@@ -1,0 +1,8 @@
+{
+  "tailwindCSS.experimental.classRegex": [
+    ["([\"'`][^\"'`]*.*?[\"'`])", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "npx eslint": true
+  },
+}

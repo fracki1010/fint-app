@@ -1,0 +1,50 @@
+Plan 7/30/60 días para profesionalizar Fint
+
+Día 1-2 (contención crítica)
+
+Cerrar bootstrap-superadmin en producción y exigir JWT_SECRET/ADMIN_SETUP_KEY sin fallback.
+
+Restringir CORS por whitelist y agregar helmet + rate limit en login.
+
+Corregir borrado de órdenes: no hard delete; cancelar con reversa de stock transaccional.
+
+Bloquear stock negativo en flujo IA/WhatsApp y mover esas operaciones a transacciones.
+
+Limpiar y excluir secretos/sesiones (.env, .wwebjs_auth, temp) del repo/deploy.
+
+Primeros 7 días (estabilidad operativa)
+
+Validaciones robustas con esquema (zod o joi) en todas las rutas críticas.
+
+Estandarizar errores HTTP (400/401/403/404/409/500) y mensajes consistentes.
+
+Idempotencia básica en creación/actualización de órdenes.
+
+Logging estructurado con correlación requestId.
+
+QA backend mínimo: tests de auth, orders, stock y whatsapp-controller.
+
+Primeros 30 días (madurez de producto)
+
+UI de administración de usuarios (crear/activar/desactivar).
+
+Búsqueda paginada real en “Nueva Venta” (no cargar todo clientes/productos).
+
+Política de sesión más segura (ideal: cookie httpOnly + refresh token).
+
+Hardening de permisos por rol (superadmin/admin/operador).
+
+Dashboards de auditoría y alertas operativas.
+
+Primeros 60 días (escala y compliance)
+
+CI/CD completo con quality gates (test, lint, build, security scan).
+
+Backups y plan de recuperación (RPO/RTO definidos).
+
+Observabilidad completa (métricas, trazas, alertas).
+
+Documentación técnica y runbooks de incidentes.
+
+Pruebas E2E de flujos críticos (venta, stock, cancelación, factura, notificaciones).
+
