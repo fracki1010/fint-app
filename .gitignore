@@ -27,3 +27,8 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 bun.lockb
+
+# Local env files
+.env
+.env.local
+.env.*.local
