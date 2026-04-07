@@ -14,6 +14,7 @@ import {
   LogOut,
   ArrowUpRight,
   X,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/button";
@@ -21,6 +22,7 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useSettings, Setting } from "@/hooks/useSettings";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +51,7 @@ type SettingsSection =
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
   const { settings, loading, error, updateSettings } = useSettings();
   const { logout } = useAuth();
   const { showToast } = useAppToast();
@@ -612,7 +615,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start">
@@ -649,9 +652,9 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           <button
-            className="app-panel w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("empresa")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -672,7 +675,7 @@ export default function SettingsPage() {
           </button>
 
           <button
-            className="app-panel w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("ventas")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -692,7 +695,7 @@ export default function SettingsPage() {
           </button>
 
           <button
-            className="app-panel w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("inventario")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -715,7 +718,7 @@ export default function SettingsPage() {
           </button>
 
           <button
-            className="app-panel w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("integraciones")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -737,7 +740,7 @@ export default function SettingsPage() {
           </button>
 
           <button
-            className="app-panel w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("movimientos")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -757,6 +760,28 @@ export default function SettingsPage() {
               </div>
             </div>
           </button>
+
+          <button
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01] lg:col-span-2"
+            onClick={() => navigate("/financial/dashboard")}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Centro Financiero
+                </p>
+                <p className="mt-1 text-xs text-default-500">
+                  Dashboard ejecutivo, contabilidad, analisis y proyecciones.
+                </p>
+                <p className="mt-2 text-xs text-default-400">
+                  Ir al modulo financiero
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                <ChartNoAxesCombined size={18} />
+              </div>
+            </div>
+          </button>
         </div>
       </main>
 
@@ -764,15 +789,21 @@ export default function SettingsPage() {
         hideCloseButton
         backdrop="opaque"
         isOpen={Boolean(activeSection)}
-        placement="bottom"
+        placement={isDesktop ? "right" : "bottom"}
         scrollBehavior="inside"
-        size="full"
+        size={isDesktop ? "xl" : "full"}
         onOpenChange={(open: boolean) => {
           if (!open) setActiveSection(null);
         }}
       >
-        <DrawerContent className="h-screen w-screen max-w-none rounded-none">
-          <DrawerBody className="flex h-full flex-col p-6">
+        <DrawerContent
+          className={
+            isDesktop
+              ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none"
+              : "h-screen w-screen max-w-none overflow-x-hidden rounded-none"
+          }
+        >
+          <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="section-kicker">Ajustes</p>

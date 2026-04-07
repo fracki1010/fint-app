@@ -17,6 +17,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   productId?: string;
+  unitCostAtSale?: number;
 }
 
 export interface OrderMovement {

@@ -48,3 +48,34 @@ Documentación técnica y runbooks de incidentes.
 
 Pruebas E2E de flujos críticos (venta, stock, cancelación, factura, notificaciones).
 
+
+
+
+
+
+
+
+
+Resumen Ejecutivo (al 29 de marzo de 2026)
+
+1) Día 1-2 (contención crítica)
+
+bootstrap-superadmin cerrado en producción: completo.
+JWT_SECRET y ADMIN_SETUP_KEY sin fallback: completo.
+CORS por whitelist + helmet: completo.
+Login rate limit: completo.
+Órdenes sin hard delete, con cancelación y reversa de stock transaccional: completo.
+Bloqueo de stock negativo en flujos críticos (incl. IA/WhatsApp): completo.
+Limpieza de secretos/sesiones (.env, .wwebjs_auth, temp): completo (frontend y backend ajustados).
+2) Primeros 7 días (estabilidad operativa)
+
+Validaciones con esquema (Zod) en rutas críticas: mayormente completo.
+Errores HTTP estandarizados: casi completo (incluido auth middleware).
+Idempotencia en órdenes: completo (create/update/delete + movimientos de stock).
+Logging estructurado con requestId: completo.
+QA backend mínimo (auth, orders, stock, whatsapp/security): completo y ampliado (16 tests pasando).
+3) Estado de CI/CD y protección
+
+CI configurado en ambos repos: completo.
+Branch protection: activo en modo temporal flexible por bloqueo de facturación de GitHub Actions.
+Riesgo actual: mientras no se resuelva billing, no se puede volver a enforcement estricto con checks obligatorios.

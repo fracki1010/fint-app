@@ -5,6 +5,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 const MobileLayout = lazy(() => import("@/layouts/MobileLayout"));
+const FinancialLayout = lazy(() => import("@/layouts/FinancialLayout"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const ProductsPage = lazy(() => import("@/pages/Products"));
 const ClientsPage = lazy(() => import("@/pages/Clients"));
@@ -15,6 +16,18 @@ const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NewOperationPage = lazy(() => import("@/pages/NewOperation"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const FinancialDashboardPage = lazy(
+  () => import("@/pages/financial/FinancialDashboard"),
+);
+const AccountingStatementsPage = lazy(
+  () => import("@/pages/financial/AccountingStatements"),
+);
+const ProductAnalysisPage = lazy(
+  () => import("@/pages/financial/ProductAnalysis"),
+);
+const SpeculationsProjectionsPage = lazy(
+  () => import("@/pages/financial/SpeculationsProjections"),
+);
 
 function FullScreenLoader() {
   return (
@@ -72,6 +85,28 @@ function App() {
           />
           <Route element={<NewOperationPage />} path="/new-operation" />
           <Route element={<SettingsPage />} path="/settings" />
+          <Route element={<FinancialLayout />}>
+            <Route
+              element={<Navigate replace to="/financial/dashboard" />}
+              path="/financial"
+            />
+            <Route
+              element={<FinancialDashboardPage />}
+              path="/financial/dashboard"
+            />
+            <Route
+              element={<AccountingStatementsPage />}
+              path="/financial/accounting"
+            />
+            <Route
+              element={<ProductAnalysisPage />}
+              path="/financial/product-analysis"
+            />
+            <Route
+              element={<SpeculationsProjectionsPage />}
+              path="/financial/projections"
+            />
+          </Route>
           <Route element={<NotFoundPage />} path="*" />
         </Route>
       </Routes>

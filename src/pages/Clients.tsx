@@ -21,6 +21,7 @@ import {
   useClients,
   useInfiniteClients,
 } from "@/hooks/useClients";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
 import { Client } from "@/types";
@@ -65,6 +66,7 @@ function getInitials(name: string) {
 
 function ClientFormModal({
   mode,
+  isDesktop,
   formData,
   onChange,
   onClose,
@@ -72,6 +74,7 @@ function ClientFormModal({
   submitting,
 }: {
   mode: "create" | "edit";
+  isDesktop: boolean;
   formData: ClientFormState;
   onChange: (field: keyof ClientFormState, value: string) => void;
   onClose: () => void;
@@ -84,15 +87,21 @@ function ClientFormModal({
       isOpen
       backdrop="opaque"
       classNames={{}}
-      placement="bottom"
+      placement={isDesktop ? "right" : "bottom"}
       scrollBehavior="inside"
-      size="full"
+      size={isDesktop ? "xl" : "full"}
       onOpenChange={(open: boolean) => {
         if (!open) onClose();
       }}
     >
-      <DrawerContent className="h-screen w-screen max-w-none rounded-none">
-        <DrawerBody className="flex h-full flex-col p-6">
+      <DrawerContent
+        className={
+          isDesktop
+            ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none"
+            : "h-screen w-screen max-w-none overflow-x-hidden rounded-none"
+        }
+      >
+        <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">
@@ -111,8 +120,8 @@ function ClientFormModal({
           </div>
 
           <div className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1">
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
                   Nombre
                 </span>
@@ -122,7 +131,7 @@ function ClientFormModal({
                   onChange={(e) => onChange("name", e.target.value)}
                 />
               </label>
-              <label className="block">
+              <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
                   Empresa
                 </span>
@@ -134,8 +143,8 @@ function ClientFormModal({
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
                   Telefono
                 </span>
@@ -145,7 +154,7 @@ function ClientFormModal({
                   onChange={(e) => onChange("phone", e.target.value)}
                 />
               </label>
-              <label className="block">
+              <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
                   Documento fiscal
                 </span>
@@ -244,6 +253,7 @@ function ClientFormModal({
 export default function ClientsPage() {
   const navigate = useNavigate();
   const { clientId } = useParams<{ clientId?: string }>();
+  const isDesktop = useIsDesktop();
   const isHeaderCompact = useMobileHeaderCompact();
   const { settings } = useSettings();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -435,7 +445,7 @@ export default function ClientsPage() {
 
   if (clientId) {
     return (
-      <div className="relative mx-auto flex min-h-screen max-w-md flex-col bg-background pb-24 font-sans">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-none lg:pb-8">
         <header
           className={`app-topbar sticky top-0 z-30 border-b border-divider/60 bg-background/95 backdrop-blur-xl transition-all duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
@@ -697,6 +707,7 @@ export default function ClientsPage() {
         {isEditOpen && (
           <ClientFormModal
             formData={formData}
+            isDesktop={isDesktop}
             mode="edit"
             submitting={isUpdating}
             onChange={handleChange}
@@ -709,7 +720,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -775,44 +786,91 @@ export default function ClientsPage() {
           </div>
         ) : filteredClients.length > 0 ? (
           <>
-            {filteredClients.map((client) => (
-              <button
-                key={client._id}
-                className="app-panel flex w-full items-center justify-between rounded-[26px] p-4 text-left"
-                onClick={() => navigate(`/clients/${client._id}`)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 font-semibold text-primary">
-                    {getInitials(client.name)}
-                  </div>
-                  <div>
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {client.name || "Sin nombre"}
-                    </h3>
-                    {client.company && (
-                      <p className="mt-1 text-[12px] text-default-500">
-                        {client.company}
-                      </p>
-                    )}
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-default-400">
-                      {client.phone}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">
-                      {formatCompactCurrency(
-                        Number(client.debt || 0),
-                        currency,
+            <div className="hidden lg:block">
+              <div className="app-panel overflow-x-auto rounded-[24px] p-2">
+                <table className="w-full min-w-[900px]">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-[0.16em] text-default-500">
+                      <th className="px-3 pb-3 pt-2">Cliente</th>
+                      <th className="px-3 pb-3 pt-2">Empresa</th>
+                      <th className="px-3 pb-3 pt-2">Telefono</th>
+                      <th className="px-3 pb-3 pt-2">Documento</th>
+                      <th className="px-3 pb-3 pt-2 text-right">Saldo</th>
+                      <th className="px-3 pb-3 pt-2 text-right">Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClients.map((client) => (
+                      <tr
+                        key={client._id}
+                        className="cursor-pointer border-t border-divider/60"
+                        onClick={() => navigate(`/clients/${client._id}`)}
+                      >
+                        <td className="px-3 py-3 text-sm font-semibold text-foreground">
+                          {client.name || "Sin nombre"}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {client.company || "No definida"}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {client.phone}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {client.taxId || "No definido"}
+                        </td>
+                        <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">
+                          {formatCompactCurrency(Number(client.debt || 0), currency)}
+                        </td>
+                        <td className="px-3 py-3 text-right text-sm text-primary">
+                          Ver ficha
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-3 lg:hidden">
+              {filteredClients.map((client) => (
+                <button
+                  key={client._id}
+                  className="app-panel flex w-full items-center justify-between rounded-[26px] p-4 text-left"
+                  onClick={() => navigate(`/clients/${client._id}`)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 font-semibold text-primary">
+                      {getInitials(client.name)}
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        {client.name || "Sin nombre"}
+                      </h3>
+                      {client.company && (
+                        <p className="mt-1 text-[12px] text-default-500">
+                          {client.company}
+                        </p>
                       )}
-                    </p>
-                    <p className="text-[11px] text-default-400">Saldo</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-default-400">
+                        {client.phone}
+                      </p>
+                    </div>
                   </div>
-                  <ChevronRight className="text-default-300" size={18} />
-                </div>
-              </button>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatCompactCurrency(
+                          Number(client.debt || 0),
+                          currency,
+                        )}
+                      </p>
+                      <p className="text-[11px] text-default-400">Saldo</p>
+                    </div>
+                    <ChevronRight className="text-default-300" size={18} />
+                  </div>
+                </button>
+              ))}
+            </div>
 
             <div ref={loadMoreRef} className="h-8 w-full" />
 
@@ -841,6 +899,7 @@ export default function ClientsPage() {
       {isCreateOpen && (
         <ClientFormModal
           formData={formData}
+          isDesktop={isDesktop}
           mode="create"
           submitting={isCreating}
           onChange={handleChange}

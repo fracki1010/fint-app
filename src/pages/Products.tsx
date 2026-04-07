@@ -23,6 +23,7 @@ import {
   useProductDetail,
   useProducts,
 } from "@/hooks/useProducts";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
 import { useStockMovements } from "@/hooks/useStockMovements";
@@ -103,6 +104,7 @@ function buildSuggestedSku(
 
 function ProductFormModal({
   mode,
+  isDesktop,
   formData,
   onChange,
   onAddCategory,
@@ -117,6 +119,7 @@ function ProductFormModal({
   submitting,
 }: {
   mode: "create" | "edit";
+  isDesktop: boolean;
   formData: ProductFormState;
   onChange: (field: keyof ProductFormState, value: string) => void;
   onAddCategory: () => void;
@@ -135,15 +138,21 @@ function ProductFormModal({
       hideCloseButton
       isOpen
       backdrop="opaque"
-      placement="bottom"
+      placement={isDesktop ? "right" : "bottom"}
       scrollBehavior="inside"
-      size="full"
+      size={isDesktop ? "xl" : "full"}
       onOpenChange={(open: boolean) => {
         if (!open) onClose();
       }}
     >
-      <DrawerContent className="h-screen w-screen max-w-none rounded-none">
-        <DrawerBody className="flex h-full flex-col p-6">
+      <DrawerContent
+        className={
+          isDesktop
+            ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none"
+            : "h-screen w-screen max-w-none overflow-x-hidden rounded-none"
+        }
+      >
+        <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">
@@ -162,7 +171,7 @@ function ProductFormModal({
           </div>
 
           <div className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4">
               <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
                   SKU
@@ -192,9 +201,9 @@ function ProductFormModal({
                   Categorias
                 </span>
                 <div className="space-y-3">
-                  <div className="flex gap-2">
+                  <div className="flex min-w-0 gap-2">
                     <input
-                      className="corp-input flex-1 rounded-2xl px-4 py-3 text-sm"
+                      className="corp-input min-w-0 flex-1 rounded-2xl px-4 py-3 text-sm"
                       placeholder="Escribe y agrega una categoria"
                       value={formData.categoryInput}
                       onChange={(e) =>
@@ -208,7 +217,7 @@ function ProductFormModal({
                       }}
                     />
                     <button
-                      className="rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
+                      className="shrink-0 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
                       type="button"
                       onClick={onAddCategory}
                     >
@@ -404,6 +413,7 @@ function ProductFormModal({
 export default function ProductsPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId?: string }>();
+  const isDesktop = useIsDesktop();
   const isHeaderCompact = useMobileHeaderCompact();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const {
@@ -720,7 +730,7 @@ export default function ProductsPage() {
 
   if (productId) {
     return (
-      <div className="relative mx-auto flex min-h-screen max-w-md flex-col bg-background pb-24 font-sans">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-none lg:pb-8">
         <header
           className={`app-topbar sticky top-0 z-30 border-b border-divider/60 bg-background/95 backdrop-blur-xl transition-all duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
@@ -978,6 +988,7 @@ export default function ProductsPage() {
           <ProductFormModal
             existingCategories={categories}
             formData={formData}
+            isDesktop={isDesktop}
             mode="edit"
             submitting={isUpdating}
             suggestedPrices={suggestedPrices}
@@ -996,7 +1007,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -1008,6 +1019,15 @@ export default function ProductsPage() {
               Altas, consulta detallada, edicion y seguimiento historico.
             </p>
           </div>
+          <button
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)]"
+            onClick={() => {
+              resetForm();
+              setShowCreateModal(true);
+            }}
+          >
+            <Plus size={20} />
+          </button>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -1086,96 +1106,169 @@ export default function ProductsPage() {
           </div>
         ) : filteredProducts.length > 0 ? (
           <>
-            {filteredProducts.map((product) => {
-              const productStock = product.stock ?? 0;
-              const productPrice = product.price ?? 0;
-              const isLowStock =
-                productStock <=
-                (product.minStock || settings?.lowStockThreshold || 5);
-              const isOutOfStock = productStock <= 0;
+            <div className="hidden lg:block">
+              <div className="app-panel overflow-x-auto rounded-[24px] p-2">
+                <table className="w-full min-w-[960px]">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-[0.16em] text-default-500">
+                      <th className="px-3 pb-3 pt-2">Producto</th>
+                      <th className="px-3 pb-3 pt-2">SKU</th>
+                      <th className="px-3 pb-3 pt-2">Categorias</th>
+                      <th className="px-3 pb-3 pt-2">Stock</th>
+                      <th className="px-3 pb-3 pt-2 text-right">Precio</th>
+                      <th className="px-3 pb-3 pt-2 text-right">Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => {
+                      const productStock = product.stock ?? 0;
+                      const productPrice = product.price ?? 0;
+                      const isLowStock =
+                        productStock <=
+                        (product.minStock || settings?.lowStockThreshold || 5);
+                      const isOutOfStock = productStock <= 0;
 
-              return (
-                <button
-                  key={product._id}
-                  className="app-panel flex w-full items-start justify-between rounded-[26px] p-4 text-left"
-                  onClick={() => openProductDetail(product)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-                        isOutOfStock
-                          ? "bg-danger/15 text-danger"
-                          : isLowStock
-                            ? "bg-warning/15 text-warning"
-                            : "bg-primary/12 text-primary"
-                      }`}
-                    >
-                      <Boxes size={22} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-[15px] font-semibold text-foreground">
-                          {product.name}
-                        </h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(product.categories && product.categories.length > 0
-                            ? product.categories
-                            : product.category
-                              ? [product.category]
-                              : []
-                          )
-                            .slice(0, 2)
-                            .map((category) => (
-                              <span
-                                key={category}
-                                className="rounded-full bg-content2 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-default-500"
-                              >
-                                {category}
-                              </span>
-                            ))}
+                      return (
+                        <tr
+                          key={product._id}
+                          className="cursor-pointer border-t border-divider/60"
+                          onClick={() => openProductDetail(product)}
+                        >
+                          <td className="px-3 py-3 text-sm font-semibold text-foreground">
+                            {product.name}
+                          </td>
+                          <td className="px-3 py-3 text-sm text-default-500">
+                            {product.sku || "No definido"}
+                          </td>
+                          <td className="px-3 py-3 text-sm text-default-500">
+                            {(product.categories && product.categories.length > 0
+                              ? product.categories
+                              : product.category
+                                ? [product.category]
+                                : []
+                            )
+                              .slice(0, 3)
+                              .join(", ") || "Sin categoria"}
+                          </td>
+                          <td className="px-3 py-3 text-sm">
+                            <span
+                              className={
+                                isOutOfStock || isLowStock
+                                  ? "font-semibold text-danger"
+                                  : "text-default-600"
+                              }
+                            >
+                              {isOutOfStock
+                                ? "Sin stock"
+                                : `${productStock} ${product.unitOfMeasure || "unidades"}`}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">
+                            {formatCompactCurrency(productPrice, currency)}
+                          </td>
+                          <td className="px-3 py-3 text-right text-sm text-primary">
+                            Ver detalle
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="space-y-3 lg:hidden">
+              {filteredProducts.map((product) => {
+                const productStock = product.stock ?? 0;
+                const productPrice = product.price ?? 0;
+                const isLowStock =
+                  productStock <=
+                  (product.minStock || settings?.lowStockThreshold || 5);
+                const isOutOfStock = productStock <= 0;
+
+                return (
+                  <button
+                    key={product._id}
+                    className="app-panel flex w-full items-start justify-between rounded-[26px] p-4 text-left"
+                    onClick={() => openProductDetail(product)}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
+                          isOutOfStock
+                            ? "bg-danger/15 text-danger"
+                            : isLowStock
+                              ? "bg-warning/15 text-warning"
+                              : "bg-primary/12 text-primary"
+                        }`}
+                      >
+                        <Boxes size={22} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-[15px] font-semibold text-foreground">
+                            {product.name}
+                          </h3>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(product.categories && product.categories.length > 0
+                              ? product.categories
+                              : product.category
+                                ? [product.category]
+                                : []
+                            )
+                              .slice(0, 2)
+                              .map((category) => (
+                                <span
+                                  key={category}
+                                  className="rounded-full bg-content2 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-default-500"
+                                >
+                                  {category}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+
+                        <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-default-400">
+                          SKU {product.sku || "No definido"}
+                        </p>
+
+                        <div className="mt-3 flex items-center gap-2 text-sm">
+                          {isOutOfStock || isLowStock ? (
+                            <AlertCircle className="text-danger" size={15} />
+                          ) : (
+                            <Layers3 className="text-primary" size={15} />
+                          )}
+                          <span
+                            className={
+                              isOutOfStock || isLowStock
+                                ? "font-semibold text-danger"
+                                : "text-default-600"
+                            }
+                          >
+                            {isOutOfStock
+                              ? "Sin stock"
+                              : `${productStock} ${product.unitOfMeasure || "unidades"}`}
+                          </span>
                         </div>
                       </div>
-
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-default-400">
-                        SKU {product.sku || "No definido"}
-                      </p>
-
-                      <div className="mt-3 flex items-center gap-2 text-sm">
-                        {isOutOfStock || isLowStock ? (
-                          <AlertCircle className="text-danger" size={15} />
-                        ) : (
-                          <Layers3 className="text-primary" size={15} />
-                        )}
-                        <span
-                          className={
-                            isOutOfStock || isLowStock
-                              ? "font-semibold text-danger"
-                              : "text-default-600"
-                          }
-                        >
-                          {isOutOfStock
-                            ? "Sin stock"
-                            : `${productStock} ${product.unitOfMeasure || "unidades"}`}
-                        </span>
-                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-[0.16em] text-default-400">
-                      Precio
-                    </p>
-                    <p className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-foreground">
-                      {formatCompactCurrency(productPrice, currency)}
-                    </p>
-                    <ArrowUpRight
-                      className="ml-auto mt-3 text-default-300"
-                      size={18}
-                    />
-                  </div>
-                </button>
-              );
-            })}
+                    <div className="text-right">
+                      <p className="text-xs uppercase tracking-[0.16em] text-default-400">
+                        Precio
+                      </p>
+                      <p className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-foreground">
+                        {formatCompactCurrency(productPrice, currency)}
+                      </p>
+                      <ArrowUpRight
+                        className="ml-auto mt-3 text-default-300"
+                        size={18}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
             <div ref={loadMoreRef} className="h-8 w-full" />
 
@@ -1213,6 +1306,7 @@ export default function ProductsPage() {
         <ProductFormModal
           existingCategories={categories}
           formData={formData}
+          isDesktop={isDesktop}
           mode="create"
           submitting={isCreating}
           suggestedPrices={suggestedPrices}

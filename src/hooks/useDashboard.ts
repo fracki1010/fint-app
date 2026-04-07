@@ -11,6 +11,33 @@ export interface DashboardSummary {
     averageTicket: number;
     totalOrdersMonth: number;
   };
+  universalKpis: {
+    salesNet: {
+      today: number;
+      month: number;
+      year: number;
+      previousMonth: number;
+    };
+    grossProfit: {
+      month: number;
+      year: number;
+    };
+    grossMarginPct: {
+      month: number;
+      year: number;
+    };
+    averageTicket: {
+      month: number;
+      orderCountMonth: number;
+    };
+    growth: {
+      salesMonthVsPreviousMonthPct: number;
+    };
+    customers: {
+      newThisMonth: number;
+      returningThisMonth: number;
+    };
+  };
   operations: {
     pendingOrders: number;
     confirmedOrders: number;
@@ -67,6 +94,59 @@ export interface DashboardSummary {
   }>;
 }
 
+export interface DashboardOptionalKpis {
+  generatedAt: string;
+  meta: {
+    startDate: string;
+    endDate: string;
+    periodDays: number;
+  };
+  inventoryRotation: {
+    ratio: number;
+    cogs: number;
+    averageStockValue: number;
+    method: "snapshot_average" | "current_stock_proxy";
+    snapshotCount: number;
+  };
+  salesByCategory: Array<{
+    category: string;
+    revenue: number;
+    sharePct: number;
+  }>;
+  salesByHour: Array<{
+    hour: string;
+    revenue: number;
+  }>;
+  salesByWeekday: Array<{
+    weekday: string;
+    revenue: number;
+  }>;
+  topProductsByVolume: Array<{
+    productName: string;
+    sku?: string | null;
+    category: string;
+    quantitySold: number;
+    revenue: number;
+    grossProfit: number;
+    grossMarginPct: number;
+  }>;
+  topProductsByMargin: Array<{
+    productName: string;
+    sku?: string | null;
+    category: string;
+    quantitySold: number;
+    revenue: number;
+    grossProfit: number;
+    grossMarginPct: number;
+  }>;
+  topClients: Array<{
+    clientId?: string | null;
+    clientName: string;
+    revenue: number;
+    orders: number;
+  }>;
+}
+
 export function useDashboard() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboard-summary"],
@@ -80,6 +160,38 @@ export function useDashboard() {
 
   return {
     dashboard: data || null,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
+
+export function useDashboardOptionalKpis(days = 90) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["dashboard-optional-kpis", days],
+    queryFn: async () => {
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+
+      const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+
+      const response = await api.get<DashboardOptionalKpis>(
+        "/dashboard/optional-kpis",
+        {
+          params: {
+            startDate: toIsoDate(startDate),
+            endDate: toIsoDate(endDate),
+          },
+        },
+      );
+
+      return response.data;
+    },
+    staleTime: 60_000,
+  });
+
+  return {
+    optionalKpis: data || null,
     loading: isLoading,
     error: error?.message || null,
     refetch,

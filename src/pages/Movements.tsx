@@ -183,7 +183,7 @@ export default function MovementsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>

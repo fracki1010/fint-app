@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Bell,
   ShoppingCart,
@@ -16,17 +16,22 @@ import {
   ReceiptText,
   PackageCheck,
   CheckCheck,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import jsPDF from "jspdf";
 
-import { useDashboard } from "@/hooks/useDashboard";
+import { useDashboard, useDashboardOptionalKpis } from "@/hooks/useDashboard";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useSettings } from "@/hooks/useSettings";
 import { formatCompactCurrency } from "@/utils/currency";
 
 export default function DashboardPage() {
+  const [optionalRangeDays, setOptionalRangeDays] = useState(90);
   const notificationsSectionRef = useRef<HTMLElement | null>(null);
   const { dashboard, loading, error } = useDashboard();
+  const { optionalKpis, loading: optionalLoading } =
+    useDashboardOptionalKpis(optionalRangeDays);
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications();
   const { settings } = useSettings();
@@ -93,7 +98,116 @@ export default function DashboardPage() {
       icon: ArrowUpRight,
       to: "/settings",
     },
+    {
+      label: "Finanzas",
+      caption: "Panel financiero",
+      icon: ChartNoAxesCombined,
+      to: "/financial/dashboard",
+    },
   ];
+
+  const peakHour = useMemo(() => {
+    if (!optionalKpis?.salesByHour?.length) return null;
+
+    return [...optionalKpis.salesByHour].sort((a, b) => b.revenue - a.revenue)[0];
+  }, [optionalKpis]);
+
+  const peakWeekday = useMemo(() => {
+    if (!optionalKpis?.salesByWeekday?.length) return null;
+
+    return optionalKpis.salesByWeekday[0];
+  }, [optionalKpis]);
+
+  const downloadFile = (content: BlobPart, fileName: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCsv = () => {
+    if (!optionalKpis) return;
+
+    const lines: string[] = [];
+    lines.push(`Rango,${optionalKpis.meta.startDate},${optionalKpis.meta.endDate}`);
+    lines.push("");
+    lines.push("Categoria,Revenue,SharePct");
+    optionalKpis.salesByCategory.forEach((row) => {
+      lines.push(`${row.category},${row.revenue},${row.sharePct}`);
+    });
+    lines.push("");
+    lines.push("Producto,MargenBruto,GananciaBruta,Revenue,Cantidad");
+    optionalKpis.topProductsByMargin.forEach((row) => {
+      lines.push(
+        `${row.productName},${row.grossMarginPct},${row.grossProfit},${row.revenue},${row.quantitySold}`,
+      );
+    });
+    lines.push("");
+    lines.push("Cliente,Revenue,Ordenes");
+    optionalKpis.topClients.forEach((row) => {
+      lines.push(`${row.clientName},${row.revenue},${row.orders}`);
+    });
+
+    const safeStart = optionalKpis.meta.startDate.replace(/-/g, "");
+    const safeEnd = optionalKpis.meta.endDate.replace(/-/g, "");
+    downloadFile(lines.join("\n"), `optional-kpis-${safeStart}-${safeEnd}.csv`, "text/csv;charset=utf-8;");
+  };
+
+  const handleExportPdf = () => {
+    if (!optionalKpis) return;
+
+    const doc = new jsPDF();
+    let y = 16;
+
+    doc.setFontSize(14);
+    doc.text("Fint - Metricas Opcionales", 14, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text(
+      `Rango: ${optionalKpis.meta.startDate} a ${optionalKpis.meta.endDate}`,
+      14,
+      y,
+    );
+    y += 10;
+
+    doc.setFontSize(11);
+    doc.text(
+      `Rotacion inventario: ${optionalKpis.inventoryRotation.ratio.toFixed(3)}x (${optionalKpis.inventoryRotation.method})`,
+      14,
+      y,
+    );
+    y += 8;
+
+    doc.text("Top productos por margen:", 14, y);
+    y += 6;
+    optionalKpis.topProductsByMargin.slice(0, 6).forEach((row, idx) => {
+      doc.text(
+        `${idx + 1}. ${row.productName} - Margen ${row.grossMarginPct.toFixed(1)}% - Ganancia ${row.grossProfit.toFixed(2)}`,
+        14,
+        y,
+      );
+      y += 6;
+    });
+
+    y += 4;
+    doc.text("Top clientes:", 14, y);
+    y += 6;
+    optionalKpis.topClients.slice(0, 6).forEach((row, idx) => {
+      doc.text(
+        `${idx + 1}. ${row.clientName} - ${row.orders} ventas - ${row.revenue.toFixed(2)}`,
+        14,
+        y,
+      );
+      y += 6;
+    });
+
+    const safeStart = optionalKpis.meta.startDate.replace(/-/g, "");
+    const safeEnd = optionalKpis.meta.endDate.replace(/-/g, "");
+    doc.save(`optional-kpis-${safeStart}-${safeEnd}.pdf`);
+  };
 
   if (loading && !dashboard) {
     return (
@@ -119,7 +233,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
@@ -188,8 +302,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="px-6 py-6 space-y-7">
-        <section ref={notificationsSectionRef}>
+      <div className="space-y-7 px-6 py-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+        <section className="lg:col-span-5" ref={notificationsSectionRef}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="section-kicker">Notificaciones</h2>
             {unreadCount > 0 && (
@@ -239,14 +353,14 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section>
+        <section className="lg:col-span-7">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="section-kicker">Acciones Rapidas</h2>
             {loading && (
               <Loader2 className="animate-spin text-primary" size={18} />
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {quickActions.map((action) => {
               const Icon = action.icon;
 
@@ -273,9 +387,9 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section>
+        <section className="lg:col-span-12">
           <h2 className="mb-4 section-kicker">Indicadores</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div className="app-panel rounded-[24px] p-5">
               <div className="flex items-center gap-2 text-primary">
                 <Wallet size={16} />
@@ -343,7 +457,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4">
+        <section className="grid gap-4 lg:col-span-12 lg:grid-cols-2">
           <div className="app-panel rounded-[28px] p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="section-kicker">Operacion</h2>
@@ -456,7 +570,144 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section>
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-12">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <h2 className="section-kicker">Metricas Opcionales por Rubro</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              {[30, 90, 180].map((days) => (
+                <button
+                  key={`range-${days}`}
+                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                    optionalRangeDays === days
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-content2/70 text-default-600 hover:bg-content2"
+                  }`}
+                  onClick={() => setOptionalRangeDays(days)}
+                  type="button"
+                >
+                  {days}d
+                </button>
+              ))}
+              <button
+                className="rounded-lg bg-content2/70 px-3 py-1 text-xs font-semibold text-default-600 hover:bg-content2"
+                onClick={handleExportCsv}
+                type="button"
+              >
+                Exportar CSV
+              </button>
+              <button
+                className="rounded-lg bg-content2/70 px-3 py-1 text-xs font-semibold text-default-600 hover:bg-content2"
+                onClick={handleExportPdf}
+                type="button"
+              >
+                Exportar PDF
+              </button>
+              {optionalLoading && (
+                <Loader2 className="animate-spin text-primary" size={16} />
+              )}
+            </div>
+          </div>
+
+          {!optionalKpis ? (
+            <p className="text-sm text-default-500">
+              No hay datos suficientes para analisis opcional.
+            </p>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-2xl bg-content2/55 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                  Rotacion Inventario (Proxy)
+                </p>
+                <p className="mt-2 text-xl font-semibold text-foreground">
+                  {optionalKpis.inventoryRotation.ratio.toFixed(3)}x
+                </p>
+                <p className="mt-1 text-xs text-default-500">
+                  COGS:{" "}
+                  {formatCompactCurrency(optionalKpis.inventoryRotation.cogs, currency)}
+                </p>
+                <p className="mt-1 text-xs text-default-500">
+                  Base stock:{" "}
+                  {formatCompactCurrency(
+                    optionalKpis.inventoryRotation.averageStockValue,
+                    currency,
+                  )}{" "}
+                  · {optionalKpis.inventoryRotation.snapshotCount} snapshot(s)
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-content2/55 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                  Franja y Dia Pico
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  Hora: {peakHour ? `${peakHour.hour}:00` : "Sin datos"}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  Dia: {peakWeekday?.weekday || "Sin datos"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-content2/55 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                  Categoria Lider
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {optionalKpis.salesByCategory[0]?.category || "Sin datos"}
+                </p>
+                <p className="mt-1 text-xs text-default-500">
+                  {optionalKpis.salesByCategory[0]
+                    ? `${optionalKpis.salesByCategory[0].sharePct.toFixed(1)}% del total`
+                    : "Sin participacion aun"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-content2/55 p-4 lg:col-span-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                  Top Productos por Margen
+                </p>
+                <div className="mt-3 space-y-2">
+                  {optionalKpis.topProductsByMargin.slice(0, 3).map((product) => (
+                    <div
+                      key={`margin-${product.productName}-${product.sku || "no-sku"}`}
+                      className="flex items-center justify-between rounded-xl bg-background/60 px-3 py-2"
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        {product.productName}
+                      </p>
+                      <p className="text-xs font-semibold text-primary">
+                        {formatCompactCurrency(product.grossProfit, currency)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-content2/55 p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                  Top Clientes
+                </p>
+                <div className="mt-3 space-y-2">
+                  {optionalKpis.topClients.slice(0, 3).map((client) => (
+                    <div
+                      key={`client-${client.clientId || client.clientName}`}
+                      className="rounded-xl bg-background/60 px-3 py-2"
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        {client.clientName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-default-500">
+                        {formatCompactCurrency(client.revenue, currency)} · {client.orders}{" "}
+                        ventas
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="lg:col-span-7">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="section-kicker">Actividad Reciente</h2>
             <Activity className="text-primary" size={18} />
@@ -513,21 +764,68 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="app-panel rounded-[28px] p-5">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-5 lg:self-start">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="section-kicker">Base Financiera</p>
+              <p className="section-kicker">KPI Universales</p>
               <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-foreground">
-                El dashboard ya esta listo para crecer con contabilidad
+                Rentabilidad y clientes en una sola lectura
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-default-500">
-                Ya distinguimos ventas, cobros, entregas, deuda y costo de
-                inventario. Con esa base, el siguiente modulo natural puede ser
-                caja, cuentas corrientes o reportes contables.
+                Indicadores transversales para cualquier rubro, con foco en
+                ventas netas, margen y fidelizacion.
               </p>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
               <ArrowUpRight size={20} />
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-content2/55 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                Ganancia Bruta (Mes)
+              </p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatCompactCurrency(
+                  dashboard.universalKpis.grossProfit.month,
+                  currency,
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-content2/55 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                Margen Bruto (Mes)
+              </p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {dashboard.universalKpis.grossMarginPct.month.toFixed(1)}%
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-content2/55 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                Crecimiento Mensual
+              </p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {dashboard.universalKpis.growth.salesMonthVsPreviousMonthPct >= 0
+                  ? "+"
+                  : ""}
+                {dashboard.universalKpis.growth.salesMonthVsPreviousMonthPct.toFixed(
+                  1,
+                )}
+                %
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-content2/55 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-default-500">
+                Nuevos vs Recurrentes
+              </p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {dashboard.universalKpis.customers.newThisMonth}/
+                {dashboard.universalKpis.customers.returningThisMonth}
+              </p>
             </div>
           </div>
         </section>

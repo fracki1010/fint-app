@@ -273,7 +273,7 @@ export default function SalesPage() {
 
   if (orderId) {
     return (
-      <div className="relative mx-auto flex min-h-screen max-w-md flex-col bg-background pb-24 font-sans">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-none lg:pb-8">
         <header
           className={`app-topbar sticky top-0 z-30 border-b border-divider/60 bg-background/95 backdrop-blur-xl transition-all duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
@@ -588,7 +588,7 @@ export default function SalesPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background pb-24 font-sans max-w-md mx-auto relative overflow-hidden">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -600,6 +600,13 @@ export default function SalesPage() {
               Seguimiento de operaciones, estados y monto transaccionado.
             </p>
           </div>
+          <Link
+            className="hidden rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] lg:inline-flex lg:items-center lg:gap-2"
+            to="/new-operation"
+          >
+            <Plus size={16} />
+            Nueva venta
+          </Link>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -706,47 +713,101 @@ export default function SalesPage() {
                 segundo plano.
               </div>
             )}
-            {filteredOrders.map((order) => (
-              <button
-                key={order._id}
-                className="app-panel w-full rounded-[24px] p-4 text-left"
-                onClick={() => navigate(`/sales/${order._id}`)}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                      <ReceiptText size={18} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {getClientName(order.client)}
-                      </h3>
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-default-500">
-                        {order.orderNumber || `Pedido #${order._id.slice(-6)}`}
-                      </p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.16em] text-default-400">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                      <p className="mt-3 text-sm text-default-500">
-                        {order.items?.length || 0} producto(s)
-                      </p>
-                    </div>
-                  </div>
+            <div className="hidden lg:block">
+              <div className="app-panel overflow-x-auto rounded-[24px] p-2">
+                <table className="w-full min-w-[980px]">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-[0.16em] text-default-500">
+                      <th className="px-3 pb-3 pt-2">Pedido</th>
+                      <th className="px-3 pb-3 pt-2">Cliente</th>
+                      <th className="px-3 pb-3 pt-2">Fecha</th>
+                      <th className="px-3 pb-3 pt-2">Comercial</th>
+                      <th className="px-3 pb-3 pt-2">Pago</th>
+                      <th className="px-3 pb-3 pt-2">Entrega</th>
+                      <th className="px-3 pb-3 pt-2 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map((order) => (
+                      <tr
+                        key={order._id}
+                        className="cursor-pointer border-t border-divider/60"
+                        onClick={() => navigate(`/sales/${order._id}`)}
+                      >
+                        <td className="px-3 py-3 text-sm font-semibold text-foreground">
+                          {order.orderNumber || `Pedido #${order._id.slice(-6)}`}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-600">
+                          {getClientName(order.client)}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {order.status}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {order.paymentStatus}
+                        </td>
+                        <td className="px-3 py-3 text-sm text-default-500">
+                          {order.deliveryStatus}
+                        </td>
+                        <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">
+                          {formatCompactCurrency(
+                            Number(order.totalAmount || 0),
+                            currency,
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                  <div className="text-right">
-                    <p className="text-[18px] font-semibold tracking-[-0.03em] text-foreground">
-                      {formatCompactCurrency(
-                        Number(order.totalAmount || 0),
-                        currency,
-                      )}
-                    </p>
-                    <span className="mt-2 inline-flex rounded-full bg-content2 px-3 py-1 text-[11px] font-semibold text-default-600">
-                      {order.status}
-                    </span>
+            <div className="space-y-3 lg:hidden">
+              {filteredOrders.map((order) => (
+                <button
+                  key={order._id}
+                  className="app-panel w-full rounded-[24px] p-4 text-left"
+                  onClick={() => navigate(`/sales/${order._id}`)}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                        <ReceiptText size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {getClientName(order.client)}
+                        </h3>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-default-500">
+                          {order.orderNumber || `Pedido #${order._id.slice(-6)}`}
+                        </p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-default-400">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                        <p className="mt-3 text-sm text-default-500">
+                          {order.items?.length || 0} producto(s)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[18px] font-semibold tracking-[-0.03em] text-foreground">
+                        {formatCompactCurrency(
+                          Number(order.totalAmount || 0),
+                          currency,
+                        )}
+                      </p>
+                      <span className="mt-2 inline-flex rounded-full bg-content2 px-3 py-1 text-[11px] font-semibold text-default-600">
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
 
             <div ref={loadMoreRef} className="h-8 w-full" />
 
@@ -769,7 +830,7 @@ export default function SalesPage() {
       <Button
         isIconOnly
         as={Link}
-        className="fixed bottom-[100px] right-6 z-10 rounded-full shadow-[0_16px_34px_rgba(88,176,156,0.35)]"
+        className="fixed bottom-[100px] right-6 z-10 rounded-full shadow-[0_16px_34px_rgba(88,176,156,0.35)] lg:hidden"
         color="primary"
         size="lg"
         to="/new-operation"

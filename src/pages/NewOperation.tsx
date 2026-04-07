@@ -195,7 +195,7 @@ export default function NewOperationPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background font-sans max-w-md mx-auto relative overflow-hidden pb-28">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -222,8 +222,8 @@ export default function NewOperationPage() {
         </div>
       </header>
 
-      <div className="space-y-5 px-4 py-5">
-        <section className="app-panel rounded-[28px] p-5">
+      <div className="space-y-5 px-4 py-5 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0 lg:px-0">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start">
           <div className="mb-4 flex items-center gap-3 border-b border-divider/60 pb-3">
             <User className="text-primary" size={20} strokeWidth={2.4} />
             <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
@@ -303,7 +303,7 @@ export default function NewOperationPage() {
           </Link>
         </section>
 
-        <section className="app-panel rounded-[28px] p-5">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-8 lg:row-span-2">
           <div className="mb-4 flex items-center gap-3 border-b border-divider/60 pb-3">
             <Package className="text-primary" size={20} strokeWidth={2.4} />
             <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
@@ -414,7 +414,7 @@ export default function NewOperationPage() {
           </div>
         </section>
 
-        <section className="app-panel rounded-[28px] p-5">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start">
           <label
             className="section-kicker block pb-3"
             htmlFor="operation-notes"
@@ -431,7 +431,7 @@ export default function NewOperationPage() {
           />
         </section>
 
-        <section className="app-panel rounded-[28px] p-5">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start lg:sticky lg:top-24">
           <div className="flex items-center justify-between text-sm">
             <span className="text-default-500">Subtotal</span>
             <span className="font-medium text-foreground">
@@ -454,10 +454,31 @@ export default function NewOperationPage() {
               {formatCompactCurrency(total, currency)}
             </span>
           </div>
+
+          <div className="mt-5 hidden gap-3 lg:flex">
+            <button className="app-panel-soft flex w-28 flex-col items-center justify-center gap-1 rounded-2xl text-default-500">
+              <FileText size={18} />
+              <span className="text-[10px] font-semibold">Borrador</span>
+            </button>
+            <button
+              className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition hover:opacity-90 disabled:opacity-50"
+              disabled={isCreating || cart.length === 0 || !selectedClient}
+              onClick={handleRegisterSale}
+            >
+              <span className="flex items-center justify-center gap-2">
+                {isCreating ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <ShoppingCart size={20} strokeWidth={2.4} />
+                )}
+                {isCreating ? "Registrando..." : "Registrar Venta"}
+              </span>
+            </button>
+          </div>
         </section>
       </div>
 
-      <div className="bottom-sheet-surface fixed bottom-0 w-full max-w-md p-4">
+      <div className="bottom-sheet-surface fixed bottom-0 w-full max-w-md p-4 lg:hidden">
         <div className="flex gap-3">
           <button className="app-panel-soft flex w-24 flex-col items-center justify-center gap-1 rounded-2xl text-default-500">
             <FileText size={18} />

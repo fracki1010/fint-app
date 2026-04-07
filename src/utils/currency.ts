@@ -16,6 +16,12 @@ function trimZeros(value: string) {
   return value.replace(/\.0+$|(\.\d*[1-9])0+$/, "$1");
 }
 
+function isDesktopViewport() {
+  if (typeof window === "undefined") return false;
+
+  return window.matchMedia("(min-width: 1024px)").matches;
+}
+
 export function formatCurrency(value: number, currency = "USD") {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -25,6 +31,10 @@ export function formatCurrency(value: number, currency = "USD") {
 }
 
 export function formatCompactCurrency(value: number, currency = "USD") {
+  if (isDesktopViewport()) {
+    return formatCurrency(value, currency);
+  }
+
   const numericValue = toNumber(value);
   const absValue = Math.abs(numericValue);
   const sign = numericValue < 0 ? "-" : "";
