@@ -133,26 +133,72 @@ function ProductFormModal({
   onSubmit: () => void;
   submitting: boolean;
 }) {
-  return (
-    <Drawer
-      hideCloseButton
-      isOpen
-      backdrop="opaque"
-      placement={isDesktop ? "right" : "bottom"}
-      scrollBehavior="inside"
-      size={isDesktop ? "xl" : "full"}
-      onOpenChange={(open: boolean) => {
-        if (!open) onClose();
+  const formScrollRef = useRef<HTMLDivElement | null>(null);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  useEffect(() => {
+    if (isDesktop) return;
+
+    const container = formScrollRef.current;
+
+    if (!container) return;
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as HTMLElement | null;
+
+      if (!target) return;
+
+      // Give the on-screen keyboard a moment to settle before scrolling.
+      window.setTimeout(() => {
+        target.scrollIntoView({
+          block: "center",
+          behavior: "smooth",
+        });
+      }, 120);
+    };
+
+    container.addEventListener("focusin", handleFocusIn);
+
+    return () => {
+      container.removeEventListener("focusin", handleFocusIn);
+    };
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (isDesktop || typeof window === "undefined" || !window.visualViewport) {
+      setKeyboardInset(0);
+
+      return;
+    }
+
+    const viewport = window.visualViewport;
+
+    const updateKeyboardInset = () => {
+      const inset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop,
+      );
+
+      setKeyboardInset(inset);
+    };
+
+    updateKeyboardInset();
+    viewport.addEventListener("resize", updateKeyboardInset);
+    viewport.addEventListener("scroll", updateKeyboardInset);
+
+    return () => {
+      viewport.removeEventListener("resize", updateKeyboardInset);
+      viewport.removeEventListener("scroll", updateKeyboardInset);
+    };
+  }, [isDesktop]);
+
+  const formLayout = (
+    <div
+      className="keyboard-safe-form flex h-full flex-col overflow-x-hidden p-6"
+      style={{
+        paddingBottom: `calc(max(env(safe-area-inset-bottom), 1rem) + ${keyboardInset}px)`,
       }}
     >
-      <DrawerContent
-        className={
-          isDesktop
-            ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none"
-            : "h-screen w-screen max-w-none overflow-x-hidden rounded-none"
-        }
-      >
-        <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="section-kicker">
@@ -170,7 +216,13 @@ function ProductFormModal({
             </button>
           </div>
 
-          <div className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1">
+          <div
+            ref={formScrollRef}
+            className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1"
+            style={{
+              paddingBottom: `calc(0.75rem + ${keyboardInset}px)`,
+            }}
+          >
             <div className="grid grid-cols-1 gap-4">
               <label className="block min-w-0">
                 <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
@@ -404,7 +456,33 @@ function ProductFormModal({
               </span>
             </button>
           </div>
-        </DrawerBody>
+    </div>
+  );
+
+  if (!isDesktop) {
+    return (
+      <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-[1px]">
+        <div className="h-[100dvh] w-screen overflow-hidden bg-background">
+          {formLayout}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Drawer
+      hideCloseButton
+      isOpen
+      backdrop="opaque"
+      placement="right"
+      scrollBehavior="inside"
+      size="xl"
+      onOpenChange={(open: boolean) => {
+        if (!open) onClose();
+      }}
+    >
+      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
+        <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
   );

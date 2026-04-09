@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   X,
   ChartNoAxesCombined,
+  Palette,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/button";
@@ -46,6 +47,7 @@ type SettingsSection =
   | "empresa"
   | "ventas"
   | "inventario"
+  | "apariencia"
   | "integraciones"
   | "movimientos";
 
@@ -65,6 +67,8 @@ export default function SettingsPage() {
     isRestarting,
   } = useWhatsApp();
   const [saving, setSaving] = useState(false);
+  const [savingWhatsAppAccess, setSavingWhatsAppAccess] = useState(false);
+  const [newAuthorizedNumber, setNewAuthorizedNumber] = useState("");
   const [formData, setFormData] = useState<Partial<Setting>>({});
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(
     null,
@@ -78,6 +82,89 @@ export default function SettingsPage() {
 
   const handleInputChange = (field: keyof Setting, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const normalizePhoneDigits = (value: string) =>
+    value
+      .toString()
+      .trim()
+      .replace(/[^\d]/g, "");
+
+  const whatsappNumberFormat = formData.whatsappNumberFormat || "AR";
+
+  const handleAddAuthorizedNumber = () => {
+    const nextNumber = normalizePhoneDigits(newAuthorizedNumber);
+    if (!nextNumber) {
+      showToast({
+        variant: "warning",
+        message: "Ingresa un numero valido para agregar.",
+      });
+      return;
+    }
+
+    const current = Array.isArray(formData.whatsappAuthorizedNumbers)
+      ? formData.whatsappAuthorizedNumbers
+          .map((value) => normalizePhoneDigits(value.toString()))
+          .filter(Boolean)
+      : [];
+
+    if (current.includes(nextNumber)) {
+      showToast({
+        variant: "warning",
+        message: "Ese numero ya esta en autorizados.",
+      });
+      return;
+    }
+
+    handleInputChange("whatsappAuthorizedNumbers", [...current, nextNumber]);
+    setNewAuthorizedNumber("");
+  };
+
+  const handleRemoveAuthorizedNumber = (numberToRemove: string) => {
+    const current = Array.isArray(formData.whatsappAuthorizedNumbers)
+      ? formData.whatsappAuthorizedNumbers
+      : [];
+
+    handleInputChange(
+      "whatsappAuthorizedNumbers",
+      current.filter((value) => value !== numberToRemove),
+    );
+  };
+
+  const handleSaveWhatsAppAccess = async () => {
+    setSavingWhatsAppAccess(true);
+    try {
+      const payload = {
+        whatsappNumberFormat,
+        whatsappAdminNumber: normalizePhoneDigits(
+          (formData.whatsappAdminNumber || "").toString(),
+        ),
+        whatsappAuthorizedNumbers: (
+          Array.isArray(formData.whatsappAuthorizedNumbers)
+            ? formData.whatsappAuthorizedNumbers
+            : []
+        )
+          .map((value) => normalizePhoneDigits(value.toString()))
+          .filter(Boolean),
+      };
+
+      const updated = await updateSettings(payload);
+      setFormData((prev) => ({ ...prev, ...updated }));
+      showToast({
+        variant: "success",
+        message: "Accesos de WhatsApp guardados.",
+      });
+    } catch (error) {
+      showToast({
+        variant: "error",
+        message: getErrorMessage(
+          error,
+          "No se pudieron guardar los accesos de WhatsApp.",
+        ),
+      });
+    } finally {
+      setSavingWhatsAppAccess(false);
+    }
   };
 
   const handleSave = async () => {
@@ -110,10 +197,28 @@ export default function SettingsPage() {
 
   const handleStartWhatsApp = async () => {
     try {
-      await startWhatsApp();
+      const status = await startWhatsApp();
+
+      if (status.status === "error" || status.status === "auth_failure") {
+        showToast({
+          variant: "error",
+          message:
+            status.lastError ||
+            "WhatsApp no pudo iniciar. Revisa el estado y vuelve a intentar.",
+        });
+        return;
+      }
+
+      const successMessage =
+        status.status === "ready"
+          ? "WhatsApp conectado correctamente."
+          : status.status === "qr_ready"
+            ? "WhatsApp iniciado. Escanea el QR para conectar."
+            : "Inicio solicitado. Esperando estado de conexion.";
+
       showToast({
         variant: "success",
-        message: "WhatsApp iniciado correctamente.",
+        message: successMessage,
       });
     } catch (error) {
       showToast({
@@ -125,10 +230,13 @@ export default function SettingsPage() {
 
   const handleStopWhatsApp = async () => {
     try {
-      await stopWhatsApp();
+      const status = await stopWhatsApp();
       showToast({
-        variant: "success",
-        message: "WhatsApp detenido correctamente.",
+        variant: status.status === "error" ? "error" : "success",
+        message:
+          status.status === "error"
+            ? status.lastError || "No se pudo detener WhatsApp correctamente."
+            : "WhatsApp detenido correctamente.",
       });
     } catch (error) {
       showToast({
@@ -140,10 +248,23 @@ export default function SettingsPage() {
 
   const handleRestartWhatsApp = async () => {
     try {
-      await restartWhatsApp();
+      const status = await restartWhatsApp();
+      if (status.status === "error" || status.status === "auth_failure") {
+        showToast({
+          variant: "error",
+          message:
+            status.lastError ||
+            "WhatsApp no pudo reiniciarse. Revisa el estado y vuelve a intentar.",
+        });
+        return;
+      }
+
       showToast({
         variant: "success",
-        message: "WhatsApp reiniciado correctamente.",
+        message:
+          status.status === "ready"
+            ? "WhatsApp reiniciado y conectado."
+            : "WhatsApp reiniciado. Esperando conexion.",
       });
     } catch (error) {
       showToast({
@@ -181,6 +302,16 @@ export default function SettingsPage() {
   const whatsappStatusClass =
     whatsappStatusClassMap[whatsappConnectionStatus] ||
     "bg-default-200 text-default-700";
+  const whatsappAdminNumberDisplay = normalizePhoneDigits(
+    (formData.whatsappAdminNumber || "").toString(),
+  );
+  const whatsappAuthorizedNumbersDisplay = Array.isArray(
+    formData.whatsappAuthorizedNumbers,
+  )
+    ? formData.whatsappAuthorizedNumbers
+        .map((value) => normalizePhoneDigits(value.toString()))
+        .filter(Boolean)
+    : [];
 
   if (loading && !settings) {
     return (
@@ -194,6 +325,7 @@ export default function SettingsPage() {
     empresa: "Empresa",
     ventas: "Ventas",
     inventario: "Inventario",
+    apariencia: "Apariencia",
     integraciones: "Integraciones",
     movimientos: "Movimientos",
   };
@@ -405,6 +537,55 @@ export default function SettingsPage() {
       );
     }
 
+    if (activeSection === "apariencia") {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-default-200/70 bg-content1/60 p-4">
+            <p className="text-sm font-semibold text-foreground">
+              Tema de la app
+            </p>
+            <p className="mt-1 text-xs text-default-500">
+              Elige como quieres ver toda la interfaz.
+            </p>
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Button
+                className="justify-start"
+                color="primary"
+                variant={formData.theme === "light" ? "solid" : "flat"}
+                onClick={() => handleInputChange("theme", "light")}
+              >
+                Claro
+              </Button>
+              <Button
+                className="justify-start"
+                color="primary"
+                variant={formData.theme === "dark" ? "solid" : "flat"}
+                onClick={() => handleInputChange("theme", "dark")}
+              >
+                Oscuro
+              </Button>
+            </div>
+          </div>
+
+          <Select
+            label="Tema visual"
+            selectedKeys={[formData.theme || "light"]}
+            variant="bordered"
+            onSelectionChange={(keys) =>
+              handleInputChange(
+                "theme",
+                Array.from(keys)[0] as "light" | "dark",
+              )
+            }
+          >
+            <SelectItem key="light">Claro</SelectItem>
+            <SelectItem key="dark">Oscuro</SelectItem>
+          </Select>
+        </div>
+      );
+    }
+
     if (activeSection === "integraciones") {
       return (
         <div className="space-y-4">
@@ -442,6 +623,126 @@ export default function SettingsPage() {
                     ? new Date(whatsappStatus.lastEventAt).toLocaleTimeString()
                     : "--:--"}
                 </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <Select
+                  label="Formato de numero"
+                  selectedKeys={[whatsappNumberFormat]}
+                  size="sm"
+                  variant="bordered"
+                  onSelectionChange={(keys) =>
+                    handleInputChange(
+                      "whatsappNumberFormat",
+                      Array.from(keys)[0] as "AR" | "INTL",
+                    )
+                  }
+                >
+                  <SelectItem key="AR">
+                    Argentina (+54, agrega 9 automaticamente)
+                  </SelectItem>
+                  <SelectItem key="INTL">Internacional (manual)</SelectItem>
+                </Select>
+                <Input
+                  description={
+                    whatsappNumberFormat === "AR"
+                      ? "Ingresa numero base (ej: 2622517447). Se guarda como 549..."
+                      : "Ingresa numero completo internacional."
+                  }
+                  label="Numero administrador"
+                  placeholder={
+                    whatsappNumberFormat === "AR"
+                      ? "2622517447"
+                      : "5491122334455"
+                  }
+                  size="sm"
+                  value={formData.whatsappAdminNumber || ""}
+                  variant="bordered"
+                  onChange={(e) =>
+                    handleInputChange(
+                      "whatsappAdminNumber",
+                      normalizePhoneDigits(e.target.value),
+                    )
+                  }
+                />
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+                  <Input
+                    description="Agrega un numero y luego pulsa Agregar."
+                    label="Nuevo autorizado"
+                    placeholder={
+                      whatsappNumberFormat === "AR"
+                        ? "2622517447"
+                        : "5491122334455"
+                    }
+                    size="sm"
+                    value={newAuthorizedNumber}
+                    variant="bordered"
+                    onChange={(e) =>
+                      setNewAuthorizedNumber(
+                        normalizePhoneDigits(e.target.value),
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddAuthorizedNumber();
+                      }
+                    }}
+                  />
+                  <Button
+                    className="self-end"
+                    color="primary"
+                    size="sm"
+                    variant="flat"
+                    onClick={handleAddAuthorizedNumber}
+                  >
+                    Agregar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded-xl border border-default-200/70 bg-content1/70 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-default-600">
+                  Numeros configurados
+                </p>
+                <p className="mt-2 text-xs text-default-700">
+                  Admin: {whatsappAdminNumberDisplay || "Sin configurar"}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {whatsappAuthorizedNumbersDisplay.length > 0 ? (
+                    whatsappAuthorizedNumbersDisplay.map((phone) => (
+                      <span
+                        key={phone}
+                        className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-xs text-primary"
+                      >
+                        {phone}
+                        <button
+                          aria-label={`Eliminar ${phone}`}
+                          className="rounded-full p-0.5 transition hover:bg-primary/20"
+                          onClick={() => handleRemoveAuthorizedNumber(phone)}
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-xs text-default-500">Sin autorizados.</p>
+                  )}
+                </div>
+                <div className="mt-3">
+                  <Button
+                    color="primary"
+                    isLoading={savingWhatsAppAccess}
+                    size="sm"
+                    startContent={!savingWhatsAppAccess ? <Save size={14} /> : null}
+                    variant="solid"
+                    onClick={handleSaveWhatsAppAccess}
+                  >
+                    {savingWhatsAppAccess
+                      ? "Guardando accesos..."
+                      : "Guardar accesos WhatsApp"}
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -567,20 +868,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <Select
-            label="Tema visual"
-            selectedKeys={[formData.theme || "light"]}
-            variant="bordered"
-            onSelectionChange={(keys) =>
-              handleInputChange(
-                "theme",
-                Array.from(keys)[0] as "light" | "dark",
-              )
-            }
-          >
-            <SelectItem key="light">Claro</SelectItem>
-            <SelectItem key="dark">Oscuro</SelectItem>
-          </Select>
         </div>
       );
     }
@@ -719,6 +1006,29 @@ export default function SettingsPage() {
 
           <button
             className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
+            onClick={() => setActiveSection("apariencia")}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Apariencia
+                </p>
+                <p className="mt-1 text-xs text-default-500">
+                  Tema visual y preferencias de visualizacion.
+                </p>
+                <p className="mt-2 text-xs text-default-400">
+                  Tema actual:{" "}
+                  {formData.theme === "dark" ? "Oscuro" : "Claro"}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                <Palette size={18} />
+              </div>
+            </div>
+          </button>
+
+          <button
+            className="app-panel h-full w-full rounded-[24px] p-5 text-left transition hover:scale-[1.01]"
             onClick={() => setActiveSection("integraciones")}
           >
             <div className="flex items-start justify-between gap-3">
@@ -727,7 +1037,7 @@ export default function SettingsPage() {
                   Integraciones
                 </p>
                 <p className="mt-1 text-xs text-default-500">
-                  WhatsApp, politica de entrega y tema visual.
+                  WhatsApp y politica de entrega.
                 </p>
                 <p className="mt-2 text-xs text-default-400">
                   Estado WhatsApp: {whatsappStatusLabel}

@@ -29,6 +29,9 @@ export interface Setting {
   currency: string;
   theme: "light" | "dark";
   whatsappEnabled: boolean;
+  whatsappNumberFormat: "AR" | "INTL";
+  whatsappAdminNumber: string;
+  whatsappAuthorizedNumbers: string[];
   lowStockThreshold: number;
   orderPrefix: string;
   allowDeliveryWithoutPayment: boolean;

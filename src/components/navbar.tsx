@@ -55,7 +55,7 @@ export const Navbar = () => {
             color="foreground"
             href="/"
           >
-            <Logo />
+            <Logo className="h-[38px] w-[38px] sm:h-9 sm:w-9" />
             <p className="font-bold text-inherit">ACME</p>
           </Link>
         </NavbarBrand>

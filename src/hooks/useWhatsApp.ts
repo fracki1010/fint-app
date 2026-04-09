@@ -13,6 +13,12 @@ export interface WhatsAppStatus {
 
 export function useWhatsApp() {
   const queryClient = useQueryClient();
+  const ACTIVE_POLLING_STATUSES = new Set([
+    "starting",
+    "stopping",
+    "qr_ready",
+    "ready",
+  ]);
 
   const {
     data: whatsappStatus,
@@ -26,7 +32,14 @@ export function useWhatsApp() {
 
       return response.data;
     },
-    refetchInterval: 4000,
+    refetchInterval: (query) => {
+      const status = (query.state.data as WhatsAppStatus | undefined)?.status;
+
+      if (!status) return 4000;
+      if (status === "stopped") return false;
+      if (ACTIVE_POLLING_STATUSES.has(status)) return 4000;
+      return 15000;
+    },
   });
 
   const startMutation = useMutation({

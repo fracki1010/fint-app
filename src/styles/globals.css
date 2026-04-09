@@ -23,11 +23,19 @@ body,
 body {
   margin: 0;
   background:
+    radial-gradient(circle at top, rgb(13 79 169 / 0.12), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgb(15 118 110 / 0.08), transparent 26%),
+    linear-gradient(180deg, rgb(13 79 169 / 0.04), transparent 24%),
+    var(--heroui-background);
+  color: var(--heroui-foreground);
+}
+
+.dark body {
+  background:
     radial-gradient(circle at top, rgb(13 79 169 / 0.16), transparent 28%),
     radial-gradient(circle at 88% 12%, rgb(201 162 39 / 0.12), transparent 24%),
     linear-gradient(180deg, rgb(10 22 44 / 0.05), transparent 24%),
     var(--heroui-background);
-  color: var(--heroui-foreground);
 }
 
 ::selection {
@@ -61,6 +69,12 @@ body {
   position: relative;
   isolation: isolate;
   background:
+    radial-gradient(circle at top right, rgb(13 79 169 / 0.11), transparent 30%),
+    radial-gradient(circle at bottom left, rgb(15 118 110 / 0.08), transparent 34%);
+}
+
+.dark .MobileAppWrapper {
+  background:
     radial-gradient(circle at top right, rgb(13 79 169 / 0.14), transparent 28%),
     radial-gradient(circle at bottom left, rgb(201 162 39 / 0.1), transparent 32%);
 }
@@ -72,6 +86,12 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.45), transparent 24%),
+    linear-gradient(0deg, rgb(13 79 169 / 0.04), transparent 25%);
+}
+
+.dark .MobileAppWrapper::before {
+  background:
     linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 18%),
     linear-gradient(0deg, rgb(0 0 0 / 0.06), transparent 22%);
 }
@@ -80,6 +100,11 @@ body {
   background-color: var(--heroui-content1);
   background: color-mix(in srgb, var(--heroui-content1) 84%, transparent);
   backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgb(69 101 149 / 0.18);
+  box-shadow: 0 14px 34px rgb(13 79 169 / 0.08);
+}
+
+.dark .app-topbar {
   border-bottom: 1px solid rgb(69 101 149 / 0.24);
   box-shadow: 0 18px 40px rgb(10 22 44 / 0.1);
 }
@@ -87,6 +112,11 @@ body {
 .app-panel {
   background-color: var(--heroui-content1);
   background: color-mix(in srgb, var(--heroui-content1) 88%, transparent);
+  border: 1px solid rgb(69 101 149 / 0.14);
+  box-shadow: 0 12px 28px rgb(13 79 169 / 0.07);
+}
+
+.dark .app-panel {
   border: 1px solid rgb(69 101 149 / 0.2);
   box-shadow: 0 14px 34px rgb(10 22 44 / 0.1);
 }
@@ -94,6 +124,10 @@ body {
 .app-panel-soft {
   background-color: var(--heroui-content2);
   background: color-mix(in srgb, var(--heroui-content1) 70%, transparent);
+  border: 1px solid rgb(69 101 149 / 0.12);
+}
+
+.dark .app-panel-soft {
   border: 1px solid rgb(69 101 149 / 0.16);
 }
 
@@ -159,6 +193,17 @@ select.corp-input {
   box-shadow:
     0 0 0 4px rgb(13 79 169 / 0.12),
     inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+/* iOS Safari zooms inputs <16px and breaks bottom drawers when keyboard opens. */
+.keyboard-safe-form .corp-input {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  .keyboard-safe-form .corp-input {
+    font-size: 0.875rem;
+  }
 }
 
 .financial-shell {

@@ -6,7 +6,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   COP: "$",
 };
 
-const COMPACT_SUFFIXES = ["", "K", "M", "B", "T"];
+const COMPACT_MAX_CHARS = 10;
 
 function toNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
@@ -39,28 +39,24 @@ export function formatCompactCurrency(value: number, currency = "USD") {
   const absValue = Math.abs(numericValue);
   const sign = numericValue < 0 ? "-" : "";
   const symbol = CURRENCY_SYMBOLS[currency];
+  const fullBase = new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(absValue);
+  const fullAmount = symbol
+    ? `${sign}${symbol}${fullBase}`
+    : `${sign}${currency} ${fullBase}`;
 
-  if (absValue < 1000) {
-    const base = new Intl.NumberFormat("es-AR", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(absValue);
-
-    return symbol ? `${sign}${symbol}${base}` : `${sign}${currency} ${base}`;
+  if (fullAmount.length <= COMPACT_MAX_CHARS || absValue < 1000) {
+    return fullAmount;
   }
 
-  let compactValue = absValue;
-  let suffixIndex = 0;
-
-  while (compactValue >= 1000 && suffixIndex < COMPACT_SUFFIXES.length - 1) {
-    compactValue /= 1000;
-    suffixIndex += 1;
-  }
-
+  const compactValue = absValue >= 1_000_000 ? absValue / 1_000_000 : absValue / 1000;
+  const suffix = absValue >= 1_000_000 ? "M" : "K";
   const compactBase = trimZeros(
     compactValue.toFixed(compactValue >= 100 ? 0 : 1),
   );
-  const compactAmount = `${compactBase}${COMPACT_SUFFIXES[suffixIndex]}`;
+  const compactAmount = `${compactBase}${suffix}`;
 
   return symbol
     ? `${sign}${symbol}${compactAmount}`

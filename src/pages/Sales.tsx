@@ -16,6 +16,7 @@ import { Select, SelectItem } from "@heroui/select";
 
 import {
   DeliveryStatus,
+  Order,
   PaymentStatus,
   SalesStatus,
   useInfiniteOrders,
@@ -66,6 +67,20 @@ function getClientPhone(
   return client || "Sin telefono";
 }
 
+function normalizeText(value?: string | null) {
+  return (value || "").trim().toLowerCase();
+}
+
+function getCommercialStatus(order: Order): SalesStatus {
+  const rawStatus = order.salesStatus || order.status;
+  const normalized = normalizeText(rawStatus);
+
+  if (normalized === "confirmada") return "Confirmada";
+  if (normalized === "cancelada") return "Cancelada";
+
+  return "Pendiente";
+}
+
 export default function SalesPage() {
   const navigate = useNavigate();
   const { orderId } = useParams<{ orderId?: string }>();
@@ -87,7 +102,7 @@ export default function SalesPage() {
   const currency = settings?.currency || "USD";
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | SalesStatus>("all");
   const [notesDraft, setNotesDraft] = useState("");
   const [salesStatusDraft, setSalesStatusDraft] =
     useState<SalesStatus>("Pendiente");
@@ -139,12 +154,7 @@ export default function SalesPage() {
     let result = safeOrders;
 
     if (activeFilter !== "all") {
-      result = result.filter(
-        (o) =>
-          o.status?.toLowerCase() === activeFilter.toLowerCase() ||
-          o.deliveryStatus?.toLowerCase() === activeFilter.toLowerCase() ||
-          o.paymentStatus?.toLowerCase() === activeFilter.toLowerCase(),
-      );
+      result = result.filter((o) => getCommercialStatus(o) === activeFilter);
     }
 
     if (searchQuery) {
@@ -161,13 +171,9 @@ export default function SalesPage() {
   }, [safeOrders, searchQuery, activeFilter]);
 
   const statuses = useMemo(() => {
-    const stats = new Set(
-      safeOrders
-        .flatMap((o) => [o.status, o.paymentStatus, o.deliveryStatus])
-        .filter(Boolean),
+    return SALES_STATUS_OPTIONS.filter((status) =>
+      safeOrders.some((order) => getCommercialStatus(order) === status),
     );
-
-    return Array.from(stats);
   }, [safeOrders]);
 
   const totalSales = useMemo(
@@ -351,7 +357,7 @@ export default function SalesPage() {
                 <div className="app-panel-soft rounded-[24px] p-4">
                   <p className="section-kicker">Importe</p>
                   <p className="mt-3 text-2xl font-semibold text-foreground">
-                    {formatCompactCurrency(
+                    {formatCurrency(
                       Number(displayOrder.totalAmount || 0),
                       currency,
                     )}
