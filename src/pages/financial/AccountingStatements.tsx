@@ -59,24 +59,25 @@ export default function AccountingStatementsPage() {
           <p className="text-xs uppercase tracking-[0.18em] text-default-500">
             Resumen Financiero
           </p>
-          <h1 className="mt-2 financial-page-title">Contabilidad y Estados</h1>
+          <h1 className="mt-2 financial-page-title">
+            Contabilidad y Estados
+          </h1>
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <article className="financial-card">
           <div className="flex items-center justify-between">
-            <h2 className="financial-section-title">Resumen de Balance</h2>
+            <h2 className="financial-section-title">
+              Resumen de Balance
+            </h2>
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               FY 2024 T3
             </span>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {summary.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-divider/70 p-4"
-              >
+              <div className="rounded-2xl border border-divider/70 p-4" key={item.label}>
                 <p className="text-xs uppercase tracking-[0.12em] text-default-500">
                   {item.label}
                 </p>
@@ -94,43 +95,30 @@ export default function AccountingStatementsPage() {
             Estado de Resultados
           </p>
           <p className="mt-4 text-4xl font-semibold tracking-[-0.03em] text-white">
-            $
-            {income.netRevenueYtd.toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-            })}
+            ${income.netRevenueYtd.toLocaleString("en-US", { maximumFractionDigits: 0 })}
           </p>
           <p className="mt-2 text-sm text-primary-100">Ingresos Netos YTD</p>
           <div className="mt-8 space-y-3 text-sm text-primary-100">
             <div className="flex justify-between">
               <span>Margen Bruto</span>
-              <span className="font-semibold">
-                {income.grossMargin.toFixed(1)}%
-              </span>
+              <span className="font-semibold">{income.grossMargin.toFixed(1)}%</span>
             </div>
             <div className="h-2 rounded-full bg-white/20">
               <div
                 className="h-full rounded-full bg-primary-200"
-                style={{
-                  width: `${Math.max(8, Math.min(100, income.grossMargin))}%`,
-                }}
+                style={{ width: `${Math.max(8, Math.min(100, income.grossMargin))}%` }}
               />
             </div>
             <div className="flex justify-between">
               <span>Gastos Operativos</span>
               <span className="font-semibold">
-                $
-                {income.operatingExpenses.toLocaleString("en-US", {
-                  maximumFractionDigits: 0,
-                })}
+                ${income.operatingExpenses.toLocaleString("en-US", { maximumFractionDigits: 0 })}
               </span>
             </div>
             <div className="flex justify-between">
               <span>EBITDA Proyectado</span>
               <span className="font-semibold">
-                $
-                {income.ebitdaProxy.toLocaleString("en-US", {
-                  maximumFractionDigits: 0,
-                })}
+                ${income.ebitdaProxy.toLocaleString("en-US", { maximumFractionDigits: 0 })}
               </span>
             </div>
           </div>
@@ -154,21 +142,13 @@ export default function AccountingStatementsPage() {
             </thead>
             <tbody>
               {ledger.map((row) => (
-                <tr key={row.refId} className="border-t border-divider/70">
+                <tr className="border-t border-divider/70" key={row.refId}>
                   <td className="py-3 text-sm text-default-500">{row.date}</td>
-                  <td className="py-3 text-sm font-medium">
-                    {row.description}
-                  </td>
-                  <td className="py-3 text-sm text-default-500">
-                    {row.category}
-                  </td>
+                  <td className="py-3 text-sm font-medium">{row.description}</td>
+                  <td className="py-3 text-sm text-default-500">{row.category}</td>
                   <td className="py-3 text-sm text-default-500">{row.refId}</td>
-                  <td className="py-3 text-right text-sm font-medium">
-                    {row.debit}
-                  </td>
-                  <td className="py-3 text-right text-sm font-medium">
-                    {row.credit}
-                  </td>
+                  <td className="py-3 text-right text-sm font-medium">{row.debit}</td>
+                  <td className="py-3 text-right text-sm font-medium">{row.credit}</td>
                   <td
                     className={`py-3 text-right text-sm font-semibold ${ledgerStatusTone(
                       row.status,

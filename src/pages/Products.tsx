@@ -199,255 +199,263 @@ function ProductFormModal({
         paddingBottom: `calc(max(env(safe-area-inset-bottom), 1rem) + ${keyboardInset}px)`,
       }}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="section-kicker">
-            {mode === "create" ? "Alta de Producto" : "Edicion"}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-            {mode === "create" ? "Nuevo producto" : "Editar producto"}
-          </h2>
-        </div>
-        <button
-          className="app-panel-soft flex h-10 w-10 items-center justify-center rounded-2xl text-default-500"
-          onClick={onClose}
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      <div
-        ref={formScrollRef}
-        className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1"
-        style={{
-          paddingBottom: `calc(0.75rem + ${keyboardInset}px)`,
-        }}
-      >
-        <div className="grid grid-cols-1 gap-4">
-          <label className="block min-w-0">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              SKU
-            </span>
-            <div className="space-y-2">
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.sku}
-                onChange={(e) => onChange("sku", e.target.value.toUpperCase())}
-              />
-              <button
-                className="inline-flex max-w-full items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
-                type="button"
-                onClick={onUseSuggestedSku}
-              >
-                <WandSparkles size={14} />
-                <span className="truncate">Usar sugerencia {suggestedSku}</span>
-              </button>
-            </div>
-          </label>
-          <label className="block min-w-0">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Categorias
-            </span>
-            <div className="space-y-3">
-              <div className="flex min-w-0 gap-2">
-                <input
-                  className="corp-input min-w-0 flex-1 rounded-2xl px-4 py-3 text-sm"
-                  placeholder="Escribe y agrega una categoria"
-                  value={formData.categoryInput}
-                  onChange={(e) => onChange("categoryInput", e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === ",") {
-                      e.preventDefault();
-                      onAddCategory();
-                    }
-                  }}
-                />
-                <button
-                  className="shrink-0 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
-                  type="button"
-                  onClick={onAddCategory}
-                >
-                  Agregar
-                </button>
-              </div>
-              {formData.categories.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.categories.map((category) => (
-                    <button
-                      key={category}
-                      className="inline-flex max-w-full items-center gap-2 rounded-full bg-content2 px-3 py-1.5 text-xs font-semibold text-default-700"
-                      type="button"
-                      onClick={() => onRemoveCategory(category)}
-                    >
-                      <span className="truncate">{category}</span>
-                      <X size={12} />
-                    </button>
-                  ))}
-                </div>
-              )}
-              {existingCategories.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {existingCategories.map((category) => (
-                    <button
-                      key={category}
-                      className="max-w-full rounded-full border border-divider/70 px-3 py-1.5 text-[11px] font-semibold text-default-500"
-                      type="button"
-                      onClick={() => onChange("categoryInput", category)}
-                    >
-                      <span className="block max-w-full truncate">
-                        {category}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-            Nombre
-          </span>
-          <input
-            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-            value={formData.name}
-            onChange={(e) => onChange("name", e.target.value)}
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-            Descripcion
-          </span>
-          <textarea
-            className="corp-input min-h-28 w-full rounded-2xl px-4 py-3 text-sm"
-            value={formData.description}
-            onChange={(e) => onChange("description", e.target.value)}
-          />
-        </label>
-
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Precio
-            </span>
-            <div className="space-y-2">
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                min="0"
-                step="0.01"
-                type="number"
-                value={formData.price}
-                onChange={(e) => onChange("price", e.target.value)}
-              />
-              <p className="text-[11px] text-default-500">
-                Carga costo primero y te sugerimos precio segun margen.
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="section-kicker">
+                {mode === "create" ? "Alta de Producto" : "Edicion"}
               </p>
-              {suggestedPrices.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {suggestedPrices.map((suggestion) => (
-                    <button
-                      key={suggestion.label}
-                      className="rounded-full bg-content2 px-3 py-1.5 text-[11px] font-semibold text-default-700"
-                      type="button"
-                      onClick={() => onApplySuggestedPrice(suggestion.value)}
-                    >
-                      {suggestion.label}: ${suggestion.value}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+                {mode === "create" ? "Nuevo producto" : "Editar producto"}
+              </h2>
             </div>
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Costo
-            </span>
-            <div className="space-y-2">
+            <button
+              className="app-panel-soft flex h-10 w-10 items-center justify-center rounded-2xl text-default-500"
+              onClick={onClose}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div
+            ref={formScrollRef}
+            className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1"
+            style={{
+              paddingBottom: `calc(0.75rem + ${keyboardInset}px)`,
+            }}
+          >
+            <div className="grid grid-cols-1 gap-4">
+              <label className="block min-w-0">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  SKU
+                </span>
+                <div className="space-y-2">
+                  <input
+                    className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+                    value={formData.sku}
+                    onChange={(e) =>
+                      onChange("sku", e.target.value.toUpperCase())
+                    }
+                  />
+                  <button
+                    className="inline-flex max-w-full items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+                    type="button"
+                    onClick={onUseSuggestedSku}
+                  >
+                    <WandSparkles size={14} />
+                    <span className="truncate">
+                      Usar sugerencia {suggestedSku}
+                    </span>
+                  </button>
+                </div>
+              </label>
+              <label className="block min-w-0">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Categorias
+                </span>
+                <div className="space-y-3">
+                  <div className="flex min-w-0 gap-2">
+                    <input
+                      className="corp-input min-w-0 flex-1 rounded-2xl px-4 py-3 text-sm"
+                      placeholder="Escribe y agrega una categoria"
+                      value={formData.categoryInput}
+                      onChange={(e) =>
+                        onChange("categoryInput", e.target.value)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === ",") {
+                          e.preventDefault();
+                          onAddCategory();
+                        }
+                      }}
+                    />
+                    <button
+                      className="shrink-0 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"
+                      type="button"
+                      onClick={onAddCategory}
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                  {formData.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.categories.map((category) => (
+                        <button
+                          key={category}
+                          className="inline-flex max-w-full items-center gap-2 rounded-full bg-content2 px-3 py-1.5 text-xs font-semibold text-default-700"
+                          type="button"
+                          onClick={() => onRemoveCategory(category)}
+                        >
+                          <span className="truncate">{category}</span>
+                          <X size={12} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {existingCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {existingCategories.map((category) => (
+                        <button
+                          key={category}
+                          className="max-w-full rounded-full border border-divider/70 px-3 py-1.5 text-[11px] font-semibold text-default-500"
+                          type="button"
+                          onClick={() => onChange("categoryInput", category)}
+                        >
+                          <span className="block max-w-full truncate">
+                            {category}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                Nombre
+              </span>
               <input
                 className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                min="0"
-                step="0.01"
-                type="number"
-                value={formData.costPrice}
-                onChange={(e) => onChange("costPrice", e.target.value)}
+                value={formData.name}
+                onChange={(e) => onChange("name", e.target.value)}
               />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                Descripcion
+              </span>
+              <textarea
+                className="corp-input min-h-28 w-full rounded-2xl px-4 py-3 text-sm"
+                value={formData.description}
+                onChange={(e) => onChange("description", e.target.value)}
+              />
+            </label>
+
+            <div className="grid grid-cols-2 gap-4">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Precio
+                </span>
+                <div className="space-y-2">
+                  <input
+                    className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+                    min="0"
+                    step="0.01"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => onChange("price", e.target.value)}
+                  />
+                  <p className="text-[11px] text-default-500">
+                    Carga costo primero y te sugerimos precio segun margen.
+                  </p>
+                  {suggestedPrices.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {suggestedPrices.map((suggestion) => (
+                        <button
+                          key={suggestion.label}
+                          className="rounded-full bg-content2 px-3 py-1.5 text-[11px] font-semibold text-default-700"
+                          type="button"
+                          onClick={() =>
+                            onApplySuggestedPrice(suggestion.value)
+                          }
+                        >
+                          {suggestion.label}: ${suggestion.value}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Costo
+                </span>
+                <div className="space-y-2">
+                  <input
+                    className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+                    min="0"
+                    step="0.01"
+                    type="number"
+                    value={formData.costPrice}
+                    onChange={(e) => onChange("costPrice", e.target.value)}
+                  />
+                </div>
+              </label>
             </div>
-          </label>
-        </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Stock
-            </span>
-            <input
-              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-              min="0"
-              type="number"
-              value={formData.stock}
-              onChange={(e) => onChange("stock", e.target.value)}
-            />
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Minimo
-            </span>
-            <input
-              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-              min="0"
-              type="number"
-              value={formData.minStock}
-              onChange={(e) => onChange("minStock", e.target.value)}
-            />
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Unidad
-            </span>
-            <Select
-              aria-label="Unidad de medida"
-              classNames={{
-                base: "w-full",
-                trigger:
-                  "corp-input min-h-[48px] rounded-2xl px-4 text-sm text-foreground",
-                value: "text-foreground",
-                popoverContent: "bg-content1 text-foreground",
-                listbox: "bg-content1 text-foreground",
-              }}
-              selectedKeys={[formData.unitOfMeasure]}
-              variant="bordered"
-              onSelectionChange={(keys) =>
-                onChange("unitOfMeasure", Array.from(keys)[0] as string)
-              }
+            <div className="grid grid-cols-3 gap-4">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Stock
+                </span>
+                <input
+                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+                  min="0"
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => onChange("stock", e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Minimo
+                </span>
+                <input
+                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+                  min="0"
+                  type="number"
+                  value={formData.minStock}
+                  onChange={(e) => onChange("minStock", e.target.value)}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+                  Unidad
+                </span>
+                <Select
+                  aria-label="Unidad de medida"
+                  classNames={{
+                    base: "w-full",
+                    trigger:
+                      "corp-input min-h-[48px] rounded-2xl px-4 text-sm text-foreground",
+                    value: "text-foreground",
+                    popoverContent: "bg-content1 text-foreground",
+                    listbox: "bg-content1 text-foreground",
+                  }}
+                  selectedKeys={[formData.unitOfMeasure]}
+                  variant="bordered"
+                  onSelectionChange={(keys) =>
+                    onChange("unitOfMeasure", Array.from(keys)[0] as string)
+                  }
+                >
+                  {UNIT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
+            <button
+              className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
+              onClick={onClose}
             >
-              {UNIT_OPTIONS.map((option) => (
-                <SelectItem key={option.value}>{option.label}</SelectItem>
-              ))}
-            </Select>
-          </label>
-        </div>
-      </div>
-
-      <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
-        <button
-          className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
-          onClick={onClose}
-        >
-          Cancelar
-        </button>
-        <button
-          className="flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-          disabled={submitting}
-          onClick={onSubmit}
-        >
-          <span className="flex items-center justify-center gap-2">
-            {submitting && <Loader2 className="animate-spin" size={18} />}
-            {mode === "create" ? "Crear producto" : "Guardar cambios"}
-          </span>
-        </button>
-      </div>
+              Cancelar
+            </button>
+            <button
+              className="flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              disabled={submitting}
+              onClick={onSubmit}
+            >
+              <span className="flex items-center justify-center gap-2">
+                {submitting && <Loader2 className="animate-spin" size={18} />}
+                {mode === "create" ? "Crear producto" : "Guardar cambios"}
+              </span>
+            </button>
+          </div>
     </div>
   );
 
@@ -1211,8 +1219,7 @@ export default function ProductsPage() {
                             {product.sku || "No definido"}
                           </td>
                           <td className="px-3 py-3 text-sm text-default-500">
-                            {(product.categories &&
-                            product.categories.length > 0
+                            {(product.categories && product.categories.length > 0
                               ? product.categories
                               : product.category
                                 ? [product.category]
@@ -1281,8 +1288,7 @@ export default function ProductsPage() {
                             {product.name}
                           </h3>
                           <div className="flex flex-wrap gap-1.5">
-                            {(product.categories &&
-                            product.categories.length > 0
+                            {(product.categories && product.categories.length > 0
                               ? product.categories
                               : product.category
                                 ? [product.category]

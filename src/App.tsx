@@ -8,17 +8,14 @@ const MobileLayout = lazy(() => import("@/layouts/MobileLayout"));
 const FinancialLayout = lazy(() => import("@/layouts/FinancialLayout"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const ProductsPage = lazy(() => import("@/pages/Products"));
-const SuppliesPage = lazy(() => import("@/pages/Supplies"));
 const ClientsPage = lazy(() => import("@/pages/Clients"));
 const SalesPage = lazy(() => import("@/pages/Sales"));
-const PurchasesPage = lazy(() => import("@/pages/Purchases"));
 const MovementsPage = lazy(() => import("@/pages/Movements"));
 const MovementDetailPage = lazy(() => import("@/pages/MovementDetail"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NewOperationPage = lazy(() => import("@/pages/NewOperation"));
 const LoginPage = lazy(() => import("@/pages/Login"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
-const SupplierAccountPage = lazy(() => import("@/pages/SupplierAccount"));
 const FinancialDashboardPage = lazy(
   () => import("@/pages/financial/FinancialDashboard"),
 );
@@ -76,16 +73,10 @@ function App() {
         >
           <Route element={<DashboardPage />} path="/" />
           <Route element={<ProductsPage />} path="/products" />
-          <Route element={<SuppliesPage />} path="/supplies" />
           <Route element={<ProductsPage />} path="/products/:productId" />
           <Route element={<ClientsPage />} path="/clients" />
           <Route element={<ClientsPage />} path="/clients/:clientId" />
-          <Route
-            element={<SupplierAccountPage />}
-            path="/suppliers/:supplierId/account"
-          />
           <Route element={<SalesPage />} path="/sales" />
-          <Route element={<PurchasesPage />} path="/purchases" />
           <Route element={<SalesPage />} path="/sales/:orderId" />
           <Route element={<MovementsPage />} path="/movements" />
           <Route

@@ -92,8 +92,8 @@ export default function FinancialLayout() {
                     ? "text-primary scale-105"
                     : "text-default-400 hover:text-default-600"
                 }`}
-                type="button"
                 onClick={() => navigate(item.path)}
+                type="button"
               >
                 <Icon
                   className={

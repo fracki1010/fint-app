@@ -38,7 +38,3 @@ export interface Product {
   createdAt?: string;
   updatedAt?: string;
 }
-
-export * from "./supplies";
-export * from "./purchases";
-export * from "./supplier-account";

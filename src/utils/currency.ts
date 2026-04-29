@@ -51,8 +51,7 @@ export function formatCompactCurrency(value: number, currency = "USD") {
     return fullAmount;
   }
 
-  const compactValue =
-    absValue >= 1_000_000 ? absValue / 1_000_000 : absValue / 1000;
+  const compactValue = absValue >= 1_000_000 ? absValue / 1_000_000 : absValue / 1000;
   const suffix = absValue >= 1_000_000 ? "M" : "K";
   const compactBase = trimZeros(
     compactValue.toFixed(compactValue >= 100 ? 0 : 1),
