@@ -38,6 +38,7 @@ export function useWhatsApp() {
       if (!status) return 4000;
       if (status === "stopped") return false;
       if (ACTIVE_POLLING_STATUSES.has(status)) return 4000;
+
       return 15000;
     },
   });

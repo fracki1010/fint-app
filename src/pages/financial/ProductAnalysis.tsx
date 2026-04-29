@@ -74,13 +74,15 @@ export default function ProductAnalysisPage() {
           </div>
           <div className="mt-6 space-y-2 text-sm">
             {distribution.map((item) => (
-              <div className="flex justify-between" key={item.name}>
+              <div key={item.name} className="flex justify-between">
                 <span>{item.name}</span>
                 <strong>{item.share}%</strong>
               </div>
             ))}
             {distribution.length === 0 && (
-              <p className="text-sm text-default-500">Sin distribucion para los filtros.</p>
+              <p className="text-sm text-default-500">
+                Sin distribucion para los filtros.
+              </p>
             )}
           </div>
         </article>
@@ -92,24 +94,28 @@ export default function ProductAnalysisPage() {
           </p>
           <div className="mt-6 space-y-3">
             {heatmapValues.map((row, rowIndex) => (
-              <div className="grid grid-cols-7 gap-2" key={`row-${rowIndex}`}>
+              <div key={`row-${rowIndex}`} className="grid grid-cols-7 gap-2">
                 {row.map((cell, index) => (
                   <div
-                    className={`h-9 rounded-md ${heatColor(cell)}`}
                     key={`cell-${rowIndex}-${index}`}
+                    className={`h-9 rounded-md ${heatColor(cell)}`}
                   />
                 ))}
               </div>
             ))}
             {heatmapValues.length === 0 && (
-              <p className="text-sm text-default-500">Sin datos de intensidad.</p>
+              <p className="text-sm text-default-500">
+                Sin datos de intensidad.
+              </p>
             )}
           </div>
         </article>
       </div>
 
       <article className="financial-card">
-        <h2 className="financial-section-title">Productos con Mejor Rendimiento</h2>
+        <h2 className="financial-section-title">
+          Productos con Mejor Rendimiento
+        </h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead>
@@ -124,11 +130,15 @@ export default function ProductAnalysisPage() {
             </thead>
             <tbody>
               {topProducts.map((row) => (
-                <tr className="border-t border-divider/70" key={row.name}>
+                <tr key={row.name} className="border-t border-divider/70">
                   <td className="py-3 text-sm font-medium">{row.name}</td>
-                  <td className="py-3 text-sm text-default-500">{row.category}</td>
+                  <td className="py-3 text-sm text-default-500">
+                    {row.category}
+                  </td>
                   <td className="py-3 text-sm">{row.netMargin}</td>
-                  <td className="py-3 text-sm font-semibold text-primary">{row.roi}</td>
+                  <td className="py-3 text-sm font-semibold text-primary">
+                    {row.roi}
+                  </td>
                   <td className="py-3 text-sm">{row.volume}</td>
                   <td className="py-3">
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">

@@ -17,10 +17,13 @@ import {
 import { useFinancialFilters } from "@/hooks/useFinancialFilters";
 import { getErrorMessage } from "@/utils/errors";
 
-const REGION_OPTIONS: Array<FinancialProjectionScenarioInput["marketExpansion"]> =
-  ["EMEA", "APAC", "LATAM"];
+const REGION_OPTIONS: Array<
+  FinancialProjectionScenarioInput["marketExpansion"]
+> = ["EMEA", "APAC", "LATAM"];
 
-function normalizeRegion(value?: string): FinancialProjectionScenarioInput["marketExpansion"] {
+function normalizeRegion(
+  value?: string,
+): FinancialProjectionScenarioInput["marketExpansion"] {
   if (value === "EMEA" || value === "APAC" || value === "LATAM") {
     return value;
   }
@@ -58,14 +61,18 @@ export default function SpeculationsProjectionsPage() {
   }, [filters.startDate, filters.endDate, filters.category]);
 
   const currentData = appliedData || data;
-  const categories = currentData?.availableCategories || data?.availableCategories || [];
+  const categories =
+    currentData?.availableCategories || data?.availableCategories || [];
   const comparison = currentData?.projectionComparison || [];
   const comparisonMax = Math.max(
     ...comparison.map((item) => item.baseline || 0),
     ...comparison.map((item) => item.scenario || 0),
     1,
   );
-  const targetLiquidity = currentData?.targetLiquidity || { amount: 0, baselineDelta: 0 };
+  const targetLiquidity = currentData?.targetLiquidity || {
+    amount: 0,
+    baselineDelta: 0,
+  };
   const risk = currentData?.riskAssessment || {
     label: "Moderado",
     level: 3,
@@ -76,6 +83,7 @@ export default function SpeculationsProjectionsPage() {
   const handleApplyModel = async () => {
     try {
       const response = await applyModel(scenario);
+
       setAppliedData(response);
       showToast({
         variant: "success",
@@ -106,7 +114,9 @@ export default function SpeculationsProjectionsPage() {
         !error &&
         data &&
         comparison.length === 0 &&
-        volatilityRows.length === 0 && <FinancialEmptyState label="Proyecciones" />}
+        volatilityRows.length === 0 && (
+          <FinancialEmptyState label="Proyecciones" />
+        )}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -163,7 +173,9 @@ export default function SpeculationsProjectionsPage() {
                 <span>Costos de Produccion</span>
                 <strong
                   className={
-                    scenario.productionCosts > 0 ? "text-danger" : "text-success"
+                    scenario.productionCosts > 0
+                      ? "text-danger"
+                      : "text-success"
                   }
                 >
                   {scenario.productionCosts >= 0 ? "+" : ""}
@@ -190,15 +202,18 @@ export default function SpeculationsProjectionsPage() {
               <div className="mt-2 flex gap-2">
                 {REGION_OPTIONS.map((region) => (
                   <button
+                    key={region}
                     className={
                       region === scenario.marketExpansion
                         ? "rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
                         : "rounded-lg border border-divider/70 px-3 py-1 text-xs font-semibold text-default-500"
                     }
-                    key={region}
                     type="button"
                     onClick={() =>
-                      setScenario((prev) => ({ ...prev, marketExpansion: region }))
+                      setScenario((prev) => ({
+                        ...prev,
+                        marketExpansion: region,
+                      }))
                     }
                   >
                     {region}
@@ -210,7 +225,9 @@ export default function SpeculationsProjectionsPage() {
         </article>
 
         <article className="financial-card">
-          <h2 className="financial-section-title">Proyeccion de Flujo de Caja</h2>
+          <h2 className="financial-section-title">
+            Proyeccion de Flujo de Caja
+          </h2>
           <p className="mt-1 text-sm text-default-500">
             Comparacion de escenario base vs modelo aplicado (12 meses futuros).
           </p>
@@ -227,12 +244,19 @@ export default function SpeculationsProjectionsPage() {
           <div className="mt-5 overflow-x-auto">
             {comparison.length > 0 ? (
               <div className="min-w-[640px]">
-                <svg className="h-72 w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                <svg
+                  className="h-72 w-full"
+                  preserveAspectRatio="none"
+                  viewBox="0 0 100 100"
+                >
                   <polyline
                     fill="none"
                     points={comparison
                       .map((point, index) => {
-                        const x = comparison.length > 1 ? (index / (comparison.length - 1)) * 100 : 0;
+                        const x =
+                          comparison.length > 1
+                            ? (index / (comparison.length - 1)) * 100
+                            : 0;
                         const y = 100 - (point.baseline / comparisonMax) * 90;
 
                         return `${x},${y}`;
@@ -245,7 +269,10 @@ export default function SpeculationsProjectionsPage() {
                     fill="none"
                     points={comparison
                       .map((point, index) => {
-                        const x = comparison.length > 1 ? (index / (comparison.length - 1)) * 100 : 0;
+                        const x =
+                          comparison.length > 1
+                            ? (index / (comparison.length - 1)) * 100
+                            : 0;
                         const y = 100 - (point.scenario / comparisonMax) * 90;
 
                         return `${x},${y}`;
@@ -257,7 +284,7 @@ export default function SpeculationsProjectionsPage() {
                 </svg>
                 <div className="mt-2 grid grid-cols-6 gap-2 text-[10px] uppercase text-default-500 md:grid-cols-12">
                   {comparison.map((point) => (
-                    <span className="truncate" key={point.month}>
+                    <span key={point.month} className="truncate">
                       {point.month}
                     </span>
                   ))}
@@ -276,7 +303,10 @@ export default function SpeculationsProjectionsPage() {
                   Mes inicial
                 </p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
-                  ${comparison[0].scenario.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  $
+                  {comparison[0].scenario.toLocaleString("en-US", {
+                    maximumFractionDigits: 0,
+                  })}
                 </p>
               </div>
               <div className="rounded-2xl border border-divider/70 p-3">
@@ -284,7 +314,11 @@ export default function SpeculationsProjectionsPage() {
                   Mes final
                 </p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
-                  ${comparison[comparison.length - 1].scenario.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  $
+                  {comparison[comparison.length - 1].scenario.toLocaleString(
+                    "en-US",
+                    { maximumFractionDigits: 0 },
+                  )}
                 </p>
               </div>
               <div className="rounded-2xl border border-divider/70 p-3">
@@ -327,7 +361,9 @@ export default function SpeculationsProjectionsPage() {
           </h2>
           <p className="mt-2 text-sm text-default-500">
             Liquidez objetivo $
-            {targetLiquidity.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+            {targetLiquidity.amount.toLocaleString("en-US", {
+              maximumFractionDigits: 2,
+            })}
             M {" · "}
             {targetLiquidity.baselineDelta >= 0 ? "+" : ""}
             {targetLiquidity.baselineDelta.toLocaleString("en-US", {
@@ -347,7 +383,7 @@ export default function SpeculationsProjectionsPage() {
               </thead>
               <tbody>
                 {volatilityRows.map((row) => (
-                  <tr className="border-t border-divider/70" key={row.segment}>
+                  <tr key={row.segment} className="border-t border-divider/70">
                     <td className="py-3 text-sm font-medium">{row.segment}</td>
                     <td className="py-3 text-sm">{row.volatility}</td>
                     <td

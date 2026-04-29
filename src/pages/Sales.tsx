@@ -741,7 +741,8 @@ export default function SalesPage() {
                         onClick={() => navigate(`/sales/${order._id}`)}
                       >
                         <td className="px-3 py-3 text-sm font-semibold text-foreground">
-                          {order.orderNumber || `Pedido #${order._id.slice(-6)}`}
+                          {order.orderNumber ||
+                            `Pedido #${order._id.slice(-6)}`}
                         </td>
                         <td className="px-3 py-3 text-sm text-default-600">
                           {getClientName(order.client)}
@@ -788,7 +789,8 @@ export default function SalesPage() {
                           {getClientName(order.client)}
                         </h3>
                         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-default-500">
-                          {order.orderNumber || `Pedido #${order._id.slice(-6)}`}
+                          {order.orderNumber ||
+                            `Pedido #${order._id.slice(-6)}`}
                         </p>
                         <p className="mt-1 text-xs uppercase tracking-[0.16em] text-default-400">
                           {new Date(order.createdAt).toLocaleDateString()}

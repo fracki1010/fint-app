@@ -1,7 +1,7 @@
+import type { FinancialFilters } from "@/hooks/useFinancial";
+
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-
-import type { FinancialFilters } from "@/hooks/useFinancial";
 
 type FilterPreset = {
   monthsBack?: number;
@@ -34,7 +34,10 @@ function buildDefaultFilters(preset: FilterPreset = {}): FinancialFilters {
 
 export function useFinancialFilters(preset: FilterPreset = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const defaults = useMemo(() => buildDefaultFilters(preset), [preset.daysBack, preset.monthsBack, preset.ytd]);
+  const defaults = useMemo(
+    () => buildDefaultFilters(preset),
+    [preset.daysBack, preset.monthsBack, preset.ytd],
+  );
 
   const filters: FinancialFilters = {
     startDate: searchParams.get("startDate") || defaults.startDate || "",

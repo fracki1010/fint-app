@@ -171,7 +171,9 @@ export function useDashboardOptionalKpis(days = 90) {
     queryKey: ["dashboard-optional-kpis", days],
     queryFn: async () => {
       const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const startDate = new Date(
+        endDate.getTime() - days * 24 * 60 * 60 * 1000,
+      );
 
       const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
 

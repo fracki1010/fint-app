@@ -85,20 +85,19 @@ export default function SettingsPage() {
   };
 
   const normalizePhoneDigits = (value: string) =>
-    value
-      .toString()
-      .trim()
-      .replace(/[^\d]/g, "");
+    value.toString().trim().replace(/[^\d]/g, "");
 
   const whatsappNumberFormat = formData.whatsappNumberFormat || "AR";
 
   const handleAddAuthorizedNumber = () => {
     const nextNumber = normalizePhoneDigits(newAuthorizedNumber);
+
     if (!nextNumber) {
       showToast({
         variant: "warning",
         message: "Ingresa un numero valido para agregar.",
       });
+
       return;
     }
 
@@ -113,6 +112,7 @@ export default function SettingsPage() {
         variant: "warning",
         message: "Ese numero ya esta en autorizados.",
       });
+
       return;
     }
 
@@ -139,16 +139,18 @@ export default function SettingsPage() {
         whatsappAdminNumber: normalizePhoneDigits(
           (formData.whatsappAdminNumber || "").toString(),
         ),
-        whatsappAuthorizedNumbers: (
-          Array.isArray(formData.whatsappAuthorizedNumbers)
-            ? formData.whatsappAuthorizedNumbers
-            : []
+        whatsappAuthorizedNumbers: (Array.isArray(
+          formData.whatsappAuthorizedNumbers,
+        )
+          ? formData.whatsappAuthorizedNumbers
+          : []
         )
           .map((value) => normalizePhoneDigits(value.toString()))
           .filter(Boolean),
       };
 
       const updated = await updateSettings(payload);
+
       setFormData((prev) => ({ ...prev, ...updated }));
       showToast({
         variant: "success",
@@ -206,6 +208,7 @@ export default function SettingsPage() {
             status.lastError ||
             "WhatsApp no pudo iniciar. Revisa el estado y vuelve a intentar.",
         });
+
         return;
       }
 
@@ -231,6 +234,7 @@ export default function SettingsPage() {
   const handleStopWhatsApp = async () => {
     try {
       const status = await stopWhatsApp();
+
       showToast({
         variant: status.status === "error" ? "error" : "success",
         message:
@@ -249,6 +253,7 @@ export default function SettingsPage() {
   const handleRestartWhatsApp = async () => {
     try {
       const status = await restartWhatsApp();
+
       if (status.status === "error" || status.status === "auth_failure") {
         showToast({
           variant: "error",
@@ -256,6 +261,7 @@ export default function SettingsPage() {
             status.lastError ||
             "WhatsApp no pudo reiniciarse. Revisa el estado y vuelve a intentar.",
         });
+
         return;
       }
 
@@ -734,7 +740,9 @@ export default function SettingsPage() {
                     color="primary"
                     isLoading={savingWhatsAppAccess}
                     size="sm"
-                    startContent={!savingWhatsAppAccess ? <Save size={14} /> : null}
+                    startContent={
+                      !savingWhatsAppAccess ? <Save size={14} /> : null
+                    }
                     variant="solid"
                     onClick={handleSaveWhatsAppAccess}
                   >
@@ -867,7 +875,6 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
-
         </div>
       );
     }
@@ -1017,8 +1024,7 @@ export default function SettingsPage() {
                   Tema visual y preferencias de visualizacion.
                 </p>
                 <p className="mt-2 text-xs text-default-400">
-                  Tema actual:{" "}
-                  {formData.theme === "dark" ? "Oscuro" : "Claro"}
+                  Tema actual: {formData.theme === "dark" ? "Oscuro" : "Claro"}
                 </p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary">

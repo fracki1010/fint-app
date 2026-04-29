@@ -20,8 +20,8 @@ export function FinancialFilterBar({
         {onReset && (
           <button
             className="rounded-lg border border-divider/70 px-3 py-1 text-xs font-semibold text-default-600 transition-colors hover:bg-content2/60"
-            onClick={onReset}
             type="button"
+            onClick={onReset}
           >
             Reiniciar
           </button>
@@ -36,7 +36,9 @@ export function FinancialFilterBar({
             className="corp-input w-full rounded-xl px-3 py-2 text-sm"
             type="date"
             value={filters.startDate || ""}
-            onChange={(e) => onChange({ ...filters, startDate: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...filters, startDate: e.target.value })
+            }
           />
         </label>
         <label className="block">

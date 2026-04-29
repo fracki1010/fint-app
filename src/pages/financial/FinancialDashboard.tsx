@@ -101,15 +101,16 @@ export default function FinancialDashboardPage() {
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <article className="financial-card">
-          <h2 className="financial-section-title">
-            Flujo de Ingresos Mensual
-          </h2>
+          <h2 className="financial-section-title">Flujo de Ingresos Mensual</h2>
           <p className="mt-1 text-sm text-default-500">
             Seguimiento de rendimiento entre unidades de negocio.
           </p>
           <div className="mt-6 grid h-64 grid-cols-6 items-end gap-3">
             {monthly.map((point) => (
-              <div className="flex flex-col items-center gap-2" key={point.month}>
+              <div
+                key={point.month}
+                className="flex flex-col items-center gap-2"
+              >
                 <div
                   className="w-full rounded-t-xl bg-primary/35"
                   style={{
@@ -135,15 +136,17 @@ export default function FinancialDashboardPage() {
         </article>
 
         <article className="financial-card">
-          <h2 className="financial-section-title">
-            Ventas por Categoria
-          </h2>
+          <h2 className="financial-section-title">Ventas por Categoria</h2>
           <div className="mt-6 space-y-4">
             {categoryShares.map((segment) => (
               <div key={segment.name}>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-foreground">{segment.name}</span>
-                  <span className="text-sm font-semibold">{segment.share}%</span>
+                  <span className="text-sm text-foreground">
+                    {segment.name}
+                  </span>
+                  <span className="text-sm font-semibold">
+                    {segment.share}%
+                  </span>
                 </div>
                 <div className="mt-2 h-2 rounded-full bg-primary/12">
                   <div
@@ -154,7 +157,9 @@ export default function FinancialDashboardPage() {
               </div>
             ))}
             {categoryShares.length === 0 && (
-              <p className="text-sm text-default-500">Sin datos por categoria.</p>
+              <p className="text-sm text-default-500">
+                Sin datos por categoria.
+              </p>
             )}
           </div>
         </article>
@@ -162,9 +167,7 @@ export default function FinancialDashboardPage() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <article className="financial-card">
-          <h2 className="financial-section-title">
-            Transacciones Recientes
-          </h2>
+          <h2 className="financial-section-title">Transacciones Recientes</h2>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[560px]">
               <thead>
@@ -177,10 +180,16 @@ export default function FinancialDashboardPage() {
               </thead>
               <tbody>
                 {transactions.map((item) => (
-                  <tr className="border-t border-divider/60" key={item.id}>
-                    <td className="py-3 text-sm font-medium">{item.recipient}</td>
-                    <td className="py-3 text-sm text-default-500">{item.date}</td>
-                    <td className={`py-3 text-sm font-medium ${statusTone(item.status)}`}>
+                  <tr key={item.id} className="border-t border-divider/60">
+                    <td className="py-3 text-sm font-medium">
+                      {item.recipient}
+                    </td>
+                    <td className="py-3 text-sm text-default-500">
+                      {item.date}
+                    </td>
+                    <td
+                      className={`py-3 text-sm font-medium ${statusTone(item.status)}`}
+                    >
                       {item.status}
                     </td>
                     <td className="py-3 text-right text-sm font-semibold">
@@ -202,9 +211,7 @@ export default function FinancialDashboardPage() {
 
         <article className="financial-card">
           <div className="flex items-center justify-between">
-            <h2 className="financial-section-title">
-              Alertas del Sistema
-            </h2>
+            <h2 className="financial-section-title">Alertas del Sistema</h2>
             <span className="rounded-full bg-danger/12 px-3 py-1 text-xs font-semibold text-danger">
               Accion Requerida
             </span>
@@ -213,12 +220,12 @@ export default function FinancialDashboardPage() {
           <div className="mt-5 space-y-3">
             {insights.map((insight) => (
               <div
+                key={insight.id}
                 className={`rounded-2xl border p-4 ${
                   insight.severity === "danger"
                     ? "border-danger/30 bg-danger/5"
                     : "border-warning/30 bg-warning/5"
                 }`}
-                key={insight.id}
               >
                 <div className="flex items-start gap-3">
                   {insight.severity === "danger" ? (

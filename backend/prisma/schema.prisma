@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Supply {
+  id            String   @id
+  name          String
+  sku           String?
+  unit          String
+  currentStock  Float    @default(0)
+  minStock      Float    @default(0)
+  referenceCost Float?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  movements     SupplyMovement[]
+  purchaseItems PurchaseItem[]
+}
+
+model SupplyMovement {
+  id          String   @id
+  supplyItemId String
+  type        String
+  quantity    Float
+  reason      String
+  sourceType  String?
+  sourceId    String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  supply      Supply   @relation(fields: [supplyItemId], references: [id])
+}
+
+model Purchase {
+  id               String   @id
+  supplierId       String
+  date             String
+  status           String
+  paymentCondition String
+  subtotal         Float
+  tax              Float
+  total            Float
+  notes            String?
+  createdBy        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  items            PurchaseItem[]
+}
+
+model PurchaseItem {
+  id          String @id
+  purchaseId  String
+  supplyItemId String
+  quantity    Float
+  unitCost    Float
+  lineTotal   Float
+
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  supply      Supply   @relation(fields: [supplyItemId], references: [id])
+}
+
+model SupplierAccountEntry {
+  id            String   @id
+  supplierId    String
+  date          String
+  type          String
+  amount        Float
+  sign          Int
+  purchaseId    String?
+  paymentMethod String?
+  reference     String?
+  notes         String?
+  createdBy     String?
+  createdAt     DateTime @default(now())
+}

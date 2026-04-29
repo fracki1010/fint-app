@@ -14,11 +14,14 @@ import api, {
   clearAuthStorage,
 } from "@/api/axios";
 
-interface AuthUser {
+export interface AuthUser {
   _id: string;
   fullName: string;
   email: string;
   isActive: boolean;
+  role?: string;
+  roles?: string[];
+  permissions?: string[];
 }
 
 interface AuthContextValue {

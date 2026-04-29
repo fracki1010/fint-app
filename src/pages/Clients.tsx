@@ -4,6 +4,7 @@ import {
   UserPlus,
   Phone,
   ChevronRight,
+  Wallet,
   X,
   Loader2,
   Mail,
@@ -146,154 +147,154 @@ function ClientFormModal({
         paddingBottom: `calc(max(env(safe-area-inset-bottom), 1rem) + ${keyboardInset}px)`,
       }}
     >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="section-kicker">
-                {mode === "create" ? "Alta de Cliente" : "Edicion"}
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-                {mode === "create" ? "Nuevo cliente" : "Editar cliente"}
-              </h2>
-            </div>
-            <button
-              className="app-panel-soft flex h-10 w-10 items-center justify-center rounded-2xl text-default-500"
-              onClick={onClose}
-            >
-              <X size={18} />
-            </button>
-          </div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="section-kicker">
+            {mode === "create" ? "Alta de Cliente" : "Edicion"}
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+            {mode === "create" ? "Nuevo cliente" : "Editar cliente"}
+          </h2>
+        </div>
+        <button
+          className="app-panel-soft flex h-10 w-10 items-center justify-center rounded-2xl text-default-500"
+          onClick={onClose}
+        >
+          <X size={18} />
+        </button>
+      </div>
 
-          <div
-            ref={formScrollRef}
-            className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1"
-            style={{
-              paddingBottom: `calc(0.75rem + ${keyboardInset}px)`,
-            }}
-          >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="block min-w-0">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                  Nombre
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  value={formData.name}
-                  onChange={(e) => onChange("name", e.target.value)}
-                />
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                  Empresa
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  value={formData.company}
-                  onChange={(e) => onChange("company", e.target.value)}
-                />
-              </label>
-            </div>
+      <div
+        ref={formScrollRef}
+        className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1"
+        style={{
+          paddingBottom: `calc(0.75rem + ${keyboardInset}px)`,
+        }}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="block min-w-0">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+              Nombre
+            </span>
+            <input
+              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+              value={formData.name}
+              onChange={(e) => onChange("name", e.target.value)}
+            />
+          </label>
+          <label className="block min-w-0">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+              Empresa
+            </span>
+            <input
+              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+              value={formData.company}
+              onChange={(e) => onChange("company", e.target.value)}
+            />
+          </label>
+        </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="block min-w-0">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                  Telefono
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  value={formData.phone}
-                  onChange={(e) => onChange("phone", e.target.value)}
-                />
-              </label>
-              <label className="block min-w-0">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                  Documento fiscal
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  placeholder="CUIT / NIT / RUC"
-                  value={formData.taxId}
-                  onChange={(e) => onChange("taxId", e.target.value)}
-                />
-              </label>
-            </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="block min-w-0">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+              Telefono
+            </span>
+            <input
+              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+              value={formData.phone}
+              onChange={(e) => onChange("phone", e.target.value)}
+            />
+          </label>
+          <label className="block min-w-0">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+              Documento fiscal
+            </span>
+            <input
+              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+              placeholder="CUIT / NIT / RUC"
+              value={formData.taxId}
+              onChange={(e) => onChange("taxId", e.target.value)}
+            />
+          </label>
+        </div>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                Email
-              </span>
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.email}
-                onChange={(e) => onChange("email", e.target.value)}
-              />
-            </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+            Email
+          </span>
+          <input
+            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+            value={formData.email}
+            onChange={(e) => onChange("email", e.target.value)}
+          />
+        </label>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                Direccion comercial
-              </span>
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.address}
-                onChange={(e) => onChange("address", e.target.value)}
-              />
-            </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+            Direccion comercial
+          </span>
+          <input
+            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+            value={formData.address}
+            onChange={(e) => onChange("address", e.target.value)}
+          />
+        </label>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                Direccion fiscal
-              </span>
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.fiscalAddress}
-                onChange={(e) => onChange("fiscalAddress", e.target.value)}
-              />
-            </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+            Direccion fiscal
+          </span>
+          <input
+            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+            value={formData.fiscalAddress}
+            onChange={(e) => onChange("fiscalAddress", e.target.value)}
+          />
+        </label>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                Deuda
-              </span>
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                min="0"
-                step="0.01"
-                type="number"
-                value={formData.debt}
-                onChange={(e) => onChange("debt", e.target.value)}
-              />
-            </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+            Deuda
+          </span>
+          <input
+            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+            min="0"
+            step="0.01"
+            type="number"
+            value={formData.debt}
+            onChange={(e) => onChange("debt", e.target.value)}
+          />
+        </label>
 
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-                Notas
-              </span>
-              <textarea
-                className="corp-input min-h-28 w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.notes}
-                onChange={(e) => onChange("notes", e.target.value)}
-              />
-            </label>
-          </div>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
+            Notas
+          </span>
+          <textarea
+            className="corp-input min-h-28 w-full rounded-2xl px-4 py-3 text-sm"
+            value={formData.notes}
+            onChange={(e) => onChange("notes", e.target.value)}
+          />
+        </label>
+      </div>
 
-          <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
-            <button
-              className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
-              onClick={onClose}
-            >
-              Cancelar
-            </button>
-            <button
-              className="flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-              disabled={submitting}
-              onClick={onSubmit}
-            >
-              <span className="flex items-center justify-center gap-2">
-                {submitting && <Loader2 className="animate-spin" size={18} />}
-                {mode === "create" ? "Crear cliente" : "Guardar cambios"}
-              </span>
-            </button>
-          </div>
+      <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
+        <button
+          className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
+          onClick={onClose}
+        >
+          Cancelar
+        </button>
+        <button
+          className="flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          disabled={submitting}
+          onClick={onSubmit}
+        >
+          <span className="flex items-center justify-center gap-2">
+            {submitting && <Loader2 className="animate-spin" size={18} />}
+            {mode === "create" ? "Crear cliente" : "Guardar cambios"}
+          </span>
+        </button>
+      </div>
     </div>
   );
 
@@ -758,6 +759,15 @@ export default function ClientsPage() {
               <div className="mt-6 flex gap-3">
                 <button
                   className="app-panel-soft flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
+                  onClick={() =>
+                    navigate(`/suppliers/${selectedClient._id}/account`)
+                  }
+                >
+                  <Wallet size={18} />
+                  Cuenta corriente
+                </button>
+                <button
+                  className="app-panel-soft flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
                   onClick={() => setIsEditOpen(true)}
                 >
                   <Pencil size={18} />
@@ -895,7 +905,10 @@ export default function ClientsPage() {
                           {client.taxId || "No definido"}
                         </td>
                         <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">
-                          {formatCompactCurrency(Number(client.debt || 0), currency)}
+                          {formatCompactCurrency(
+                            Number(client.debt || 0),
+                            currency,
+                          )}
                         </td>
                         <td className="px-3 py-3 text-right text-sm text-primary">
                           Ver ficha

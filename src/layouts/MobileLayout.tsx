@@ -3,7 +3,9 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
   ClipboardList,
+  Boxes,
   ReceiptText,
+  ShoppingCart,
   Users,
   Settings,
   ChartNoAxesCombined,
@@ -19,7 +21,9 @@ export default function MobileLayout() {
   const tabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
     { path: "/products", label: "PRODUCTOS", icon: ClipboardList },
+    { path: "/supplies", label: "INSUMOS", icon: Boxes },
     { path: "/sales", label: "VENTAS", icon: ReceiptText },
+    { path: "/purchases", label: "COMPRAS", icon: ShoppingCart },
     { path: "/clients", label: "CLIENTES", icon: Users },
     { path: "/settings", label: "AJUSTES", icon: Settings },
   ];
@@ -86,8 +90,8 @@ export default function MobileLayout() {
                       ? "border-primary/40 bg-primary/10 text-primary"
                       : "border-transparent text-default-500 hover:border-white/10 hover:text-foreground"
                   }`}
-                  onClick={() => navigate(tab.path)}
                   type="button"
+                  onClick={() => navigate(tab.path)}
                 >
                   <Icon size={16} />
                   <span>{tab.label}</span>
@@ -116,8 +120,8 @@ export default function MobileLayout() {
                       ? "border-primary/40 bg-primary/10 text-primary"
                       : "border-transparent text-default-500 hover:border-white/10 hover:text-foreground"
                   }`}
-                  onClick={() => navigate(tab.path)}
                   type="button"
+                  onClick={() => navigate(tab.path)}
                 >
                   <Icon size={16} />
                   <span>{tab.label}</span>

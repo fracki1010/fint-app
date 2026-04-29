@@ -13,7 +13,7 @@ const firebaseConfig = {
   storageBucket: "fint-guard.firebasestorage.app",
   messagingSenderId: "278124006688",
   appId: "1:278124006688:web:ed854f7e49e907493b1b45",
-  measurementId: "G-WXDLS69E3Z"
+  measurementId: "G-WXDLS69E3Z",
 };
 
 // Initialize Firebase
