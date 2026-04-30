@@ -12,18 +12,21 @@ import {
   AlertCircle,
   Package,
   ArrowRight,
+  History,
+  ClipboardList,
 } from "lucide-react";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 
-import { useRecipes, CreateRecipePayload, UpdateRecipePayload } from "@/hooks/useRecipes";
+import { useRecipes, useProductionLogs, CreateRecipePayload, UpdateRecipePayload } from "@/hooks/useRecipes";
 import { useSupplies } from "@/hooks/useSupplies";
 import { useProducts } from "@/hooks/useProducts";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
-import { Recipe, Supply, Product } from "@/types";
+import { Recipe, Supply, Product, ProductionLog } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
+import { formatCurrency, formatCompactCurrency } from "@/utils/currency";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -35,6 +38,16 @@ function getSupplyObj(s: Supply | string | undefined): Supply | null {
 function getProductObj(p: Product | string | null | undefined): Product | null {
   if (p && typeof p === "object") return p as Product;
   return null;
+}
+
+function calcRecipeCost(recipe: Recipe) {
+  const batchCost = recipe.ingredients.reduce((acc, ing) => {
+    const s = getSupplyObj(ing.supply);
+    if (!s || !s.referenceCost) return acc;
+    return acc + ing.quantity * s.referenceCost;
+  }, 0);
+  const unitCost = recipe.yieldQuantity > 0 ? batchCost / recipe.yieldQuantity : 0;
+  return { batchCost, unitCost };
 }
 
 function stockStatusColor(available: number, needed: number) {
@@ -418,6 +431,7 @@ function RecipeDrawer({
   products,
   isOpen,
   isDesktop,
+  currency,
   onClose,
   onDeleted,
   onUpdated,
@@ -427,6 +441,7 @@ function RecipeDrawer({
   products: Product[];
   isOpen: boolean;
   isDesktop: boolean;
+  currency: string;
   onClose: () => void;
   onDeleted: (id: string) => void;
   onUpdated: (r: Recipe) => void;
@@ -522,6 +537,8 @@ function RecipeDrawer({
     }
 
     // Detail view
+    const { batchCost, unitCost } = calcRecipeCost(recipe);
+
     return (
       <div className={`flex flex-col ${isDesktop ? "w-[480px]" : "h-full"} bg-content1`}>
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
@@ -593,23 +610,47 @@ function RecipeDrawer({
                       {s?.name || "Insumo"}
                     </span>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex shrink-0 flex-col items-end gap-0.5">
                     <span className="text-sm font-bold text-foreground">
                       {ing.quantity} {s?.unit || ""}
                     </span>
-                    {s && (
-                      <span className={`text-[11px] font-semibold ${stockOk ? "text-success" : "text-danger"}`}>
-                        ({s.currentStock} disp.)
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {s?.referenceCost ? (
+                        <span className="text-[11px] text-default-400">
+                          {formatCompactCurrency(ing.quantity * s.referenceCost, currency)}
+                        </span>
+                      ) : null}
+                      {s && (
+                        <span className={`text-[11px] font-semibold ${stockOk ? "text-success" : "text-danger"}`}>
+                          ({s.currentStock} disp.)
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
 
+          {/* Cost summary */}
+          {batchCost > 0 && (
+            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-default-400">
+                Costo estimado
+              </p>
+              <div className="flex justify-between text-sm">
+                <span className="text-default-400">Por lote</span>
+                <span className="font-semibold">{formatCurrency(batchCost, currency)}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-sm">
+                <span className="text-default-400">Por unidad</span>
+                <span className="font-bold text-primary">{formatCurrency(unitCost, currency)}</span>
+              </div>
+            </div>
+          )}
+
           {recipe.notes && (
-            <div className="mt-4 rounded-xl border border-white/6 bg-content2 px-4 py-3">
+            <div className="mt-3 rounded-xl border border-white/6 bg-content2 px-4 py-3">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-default-400">
                 Notas
               </p>
@@ -663,6 +704,50 @@ function RecipeDrawer({
   );
 }
 
+// ── Production log helpers ────────────────────────────────────────────
+
+function formatDateTime(dateStr?: string) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function ProductionLogRow({ log }: { log: ProductionLog }) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-white/6 bg-content2 px-4 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15">
+        <FlaskConical size={14} className="text-success" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-sm font-semibold">{log.recipeName}</span>
+          <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">
+            {log.unitsProduced} ud.
+          </span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-default-400">
+          <span>{formatDateTime(log.createdAt)}</span>
+          <span>·</span>
+          <span>{log.batchesProduced} lote{log.batchesProduced !== 1 ? "s" : ""}</span>
+          {log.notes && (
+            <>
+              <span>·</span>
+              <span className="truncate">{log.notes}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────
 
 export default function RecipesPage() {
@@ -670,13 +755,16 @@ export default function RecipesPage() {
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [pageView, setPageView] = useState<"recipes" | "history">("recipes");
 
   const isDesktop = useIsDesktop();
   const isHeaderCompact = useMobileHeaderCompact();
-  useSettings();
+  const { settings } = useSettings();
+  const currency = settings?.currency || "USD";
 
   const { showToast } = useAppToast();
   const { recipes, loading, createRecipe, isCreating } = useRecipes();
+  const { logs, loading: logsLoading } = useProductionLogs();
   const { supplies } = useSupplies();
   const { products } = useProducts();
 
@@ -735,35 +823,89 @@ export default function RecipesPage() {
         <div className="flex items-center gap-3">
           <div className={`min-w-0 flex-1 ${isHeaderCompact ? "hidden" : "block"}`}>
             <p className="text-lg font-bold lg:text-xl">Recetas</p>
-            <p className="text-xs text-default-400">{recipes.length} receta{recipes.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-default-400">
+              {pageView === "recipes"
+                ? `${recipes.length} receta${recipes.length !== 1 ? "s" : ""}`
+                : `${logs.length} produccion${logs.length !== 1 ? "es" : ""}`}
+            </p>
           </div>
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-content2 px-3 py-2">
-            <Search className="shrink-0 text-default-400" size={15} />
-            <input
-              className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-default-400 focus:outline-none"
-              placeholder="Buscar receta..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button className="text-default-400 hover:text-foreground" type="button" onClick={() => setSearch("")}>
-                <X size={14} />
+
+          {/* Tab toggle */}
+          <div className="flex shrink-0 rounded-xl border border-white/10 bg-content2 p-1">
+            <button
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${pageView === "recipes" ? "bg-primary text-white" : "text-default-400 hover:text-foreground"}`}
+              type="button"
+              onClick={() => setPageView("recipes")}
+            >
+              <ClipboardList size={13} />
+              <span className="hidden sm:inline">Recetas</span>
+            </button>
+            <button
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${pageView === "history" ? "bg-primary text-white" : "text-default-400 hover:text-foreground"}`}
+              type="button"
+              onClick={() => setPageView("history")}
+            >
+              <History size={13} />
+              <span className="hidden sm:inline">Historial</span>
+            </button>
+          </div>
+
+          {pageView === "recipes" && (
+            <>
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-content2 px-3 py-2">
+                <Search className="shrink-0 text-default-400" size={15} />
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-default-400 focus:outline-none"
+                  placeholder="Buscar receta..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button className="text-default-400 hover:text-foreground" type="button" onClick={() => setSearch("")}>
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <button
+                className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white transition hover:bg-primary/90"
+                type="button"
+                onClick={() => setCreateOpen(true)}
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">Nueva</span>
               </button>
-            )}
-          </div>
-          <button
-            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white transition hover:bg-primary/90"
-            type="button"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus size={16} />
-            <span className="hidden sm:inline">Nueva</span>
-          </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
+      {/* History view */}
+      {pageView === "history" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
+          {logsLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-default-400" size={28} />
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
+              <History size={40} />
+              <div>
+                <p className="font-semibold">Sin producciones</p>
+                <p className="text-xs">Todavía no se registró ninguna producción</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {logs.map((log) => (
+                <ProductionLogRow key={log._id} log={log} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Recipes list */}
+      {pageView === "recipes" && <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-default-400" size={28} />
@@ -786,6 +928,7 @@ export default function RecipesPage() {
                 const s = getSupplyObj(ing.supply);
                 return s && s.currentStock < ing.quantity;
               });
+              const { batchCost, unitCost } = calcRecipeCost(recipe);
 
               return (
                 <button
@@ -824,15 +967,25 @@ export default function RecipesPage() {
                     <span>·</span>
                     <span>Rinde {recipe.yieldQuantity} ud.</span>
                   </div>
+
+                  {batchCost > 0 && (
+                    <div className="flex items-center justify-between border-t border-white/8 pt-2 text-[11px]">
+                      <span className="text-default-400">Costo/unidad</span>
+                      <span className="font-bold text-primary">
+                        {formatCompactCurrency(unitCost, currency)}
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Detail / Produce / Edit drawer */}
       <RecipeDrawer
+        currency={currency}
         isDesktop={isDesktop}
         isOpen={drawerOpen}
         products={products}

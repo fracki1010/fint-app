@@ -165,3 +165,14 @@ export interface ProduceResult {
   unitsProduced: number;
   ingredientsUsed: number;
 }
+
+export interface ProductionLog {
+  _id: string;
+  recipe: string;
+  recipeName: string;
+  batchesProduced: number;
+  unitsProduced: number;
+  notes?: string;
+  producedBy?: string | null;
+  createdAt?: string;
+}

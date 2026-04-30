@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@/api/axios";
-import { Recipe, ProduceResult } from "@/types";
+import { Recipe, ProduceResult, ProductionLog } from "@/types";
 
 export interface RecipeIngredientPayload {
   supply: string;
@@ -27,6 +27,21 @@ export interface UpdateRecipePayload {
 export interface ProducePayload {
   quantity: number;
   notes?: string;
+}
+
+export function useProductionLogs(options?: { recipeId?: string; limit?: number; enabled?: boolean }) {
+  const { data: logs = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ["production-logs", options?.recipeId, options?.limit],
+    enabled: options?.enabled ?? true,
+    queryFn: async () => {
+      const params: Record<string, string> = {};
+      if (options?.recipeId) params.recipeId = options.recipeId;
+      if (options?.limit) params.limit = String(options.limit);
+      const response = await api.get<ProductionLog[]>("/recipes/production-logs", { params });
+      return response.data;
+    },
+  });
+  return { logs, loading, error: error?.message || null, refetch };
 }
 
 export function useRecipes(options?: { enabled?: boolean }) {
@@ -90,6 +105,7 @@ export function useRecipes(options?: { enabled?: boolean }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supplies"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["production-logs"] });
     },
   });
 

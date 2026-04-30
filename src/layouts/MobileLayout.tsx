@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   LayoutGrid,
   ClipboardList,
@@ -13,12 +14,14 @@ import {
   ShoppingCart,
   CreditCard,
   ChefHat,
+  Bell,
 } from "lucide-react";
 
 export default function MobileLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement | null>(null);
+  const { unreadCount } = useNotifications();
 
   const tabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
@@ -71,9 +74,23 @@ export default function MobileLayout() {
   return (
     <div className="MobileAppWrapper flex h-screen w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="hidden border-r border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_90%,transparent)] p-5 lg:block">
-        <div>
-          <p className="text-sm font-semibold text-foreground">Fint Suite</p>
-          <p className="text-xs text-default-500">Panel Operativo</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Fint Suite</p>
+            <p className="text-xs text-default-500">Panel Operativo</p>
+          </div>
+          <button
+            className="relative flex h-8 w-8 items-center justify-center rounded-xl text-default-400 transition hover:bg-content2 hover:text-foreground"
+            type="button"
+            onClick={() => navigate("/")}
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
         </div>
         <div className="mt-6">
           <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-default-400">
@@ -162,6 +179,7 @@ export default function MobileLayout() {
                 }`}
                 onClick={() => navigate(tab.path)}
               >
+                <div className="relative">
                 <Icon
                   className={
                     isActive
@@ -171,6 +189,12 @@ export default function MobileLayout() {
                   size={24}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
+                {tab.path === "/" && unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+                </div>
                 <span
                   className={`text-[10px] font-bold tracking-tight ${isActive ? "opacity-100" : "opacity-70"}`}
                 >
