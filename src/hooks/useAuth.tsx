@@ -14,11 +14,15 @@ import api, {
   clearAuthStorage,
 } from "@/api/axios";
 
-interface AuthUser {
+export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura";
+
+export interface AuthUser {
   _id: string;
   fullName: string;
   email: string;
+  role: UserRole;
   isActive: boolean;
+  isSuperAdmin?: boolean;
 }
 
 interface AuthContextValue {

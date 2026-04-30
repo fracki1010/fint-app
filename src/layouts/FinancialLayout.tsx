@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   LineChart,
   Settings as SettingsIcon,
+  ShoppingCart,
 } from "lucide-react";
 
 const financialNav = [
@@ -33,6 +34,12 @@ const financialNav = [
     label: "Proyecciones",
     mobileLabel: "PROYEC",
     icon: LineChart,
+  },
+  {
+    path: "/financial/purchases",
+    label: "Compras",
+    mobileLabel: "COMPRAS",
+    icon: ShoppingCart,
   },
   {
     path: "/settings",

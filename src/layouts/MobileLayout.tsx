@@ -15,6 +15,8 @@ import {
   CreditCard,
   ChefHat,
   Bell,
+  Truck,
+  UserCog,
 } from "lucide-react";
 
 export default function MobileLayout() {
@@ -34,8 +36,11 @@ export default function MobileLayout() {
   ];
   const desktopMainNav = [
     ...tabs,
+    { path: "/suppliers", label: "PROVEEDORES", icon: Truck },
     { path: "/recipes", label: "RECETAS", icon: ChefHat },
-    { path: "/supplier-account", label: "CUENTA CORRIENTE", icon: CreditCard },
+    { path: "/supplier-account", label: "CTA. PROVEEDORES", icon: CreditCard },
+    { path: "/client-account", label: "CTA. CLIENTES", icon: CreditCard },
+    { path: "/team", label: "EQUIPO", icon: UserCog },
   ];
   const desktopFinancialNav = [
     {
@@ -57,6 +62,11 @@ export default function MobileLayout() {
       path: "/financial/projections",
       label: "PROYECCIONES",
       icon: LineChart,
+    },
+    {
+      path: "/financial/purchases",
+      label: "COSTOS Y COMPRAS",
+      icon: ShoppingCart,
     },
   ];
 

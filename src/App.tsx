@@ -19,6 +19,9 @@ const SuppliesPage = lazy(() => import("@/pages/Supplies"));
 const PurchasesPage = lazy(() => import("@/pages/Purchases"));
 const SupplierAccountPage = lazy(() => import("@/pages/SupplierAccount"));
 const RecipesPage = lazy(() => import("@/pages/Recipes"));
+const SuppliersPage = lazy(() => import("@/pages/Suppliers"));
+const TeamPage = lazy(() => import("@/pages/Team"));
+const ClientAccountPage = lazy(() => import("@/pages/ClientAccount"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const FinancialDashboardPage = lazy(
   () => import("@/pages/financial/FinancialDashboard"),
@@ -31,6 +34,9 @@ const ProductAnalysisPage = lazy(
 );
 const SpeculationsProjectionsPage = lazy(
   () => import("@/pages/financial/SpeculationsProjections"),
+);
+const PurchasesDashboardPage = lazy(
+  () => import("@/pages/financial/PurchasesDashboard"),
 );
 
 function FullScreenLoader() {
@@ -94,6 +100,9 @@ function App() {
           <Route element={<PurchasesPage />} path="/purchases/:purchaseId" />
           <Route element={<SupplierAccountPage />} path="/supplier-account" />
           <Route element={<RecipesPage />} path="/recipes" />
+          <Route element={<SuppliersPage />} path="/suppliers" />
+          <Route element={<TeamPage />} path="/team" />
+          <Route element={<ClientAccountPage />} path="/client-account" />
           <Route element={<SettingsPage />} path="/settings" />
           <Route element={<FinancialLayout />}>
             <Route
@@ -115,6 +124,10 @@ function App() {
             <Route
               element={<SpeculationsProjectionsPage />}
               path="/financial/projections"
+            />
+            <Route
+              element={<PurchasesDashboardPage />}
+              path="/financial/purchases"
             />
           </Route>
           <Route element={<NotFoundPage />} path="*" />

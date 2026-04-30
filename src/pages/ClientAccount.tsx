@@ -13,37 +13,37 @@ import {
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 import { Select, SelectItem } from "@heroui/select";
 
-import { useSuppliers } from "@/hooks/useSuppliers";
+import { useClients } from "@/hooks/useClients";
 import {
-  useSupplierAccount,
-  CreatePaymentPayload,
-  CreateAccountEntryPayload,
-} from "@/hooks/useSupplierAccount";
+  useClientAccount,
+  CreateClientPaymentPayload,
+  CreateClientEntryPayload,
+} from "@/hooks/useClientAccount";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
-import { Supplier, SupplierEntryType, SupplierAccountEntry } from "@/types";
+import { Client, ClientEntryType, ClientAccountEntry } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { formatCurrency, formatCompactCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
-const ENTRY_TYPE_LABELS: Record<SupplierEntryType, string> = {
+const ENTRY_TYPE_LABELS: Record<ClientEntryType, string> = {
   CHARGE: "Cargo",
-  PAYMENT: "Pago",
+  PAYMENT: "Cobro",
   CREDIT_NOTE: "Nota de Crédito",
   DEBIT_NOTE: "Nota de Débito",
 };
 
-const ENTRY_TYPE_COLORS: Record<SupplierEntryType, string> = {
+const ENTRY_TYPE_COLORS: Record<ClientEntryType, string> = {
   CHARGE: "bg-danger/15 text-danger",
   PAYMENT: "bg-success/15 text-success",
   CREDIT_NOTE: "bg-primary/15 text-primary",
   DEBIT_NOTE: "bg-warning/15 text-warning",
 };
 
-const ENTRY_TYPES_FOR_FORM: Exclude<SupplierEntryType, "PAYMENT">[] = [
+const ENTRY_TYPES_FOR_FORM: Exclude<ClientEntryType, "PAYMENT">[] = [
   "CHARGE",
   "CREDIT_NOTE",
   "DEBIT_NOTE",
@@ -71,7 +71,7 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-function EntryTypeIcon({ type }: { type: SupplierEntryType }) {
+function EntryTypeIcon({ type }: { type: ClientEntryType }) {
   switch (type) {
     case "PAYMENT":
       return <ArrowUpRight size={14} />;
@@ -133,7 +133,7 @@ function PaymentForm({
       className={`flex flex-col ${isDesktop ? "w-[420px]" : "h-full"} bg-content1`}
     >
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <p className="text-base font-bold">Registrar Pago</p>
+        <p className="text-base font-bold">Registrar Cobro</p>
         <button
           className="rounded-full p-1 text-default-400 hover:text-foreground transition"
           type="button"
@@ -147,9 +147,7 @@ function PaymentForm({
         onSubmit={handleSubmit}
       >
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-default-500">
-            FECHA
-          </label>
+          <label className="text-xs font-semibold text-default-500">FECHA</label>
           <input
             required
             className={inputCls}
@@ -175,7 +173,7 @@ function PaymentForm({
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold text-default-500">
-            MEDIO DE PAGO
+            MEDIO DE COBRO
           </label>
           <input
             className={inputCls}
@@ -198,9 +196,7 @@ function PaymentForm({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-default-500">
-            NOTAS
-          </label>
+          <label className="text-xs font-semibold text-default-500">NOTAS</label>
           <textarea
             className={`${inputCls} resize-none`}
             placeholder="Observaciones..."
@@ -219,7 +215,7 @@ function PaymentForm({
           ) : (
             <ArrowUpRight size={16} />
           )}
-          Confirmar Pago
+          Confirmar Cobro
         </button>
       </form>
     </div>
@@ -230,7 +226,7 @@ function PaymentForm({
 
 type EntryFormState = {
   date: string;
-  type: Exclude<SupplierEntryType, "PAYMENT">;
+  type: Exclude<ClientEntryType, "PAYMENT">;
   amount: string;
   reference: string;
   notes: string;
@@ -296,7 +292,7 @@ function EntryForm({
             classNames={{ trigger: "bg-content2 border border-white/10 rounded-xl" }}
             selectedKeys={[form.type]}
             onSelectionChange={(keys) => {
-              const val = Array.from(keys)[0] as Exclude<SupplierEntryType, "PAYMENT">;
+              const val = Array.from(keys)[0] as Exclude<ClientEntryType, "PAYMENT">;
               if (val) set("type", val);
             }}
           >
@@ -306,9 +302,7 @@ function EntryForm({
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-default-500">
-            FECHA
-          </label>
+          <label className="text-xs font-semibold text-default-500">FECHA</label>
           <input
             required
             className={inputCls}
@@ -345,9 +339,7 @@ function EntryForm({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-default-500">
-            NOTAS
-          </label>
+          <label className="text-xs font-semibold text-default-500">NOTAS</label>
           <textarea
             className={`${inputCls} resize-none`}
             placeholder="Observaciones..."
@@ -379,7 +371,7 @@ function EntryRow({
   entry,
   currency,
 }: {
-  entry: SupplierAccountEntry;
+  entry: ClientAccountEntry;
   currency: string;
 }) {
   const signed = entry.amount * entry.sign;
@@ -433,13 +425,13 @@ function EntryRow({
 // ── Account Drawer ────────────────────────────────────────────────────
 
 function AccountDrawer({
-  supplier,
+  client,
   isOpen,
   isDesktop,
   onClose,
   currency,
 }: {
-  supplier: Supplier | null;
+  client: Client | null;
   isOpen: boolean;
   isDesktop: boolean;
   onClose: () => void;
@@ -456,11 +448,11 @@ function AccountDrawer({
     createEntry,
     isCreatingPayment,
     isCreatingEntry,
-  } = useSupplierAccount(supplier?._id);
+  } = useClientAccount(client?._id);
 
   const handlePayment = async (form: PaymentFormState) => {
     try {
-      const payload: CreatePaymentPayload = {
+      const payload: CreateClientPaymentPayload = {
         date: form.date,
         amount: parseFloat(form.amount),
         paymentMethod: form.paymentMethod || undefined,
@@ -468,7 +460,7 @@ function AccountDrawer({
         notes: form.notes || undefined,
       };
       await createPayment(payload);
-      showToast({ variant: "success", message: "Pago registrado" });
+      showToast({ variant: "success", message: "Cobro registrado" });
       setView("account");
     } catch (err) {
       showToast({ variant: "error", message: getErrorMessage(err, "Error inesperado") });
@@ -477,7 +469,7 @@ function AccountDrawer({
 
   const handleEntry = async (form: EntryFormState) => {
     try {
-      const payload: CreateAccountEntryPayload = {
+      const payload: CreateClientEntryPayload = {
         date: form.date,
         type: form.type,
         amount: parseFloat(form.amount),
@@ -528,7 +520,7 @@ function AccountDrawer({
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
             <p className="text-base font-bold">
-              {supplier?.company || supplier?.name || "Proveedor"}
+              {client?.name || "Cliente"}
             </p>
             <p className="text-xs text-default-400">Cuenta Corriente</p>
           </div>
@@ -556,9 +548,9 @@ function AccountDrawer({
             </p>
             <p className="mt-0.5 text-xs text-default-400">
               {balance > 0
-                ? "Debemos al proveedor"
+                ? "El cliente nos debe"
                 : balance < 0
-                  ? "El proveedor nos debe"
+                  ? "Tenemos saldo a favor del cliente"
                   : "Sin saldo pendiente"}
             </p>
           </div>
@@ -572,7 +564,7 @@ function AccountDrawer({
             onClick={() => setView("payment")}
           >
             <ArrowUpRight size={14} />
-            Registrar Pago
+            Registrar Cobro
           </button>
           <button
             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-content2 border border-white/10 py-2.5 text-xs font-bold text-default-500 transition hover:text-foreground"
@@ -645,30 +637,30 @@ function AccountDrawer({
 
 // ── Main Page ─────────────────────────────────────────────────────────
 
-export default function SupplierAccountPage() {
+export default function ClientAccountPage() {
   const [search, setSearch] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isDesktop = useIsDesktop();
   const isHeaderCompact = useMobileHeaderCompact();
   const { settings } = useSettings();
   const currency = settings?.currency || "USD";
-  const { suppliers, loading } = useSuppliers();
+  const { clients, loading } = useClients();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return suppliers;
-    return suppliers.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.company?.toLowerCase().includes(q) ||
-        s.taxId?.toLowerCase().includes(q),
+    if (!q) return clients;
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.phone?.toLowerCase().includes(q),
     );
-  }, [suppliers, search]);
+  }, [clients, search]);
 
-  const openAccount = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
+  const openAccount = (client: Client) => {
+    setSelectedClient(client);
     setDrawerOpen(true);
   };
 
@@ -681,7 +673,7 @@ export default function SupplierAccountPage() {
         <div className="flex items-center justify-between gap-3">
           <div className={isHeaderCompact ? "hidden" : ""}>
             <p className="text-lg font-bold lg:text-xl">Cuenta Corriente</p>
-            <p className="text-xs text-default-400">Proveedores</p>
+            <p className="text-xs text-default-400">Clientes</p>
           </div>
           <div
             className={`flex items-center gap-2 rounded-xl border border-white/10 bg-content2 px-3 py-2 ${isHeaderCompact ? "flex-1" : "w-full lg:max-w-sm"}`}
@@ -689,7 +681,7 @@ export default function SupplierAccountPage() {
             <Search className="shrink-0 text-default-400" size={15} />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-default-400 focus:outline-none"
-              placeholder="Buscar proveedor..."
+              placeholder="Buscar cliente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -716,37 +708,33 @@ export default function SupplierAccountPage() {
           <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
             <CreditCard size={36} />
             <div>
-              <p className="font-semibold">Sin proveedores</p>
+              <p className="font-semibold">Sin clientes</p>
               <p className="text-xs">
-                {search ? "No hay coincidencias" : "Todavía no hay proveedores cargados"}
+                {search ? "No hay coincidencias" : "Todavía no hay clientes cargados"}
               </p>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {filtered.map((supplier) => (
+            {filtered.map((client) => (
               <button
-                key={supplier._id}
+                key={client._id}
                 className="flex w-full items-center gap-3 rounded-2xl border border-white/6 bg-content2 px-4 py-3.5 text-left transition hover:border-primary/30 hover:bg-primary/5 active:scale-[0.99]"
                 type="button"
-                onClick={() => openAccount(supplier)}
+                onClick={() => openAccount(client)}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
-                  {getInitials(supplier.company || supplier.name)}
+                  {getInitials(client.name)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {supplier.company || supplier.name}
-                  </p>
-                  {supplier.company && (
+                  <p className="truncate text-sm font-semibold">{client.name}</p>
+                  {client.email && (
                     <p className="truncate text-xs text-default-400">
-                      {supplier.name}
+                      {client.email}
                     </p>
                   )}
-                  {supplier.taxId && (
-                    <p className="text-[11px] text-default-400">
-                      CUIT {supplier.taxId}
-                    </p>
+                  {client.phone && (
+                    <p className="text-[11px] text-default-400">{client.phone}</p>
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -761,10 +749,10 @@ export default function SupplierAccountPage() {
 
       {/* Account Drawer */}
       <AccountDrawer
+        client={selectedClient}
         currency={currency}
         isDesktop={isDesktop}
         isOpen={drawerOpen}
-        supplier={selectedSupplier}
         onClose={() => setDrawerOpen(false)}
       />
     </div>

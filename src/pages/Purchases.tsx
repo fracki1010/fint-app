@@ -22,7 +22,7 @@ import {
   CreatePurchaseItemPayload,
 } from "@/hooks/usePurchases";
 import { useSupplies } from "@/hooks/useSupplies";
-import { useClients } from "@/hooks/useClients";
+import { useSuppliers } from "@/hooks/useSuppliers";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
@@ -110,7 +110,7 @@ function CreatePurchaseModal({
   onClose,
   onSubmit,
   submitting,
-  clients,
+  suppliers,
   supplies,
   currency,
 }: {
@@ -118,7 +118,7 @@ function CreatePurchaseModal({
   onClose: () => void;
   onSubmit: (form: PurchaseFormState) => void;
   submitting: boolean;
-  clients: Array<{ _id: string; name: string; company?: string }>;
+  suppliers: Array<{ _id: string; name: string; company?: string }>;
   supplies: Array<{
     _id: string;
     name: string;
@@ -196,18 +196,18 @@ function CreatePurchaseModal({
               base: "w-full",
               listboxWrapper: "bg-content1",
             }}
-            defaultItems={clients}
+            defaultItems={suppliers}
             inputValue={form.supplierLabel}
             placeholder="Buscar proveedor..."
             variant="bordered"
             onInputChange={(v) => updateField("supplierLabel", v)}
             onSelectionChange={(key) => {
               if (!key) return;
-              const c = clients.find((cl) => cl._id === String(key));
+              const s = suppliers.find((sup) => sup._id === String(key));
 
-              if (c) {
-                updateField("supplierId", c._id);
-                updateField("supplierLabel", c.company || c.name);
+              if (s) {
+                updateField("supplierId", s._id);
+                updateField("supplierLabel", s.company || s.name);
               }
             }}
           >
@@ -501,7 +501,7 @@ export default function PurchasesPage() {
     usePurchaseDetail(purchaseId);
 
   const { supplies } = useSupplies();
-  const { clients } = useClients();
+  const { suppliers } = useSuppliers();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseStatus>(
@@ -1151,7 +1151,7 @@ export default function PurchasesPage() {
       {/* Create modal */}
       {showCreateModal && (
         <CreatePurchaseModal
-          clients={clients}
+          suppliers={suppliers}
           currency={currency}
           isDesktop={isDesktop}
           submitting={isCreating}

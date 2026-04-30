@@ -21,6 +21,21 @@ export interface Client {
   updatedAt?: string;
 }
 
+export interface Supplier {
+  _id: string;
+  name: string;
+  company?: string;
+  taxId?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+  isActive?: boolean;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Product {
   _id: string;
   sku?: string;
@@ -137,6 +152,45 @@ export interface SupplierAccountEntry {
 export interface SupplierAccount {
   entries: SupplierAccountEntry[];
   balance: number;
+}
+
+// ── Cuenta Corriente Cliente ──────────────────────────────────────────
+
+export type ClientEntryType = "CHARGE" | "PAYMENT" | "CREDIT_NOTE" | "DEBIT_NOTE";
+
+export interface ClientAccountEntry {
+  _id: string;
+  client: string;
+  date: string;
+  type: ClientEntryType;
+  amount: number;
+  sign: 1 | -1;
+  order?: string | null;
+  paymentMethod: string;
+  reference: string;
+  notes: string;
+  createdBy?: string | null;
+  createdAt?: string;
+}
+
+export interface ClientAccount {
+  entries: ClientAccountEntry[];
+  balance: number;
+}
+
+// ── Equipo ────────────────────────────────────────────────────────────
+
+export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura";
+
+export interface TeamMember {
+  _id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  roleLabel: string;
+  isActive: boolean;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 // ── Recetas ───────────────────────────────────────────────────────────
