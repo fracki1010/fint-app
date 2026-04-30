@@ -9,6 +9,10 @@ import {
   ChartNoAxesCombined,
   FileSpreadsheet,
   LineChart,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  ChefHat,
 } from "lucide-react";
 
 export default function MobileLayout() {
@@ -19,11 +23,17 @@ export default function MobileLayout() {
   const tabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
     { path: "/products", label: "PRODUCTOS", icon: ClipboardList },
+    { path: "/supplies", label: "INSUMOS", icon: Package },
+    { path: "/purchases", label: "COMPRAS", icon: ShoppingCart },
     { path: "/sales", label: "VENTAS", icon: ReceiptText },
     { path: "/clients", label: "CLIENTES", icon: Users },
     { path: "/settings", label: "AJUSTES", icon: Settings },
   ];
-  const desktopMainNav = tabs;
+  const desktopMainNav = [
+    ...tabs,
+    { path: "/recipes", label: "RECETAS", icon: ChefHat },
+    { path: "/supplier-account", label: "CUENTA CORRIENTE", icon: CreditCard },
+  ];
   const desktopFinancialNav = [
     {
       path: "/financial/dashboard",

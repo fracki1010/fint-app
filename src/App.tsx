@@ -15,6 +15,10 @@ const MovementDetailPage = lazy(() => import("@/pages/MovementDetail"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const NewOperationPage = lazy(() => import("@/pages/NewOperation"));
 const LoginPage = lazy(() => import("@/pages/Login"));
+const SuppliesPage = lazy(() => import("@/pages/Supplies"));
+const PurchasesPage = lazy(() => import("@/pages/Purchases"));
+const SupplierAccountPage = lazy(() => import("@/pages/SupplierAccount"));
+const RecipesPage = lazy(() => import("@/pages/Recipes"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const FinancialDashboardPage = lazy(
   () => import("@/pages/financial/FinancialDashboard"),
@@ -84,6 +88,12 @@ function App() {
             path="/movements/:movementId"
           />
           <Route element={<NewOperationPage />} path="/new-operation" />
+          <Route element={<SuppliesPage />} path="/supplies" />
+          <Route element={<SuppliesPage />} path="/supplies/:supplyId" />
+          <Route element={<PurchasesPage />} path="/purchases" />
+          <Route element={<PurchasesPage />} path="/purchases/:purchaseId" />
+          <Route element={<SupplierAccountPage />} path="/supplier-account" />
+          <Route element={<RecipesPage />} path="/recipes" />
           <Route element={<SettingsPage />} path="/settings" />
           <Route element={<FinancialLayout />}>
             <Route
