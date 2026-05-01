@@ -30,6 +30,7 @@ import { PurchaseStatus, PaymentCondition } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { formatCompactCurrency, formatCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
+import { PaginationBar } from "@/components/PaginationBar";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -503,6 +504,9 @@ export default function PurchasesPage() {
   const { supplies } = useSupplies();
   const { suppliers } = useSuppliers();
 
+  const DESKTOP_PAGE_SIZE = 15;
+  const [desktopPage, setDesktopPage] = useState(1);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseStatus>(
     "all",
@@ -532,6 +536,15 @@ export default function PurchasesPage() {
 
     return result;
   }, [purchases, searchQuery, activeFilter]);
+
+  useEffect(() => {
+    setDesktopPage(1);
+  }, [searchQuery, activeFilter]);
+
+  const desktopItems = isDesktop
+    ? filteredPurchases.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
+    : filteredPurchases;
+  const desktopTotalPages = Math.ceil(filteredPurchases.length / DESKTOP_PAGE_SIZE);
 
   const totalPurchased = useMemo(
     () => purchases.reduce((sum, p) => sum + (p.total || 0), 0),
@@ -917,7 +930,7 @@ export default function PurchasesPage() {
   // ── List view ─────────────────────────────────────────────────────
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -1030,7 +1043,7 @@ export default function PurchasesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPurchases.map((purchase) => (
+                    {(isDesktop ? desktopItems : filteredPurchases).map((purchase) => (
                       <tr
                         key={purchase._id}
                         className="cursor-pointer border-t border-divider/60"
@@ -1066,6 +1079,17 @@ export default function PurchasesPage() {
                   </tbody>
                 </table>
               </div>
+              {isDesktop && (
+                <PaginationBar
+                  from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
+                  page={desktopPage}
+                  to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, filteredPurchases.length)}
+                  total={filteredPurchases.length}
+                  totalPages={desktopTotalPages}
+                  onNext={() => setDesktopPage((p) => p + 1)}
+                  onPrev={() => setDesktopPage((p) => p - 1)}
+                />
+              )}
             </div>
 
             {/* Mobile cards */}

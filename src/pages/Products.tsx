@@ -14,7 +14,6 @@ import {
   WandSparkles,
   ChevronRight,
   ArrowUpRight,
-  Package,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Select, SelectItem } from "@heroui/select";
@@ -32,6 +31,7 @@ import { Product } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { formatCompactCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
+import { PaginationBar } from "@/components/PaginationBar";
 
 type ProductFormState = {
   sku: string;
@@ -368,6 +368,7 @@ function ProductDetailPanel({
   isDesktop,
   onEdit,
   onDelete,
+  onClose,
   isDeleting,
 }: {
   productId: string;
@@ -375,6 +376,7 @@ function ProductDetailPanel({
   isDesktop: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onClose?: () => void;
   isDeleting: boolean;
 }) {
   const navigate = useNavigate();
@@ -420,25 +422,35 @@ function ProductDetailPanel({
           <p className="section-kicker">Ficha de Producto</p>
           <h1 className="page-title truncate">{product?.name || "Cargando..."}</h1>
         </div>
-        {isDesktop && product && (
-          <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          {product && (
+            <>
+              <button
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-default-400 transition hover:text-foreground"
+                onClick={onEdit}
+              >
+                <Pencil size={14} />
+                {isDesktop && "Editar"}
+              </button>
+              <button
+                className="flex items-center gap-2 rounded-xl bg-danger/10 px-3 py-2 text-sm font-semibold text-danger transition hover:bg-danger/20 disabled:opacity-50"
+                disabled={isDeleting}
+                onClick={onDelete}
+              >
+                {isDeleting ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
+                {isDesktop && "Desactivar"}
+              </button>
+            </>
+          )}
+          {isDesktop && onClose && (
             <button
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-default-400 transition hover:text-foreground"
-              onClick={onEdit}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+              onClick={onClose}
             >
-              <Pencil size={14} />
-              Editar
+              <X size={16} />
             </button>
-            <button
-              className="flex items-center gap-2 rounded-xl bg-danger/10 px-4 py-2 text-sm font-semibold text-danger transition hover:bg-danger/20 disabled:opacity-50"
-              disabled={isDeleting}
-              onClick={onDelete}
-            >
-              {isDeleting ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
-              Desactivar
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Body */}
@@ -609,44 +621,8 @@ function ProductDetailPanel({
               <p className="mt-1.5">El producto se desactiva del catálogo pero conserva su trazabilidad histórica.</p>
             </div>
 
-            {/* Mobile action buttons */}
-            {!isDesktop && (
-              <div className="flex gap-3 pb-4">
-                <button
-                  className="app-panel-soft flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
-                  onClick={onEdit}
-                >
-                  <Pencil size={16} />
-                  Editar
-                </button>
-                <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-danger/10 px-4 py-3 text-sm font-semibold text-danger disabled:opacity-50"
-                  disabled={isDeleting}
-                  onClick={onDelete}
-                >
-                  {isDeleting ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
-                  Desactivar
-                </button>
-              </div>
-            )}
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ── Detail Empty State ────────────────────────────────────────────────────────
-
-function DetailEmptyState() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 text-center px-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <Package size={28} />
-      </div>
-      <div>
-        <p className="text-base font-semibold text-foreground">Seleccioná un producto</p>
-        <p className="mt-1 text-sm text-default-400">Hacé clic en un producto para ver su ficha completa, movimientos de stock y margen.</p>
       </div>
     </div>
   );
@@ -665,6 +641,9 @@ export default function ProductsPage() {
   const currency = settings?.currency || "USD";
   const { createProduct, updateProduct, deleteProduct, isCreating, isUpdating, isDeleting } = useProducts({ enabled: false });
   const { showToast } = useAppToast();
+
+  const DESKTOP_PAGE_SIZE = 15;
+  const [desktopPage, setDesktopPage] = useState(1);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -704,6 +683,10 @@ export default function ProductsPage() {
     }
   }, [showEditModal, selectedProduct]);
 
+  useEffect(() => {
+    setDesktopPage(1);
+  }, [searchQuery, activeFilter]);
+
   const filteredProducts = useMemo(() => {
     let result = safeProducts;
     const lowStockThreshold = settings?.lowStockThreshold || 5;
@@ -728,6 +711,19 @@ export default function ProductsPage() {
 
     return result;
   }, [safeProducts, searchQuery, activeFilter, settings?.lowStockThreshold]);
+
+  const desktopItems = isDesktop
+    ? filteredProducts.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
+    : filteredProducts;
+  const desktopTotalPages = Math.ceil((total ?? filteredProducts.length) / DESKTOP_PAGE_SIZE);
+
+  const handleDesktopNext = () => {
+    const next = desktopPage + 1;
+    if (next * DESKTOP_PAGE_SIZE > safeProducts.length && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+    setDesktopPage(next);
+  };
 
   const categories = useMemo(() => {
     const cats = new Set(
@@ -765,14 +761,14 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const target = loadMoreRef.current;
-    if (!target || !hasNextPage) return;
+    if (!target || !hasNextPage || isDesktop) return;
     const observer = new IntersectionObserver(
       (entries) => { if (entries[0]?.isIntersecting && !isFetchingNextPage) fetchNextPage(); },
       { rootMargin: "240px 0px" },
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, filteredProducts.length]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, filteredProducts.length, isDesktop]);
 
   const resetForm = () =>
     setFormData({ ...emptyForm, unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure });
@@ -899,7 +895,7 @@ export default function ProductsPage() {
         </div>
 
         {/* KPIs */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
           <div className="stat-card p-3">
             <p className="stat-card-label">Productos</p>
             <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{total || safeProducts.length}</p>
@@ -910,6 +906,20 @@ export default function ProductsPage() {
               {lowStockCount}
             </p>
           </div>
+          {isDesktop && (
+            <>
+              <div className="stat-card p-3">
+                <p className="stat-card-label">Categorías</p>
+                <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{categories.length}</p>
+              </div>
+              <div className="stat-card p-3">
+                <p className="stat-card-label">Con costo</p>
+                <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">
+                  {safeProducts.filter((p) => p.costPrice != null && p.costPrice > 0).length}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Search */}
@@ -958,7 +968,7 @@ export default function ProductsPage() {
           </div>
         ) : filteredProducts.length > 0 ? (
           <>
-            {filteredProducts.map((product) => {
+            {(isDesktop ? desktopItems : filteredProducts).map((product) => {
               const isLow = product.stock <= (product.minStock || settings?.lowStockThreshold || 5);
               const isOut = product.stock <= 0;
               const productCats =
@@ -978,37 +988,84 @@ export default function ProductsPage() {
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOut ? "bg-danger/15 text-danger" : isLow ? "bg-warning/15 text-warning" : "bg-primary/12 text-primary"}`}>
                     <Boxes size={18} />
                   </div>
+
+                  {/* Name + SKU + categories */}
                   <div className="min-w-0 flex-1 text-left">
                     <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <span className="text-xs text-default-400">{product.sku || "—"}</span>
-                      {productCats.slice(0, 1).map((cat) => (
+                      <span className="font-mono text-xs text-default-400">{product.sku || "—"}</span>
+                      {productCats.slice(0, isDesktop ? 2 : 1).map((cat) => (
                         <span key={cat} className="badge bg-content2/70 text-default-500">{cat}</span>
                       ))}
                     </div>
-                    <p className={`mt-1 text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
-                      {isOut ? "Sin stock" : `${product.stock} ${product.unitOfMeasure || "u."}`}
-                    </p>
+                    {/* Stock visible on mobile inline */}
+                    {!isDesktop && (
+                      <p className={`mt-1 text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
+                        {isOut ? "Sin stock" : `${product.stock} ${product.unitOfMeasure || "u."}`}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Stock — desktop column */}
+                  {isDesktop && (
+                    <div className="hidden lg:block shrink-0 w-28 text-right">
+                      <p className={`text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
+                        {isOut ? "Sin stock" : `${product.stock} ${product.unitOfMeasure || "u."}`}
+                      </p>
+                      {isLow && !isOut && <p className="text-[10px] text-warning">Stock bajo</p>}
+                    </div>
+                  )}
+
+                  {/* Cost — desktop column */}
+                  {isDesktop && (
+                    <div className="hidden lg:block shrink-0 w-24 text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-default-400">Costo</p>
+                      <p className="text-xs font-semibold text-default-500">
+                        {product.costPrice != null ? formatCompactCurrency(product.costPrice, currency) : "—"}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Price + margin */}
                   <div className="shrink-0 text-right">
+                    {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Precio</p>}
                     <p className="text-sm font-bold text-foreground">{formatCompactCurrency(product.price, currency)}</p>
-                    {isDesktop
-                      ? <ChevronRight className={`ml-auto mt-1 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
-                      : <ArrowUpRight className="ml-auto mt-1 text-default-300" size={16} />
-                    }
+                    {isDesktop && product.costPrice != null && product.costPrice > 0 && product.price > 0 && (
+                      <p className="text-[10px] text-success">
+                        {(((product.price - product.costPrice) / product.price) * 100).toFixed(0)}% mg
+                      </p>
+                    )}
                   </div>
+
+                  <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
               );
             })}
 
-            <div ref={loadMoreRef} className="h-4 w-full" />
-            {isFetchingNextPage && (
-              <div className="py-4 text-center text-default-400">
-                <Loader2 className="mx-auto animate-spin" size={20} />
-              </div>
+            {!isDesktop && (
+              <>
+                <div ref={loadMoreRef} className="h-4 w-full" />
+                {isFetchingNextPage && (
+                  <div className="py-4 text-center text-default-400">
+                    <Loader2 className="mx-auto animate-spin" size={20} />
+                  </div>
+                )}
+                {!hasNextPage && safeProducts.length > 0 && (
+                  <p className="py-3 text-center text-xs text-default-400">Fin del catálogo</p>
+                )}
+              </>
             )}
-            {!hasNextPage && safeProducts.length > 0 && (
-              <p className="py-3 text-center text-xs text-default-400">Fin del catálogo</p>
+            {isDesktop && (
+              <PaginationBar
+                from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
+                loading={isFetchingNextPage}
+                page={desktopPage}
+                to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, total ?? filteredProducts.length)}
+                total={total ?? filteredProducts.length}
+                totalPages={desktopTotalPages}
+                onNext={handleDesktopNext}
+                onPrev={() => setDesktopPage((p) => p - 1)}
+              />
             )}
           </>
         ) : (
@@ -1074,25 +1131,38 @@ export default function ProductsPage() {
     </>
   );
 
-  // Desktop: split layout
+  // Desktop: full-width list + slide-over panel
   if (isDesktop) {
     return (
-      <div className="grid h-screen grid-cols-[380px_1fr]">
-        <div className="h-screen border-r border-white/8 overflow-y-auto">{listPanel}</div>
-        <div className="h-screen overflow-y-auto">
-          {productId ? (
+      <div className="h-screen overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          {listPanel}
+        </div>
+
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 z-40 transition-all duration-300 ${productId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+          onClick={() => navigate("/products")}
+        />
+
+        {/* Slide-over panel */}
+        <div
+          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out ${productId ? "translate-x-0" : "translate-x-full"}`}
+          style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
+        >
+          {productId && (
             <ProductDetailPanel
               currency={currency}
               isDeleting={isDeleting}
               isDesktop={true}
               productId={productId}
+              onClose={() => navigate("/products")}
               onDelete={handleDeleteProduct}
               onEdit={() => setShowEditModal(true)}
             />
-          ) : (
-            <DetailEmptyState />
           )}
         </div>
+
         {modals}
       </div>
     );

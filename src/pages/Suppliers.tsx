@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Building2,
   Loader2,
@@ -19,6 +19,7 @@ import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { Supplier } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
+import { PaginationBar } from "@/components/PaginationBar";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -411,6 +412,9 @@ export default function Suppliers() {
   const isHeaderCompact = useMobileHeaderCompact();
   const { showToast } = useAppToast();
 
+  const DESKTOP_PAGE_SIZE = 15;
+  const [desktopPage, setDesktopPage] = useState(1);
+
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Supplier | null>(null);
   const [mode, setMode] = useState<DrawerMode>("detail");
@@ -426,6 +430,15 @@ export default function Suppliers() {
         s.email?.toLowerCase().includes(q),
     );
   }, [suppliers, search]);
+
+  useEffect(() => {
+    setDesktopPage(1);
+  }, [search]);
+
+  const desktopItems = isDesktop
+    ? filtered.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
+    : filtered;
+  const desktopTotalPages = Math.ceil(filtered.length / DESKTOP_PAGE_SIZE);
 
   const openCreate = () => {
     setSelected(null);
@@ -475,7 +488,7 @@ export default function Suppliers() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl lg:px-6">
+    <div className="h-full overflow-y-auto"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl lg:px-6">
       {/* Header */}
       <div
         className={`flex items-center justify-between transition-all lg:pt-0 ${
@@ -547,11 +560,24 @@ export default function Suppliers() {
           )}
         </div>
       ) : (
-        <div className="grid gap-2 lg:grid-cols-2">
-          {filtered.map((s) => (
-            <SupplierCard key={s._id} supplier={s} onClick={() => openDetail(s)} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-2 lg:grid-cols-2">
+            {(isDesktop ? desktopItems : filtered).map((s) => (
+              <SupplierCard key={s._id} supplier={s} onClick={() => openDetail(s)} />
+            ))}
+          </div>
+          {isDesktop && (
+            <PaginationBar
+              from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
+              page={desktopPage}
+              to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, filtered.length)}
+              total={filtered.length}
+              totalPages={desktopTotalPages}
+              onNext={() => setDesktopPage((p) => p + 1)}
+              onPrev={() => setDesktopPage((p) => p - 1)}
+            />
+          )}
+        </>
       )}
 
       {/* Drawer */}
@@ -566,6 +592,6 @@ export default function Suppliers() {
         onEdit={() => setMode(mode === "edit" ? "detail" : "edit")}
         onSaveEdit={mode === "create" ? handleSaveCreate : handleSaveEdit}
       />
-    </div>
+    </div></div>
   );
 }

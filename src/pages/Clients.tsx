@@ -30,6 +30,7 @@ import { Client } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { formatCompactCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
+import { PaginationBar } from "@/components/PaginationBar";
 
 type ClientFormState = {
   name: string; email: string; phone: string; taxId: string;
@@ -171,11 +172,11 @@ function ClientFormModal({
 // ── Client detail panel ───────────────────────────────────────────────
 
 function ClientDetailPanel({
-  clientId, currency, isDesktop, onBack,
+  clientId, currency, isDesktop, onBack, onClose,
   onEdit, onDelete, isDeleting,
 }: {
   clientId: string; currency: string; isDesktop: boolean;
-  onBack: () => void; onEdit: () => void;
+  onBack: () => void; onClose?: () => void; onEdit: () => void;
   onDelete: () => void; isDeleting: boolean;
 }) {
   const { client: selectedClient, orders, metrics, loading, error } = useClientDetail(clientId);
@@ -188,6 +189,16 @@ function ClientDetailPanel({
           <button className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-default-500" onClick={onBack}>
             <ArrowLeft size={14} /> Volver a clientes
           </button>
+        )}
+        {isDesktop && (
+          <div className="mb-3 flex justify-end">
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+              onClick={onClose}
+            >
+              <X size={15} />
+            </button>
+          </div>
         )}
         {loading && !selectedClient ? (
           <div className="flex items-center gap-2 text-default-400"><Loader2 className="animate-spin" size={16} /><span className="text-sm">Cargando...</span></div>
@@ -323,20 +334,6 @@ function ClientDetailPanel({
   );
 }
 
-function DetailEmptyState() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-default-400 px-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-content2/50 border border-white/8">
-        <Users size={28} />
-      </div>
-      <div>
-        <p className="font-semibold text-foreground">Seleccioná un cliente</p>
-        <p className="mt-1 text-sm">La ficha completa aparece aquí sin perder el listado.</p>
-      </div>
-    </div>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────
 
 export default function ClientsPage() {
@@ -351,6 +348,9 @@ export default function ClientsPage() {
   const { client: selectedClient } = useClientDetail(clientId);
   const { showToast } = useAppToast();
   const currency = settings?.currency || "USD";
+
+  const DESKTOP_PAGE_SIZE = 15;
+  const [desktopPage, setDesktopPage] = useState(1);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -371,18 +371,36 @@ export default function ClientsPage() {
     [safeClients, searchQuery],
   );
 
+  useEffect(() => {
+    setDesktopPage(1);
+  }, [searchQuery]);
+
+  const desktopItems = isDesktop
+    ? filteredClients.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
+    : filteredClients;
+  const desktopTotalPages = Math.ceil((total ?? filteredClients.length) / DESKTOP_PAGE_SIZE);
+
+  const handleDesktopNext = () => {
+    const next = desktopPage + 1;
+    if (next * DESKTOP_PAGE_SIZE > safeClients.length && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+    setDesktopPage(next);
+  };
+
   const companies = useMemo(() => Array.from(new Set(safeClients.map((c) => c.company).filter(Boolean))), [safeClients]);
+  const totalDebt = useMemo(() => safeClients.reduce((sum, c) => sum + Number(c.debt || 0), 0), [safeClients]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
-    if (!target || !hasNextPage) return;
+    if (!target || !hasNextPage || isDesktop) return;
     const observer = new IntersectionObserver(
       (entries) => { if (entries[0]?.isIntersecting && !isFetchingNextPage) fetchNextPage(); },
       { rootMargin: "240px 0px" },
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, filteredClients.length]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, filteredClients.length, isDesktop]);
 
   useEffect(() => {
     if (isEditOpen && selectedClient) {
@@ -467,7 +485,7 @@ export default function ClientsPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "h-screen overflow-hidden border-r border-white/8" : "min-h-screen pb-24"}`}>
+    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-24"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -484,7 +502,7 @@ export default function ClientsPage() {
         </div>
 
         {!isHeaderCompact && (
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
             <div className="stat-card !p-4">
               <p className="stat-card-label">Clientes</p>
               <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{total || safeClients.length}</p>
@@ -493,6 +511,22 @@ export default function ClientsPage() {
               <p className="stat-card-label">Empresas</p>
               <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{companies.length}</p>
             </div>
+            {isDesktop && (
+              <>
+                <div className="stat-card !p-4">
+                  <p className="stat-card-label">Deuda total</p>
+                  <p className={`mt-2 text-2xl font-bold tracking-tight ${totalDebt > 0 ? "text-danger" : "text-foreground"}`}>
+                    {formatCompactCurrency(totalDebt, currency)}
+                  </p>
+                </div>
+                <div className="stat-card !p-4">
+                  <p className="stat-card-label">Con email</p>
+                  <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+                    {safeClients.filter((c) => c.email).length}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -519,7 +553,7 @@ export default function ClientsPage() {
           </div>
         ) : (
           <div className="space-y-2 pb-4">
-            {filteredClients.map((client) => {
+            {(isDesktop ? desktopItems : filteredClients).map((client) => {
               const isSelected = client._id === clientId;
               return (
                 <button
@@ -536,17 +570,24 @@ export default function ClientsPage() {
                       {getInitials(client.name)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-foreground">{client.name || "Sin nombre"}</p>
-                        <p className={`shrink-0 text-sm font-bold ${Number(client.debt || 0) > 0 ? "text-danger" : "text-foreground"}`}>
-                          {formatCompactCurrency(Number(client.debt || 0), currency)}
-                        </p>
-                      </div>
+                      <p className="truncate text-sm font-semibold text-foreground">{client.name || "Sin nombre"}</p>
                       <div className="mt-0.5 flex items-center gap-2">
-                        {client.company && <span className="text-[11px] text-default-400 truncate">{client.company}</span>}
-                        {client.company && <span className="text-[11px] text-default-400">·</span>}
-                        <span className="text-[11px] text-default-400">{client.phone}</span>
+                        {client.company && <span className="text-[11px] text-default-400 truncate max-w-[140px]">{client.company}</span>}
+                        {!isDesktop && client.company && <span className="text-[11px] text-default-400">·</span>}
+                        {!isDesktop && <span className="text-[11px] text-default-400">{client.phone}</span>}
                       </div>
+                    </div>
+                    {isDesktop && (
+                      <div className="shrink-0 w-32 text-right">
+                        <p className="text-[10px] uppercase tracking-wide text-default-400">Teléfono</p>
+                        <p className="text-xs font-semibold text-default-500">{client.phone || "—"}</p>
+                      </div>
+                    )}
+                    <div className="shrink-0 text-right">
+                      {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Deuda</p>}
+                      <p className={`text-sm font-bold ${Number(client.debt || 0) > 0 ? "text-danger" : "text-foreground"}`}>
+                        {formatCompactCurrency(Number(client.debt || 0), currency)}
+                      </p>
                     </div>
                     {isDesktop && <ChevronRight size={14} className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} />}
                   </div>
@@ -554,32 +595,56 @@ export default function ClientsPage() {
               );
             })}
 
-            <div ref={loadMoreRef} className="h-4 w-full" />
-            {isFetchingNextPage && <div className="flex justify-center py-4"><Loader2 className="animate-spin text-default-400" size={20} /></div>}
-            {!hasNextPage && safeClients.length > 0 && <p className="py-3 text-center text-[11px] text-default-400">Fin del directorio</p>}
+            {!isDesktop && (
+              <>
+                <div ref={loadMoreRef} className="h-4 w-full" />
+                {isFetchingNextPage && <div className="flex justify-center py-4"><Loader2 className="animate-spin text-default-400" size={20} /></div>}
+                {!hasNextPage && safeClients.length > 0 && <p className="py-3 text-center text-[11px] text-default-400">Fin del directorio</p>}
+              </>
+            )}
+            {isDesktop && (
+              <PaginationBar
+                from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
+                loading={isFetchingNextPage}
+                page={desktopPage}
+                to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, total ?? filteredClients.length)}
+                total={total ?? filteredClients.length}
+                totalPages={desktopTotalPages}
+                onNext={handleDesktopNext}
+                onPrev={() => setDesktopPage((p) => p - 1)}
+              />
+            )}
           </div>
         )}
       </div>
     </div>
   );
 
-  // Desktop master-detail
+  // Desktop slide-over
   if (isDesktop) {
     return (
       <>
-        <div className="grid h-screen grid-cols-[380px_1fr]">
-          {ListPanel}
-          <div className="h-screen overflow-y-auto">
-            {clientId ? (
+        <div className="h-screen overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            {ListPanel}
+          </div>
+          <div
+            className={`fixed inset-0 z-40 transition-all duration-300 ${clientId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+            onClick={() => navigate("/clients")}
+          />
+          <div
+            className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out ${clientId ? "translate-x-0" : "translate-x-full"}`}
+            style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
+          >
+            {clientId && (
               <ClientDetailPanel
                 clientId={clientId} currency={currency} isDesktop
                 isDeleting={isDeleting}
                 onBack={() => navigate("/clients")}
+                onClose={() => navigate("/clients")}
                 onDelete={handleDelete}
                 onEdit={() => setIsEditOpen(true)}
               />
-            ) : (
-              <DetailEmptyState />
             )}
           </div>
         </div>

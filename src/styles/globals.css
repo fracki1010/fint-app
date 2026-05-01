@@ -65,6 +65,28 @@ body {
   display: none;
 }
 
+.scrollbar-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.1) transparent;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.1);
+  border-radius: 999px;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.22);
+}
+
 .MobileAppWrapper {
   position: relative;
   isolation: isolate;

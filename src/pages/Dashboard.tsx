@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  Bell,
   ShoppingCart,
   UserPlus,
   PackagePlus,
@@ -15,25 +14,20 @@ import {
   Activity,
   ReceiptText,
   PackageCheck,
-  CheckCheck,
   ChartNoAxesCombined,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 
 import { useDashboard, useDashboardOptionalKpis } from "@/hooks/useDashboard";
-import { useNotifications } from "@/hooks/useNotifications";
 import { useSettings } from "@/hooks/useSettings";
 import { formatCompactCurrency } from "@/utils/currency";
 
 export default function DashboardPage() {
   const [optionalRangeDays, setOptionalRangeDays] = useState(90);
-  const notificationsSectionRef = useRef<HTMLElement | null>(null);
   const { dashboard, loading, error } = useDashboard();
   const { optionalKpis, loading: optionalLoading } =
     useDashboardOptionalKpis(optionalRangeDays);
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
   const { settings } = useSettings();
   const currency = settings?.currency || "USD";
 
@@ -233,7 +227,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background pb-24 font-sans lg:pb-8">
+    <div className="relative flex h-full w-full flex-col overflow-y-auto bg-background pb-24 font-sans lg:pb-8">
 
       {/* ── Desktop header ──────────────────────────────────────────── */}
       <header className="page-header">
@@ -262,22 +256,6 @@ export default function DashboardPage() {
                 Monitoreo activo
               </div>
             </div>
-            <button
-              aria-label="Ir a notificaciones"
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl app-panel-soft hover:bg-content2 transition"
-              type="button"
-              onClick={() =>
-                notificationsSectionRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
-              }
-            >
-              <Bell size={16} />
-              {unreadCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger ring-2 ring-background" />
-              )}
-            </button>
           </div>
         </div>
       </header>
@@ -310,64 +288,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="space-y-6 px-4 py-5 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6 lg:py-6">
-        <section className="lg:col-span-5" ref={notificationsSectionRef}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="section-kicker">Notificaciones</h2>
-            {unreadCount > 0 && (
-              <button
-                className="flex items-center gap-1 text-xs font-semibold text-primary"
-                onClick={() => void markAllAsRead()}
-              >
-                <CheckCheck size={14} />
-                Marcar todas
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            {notifications.length > 0 ? (
-              notifications.slice(0, 5).map((notification) => (
-                <button
-                  key={notification._id}
-                  className="app-panel w-full rounded-[20px] p-4 text-left transition-colors hover:bg-content2/70"
-                  onClick={() => void markAsRead(notification._id)}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {notification.title}
-                      </p>
-                      <p className="mt-1 text-xs text-default-500">
-                        {notification.message}
-                      </p>
-                    </div>
-                    {!notification.isRead && (
-                      <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
-                    )}
-                  </div>
-                  <p className="mt-2 text-[11px] text-default-400">
-                    {new Date(notification.createdAt).toLocaleString()}
-                  </p>
-                </button>
-              ))
-            ) : (
-              <div className="app-panel rounded-[20px] p-4">
-                <p className="text-sm text-default-500">
-                  No hay notificaciones por ahora.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="lg:col-span-7">
+        <section className="lg:col-span-12">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="section-kicker">Acciones Rapidas</h2>
             {loading && (
               <Loader2 className="animate-spin text-primary" size={18} />
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             {quickActions.map((action) => {
               const Icon = action.icon;
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,8 @@ import {
   UserCog,
   LogOut,
   Building2,
+  X,
+  CheckCheck,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -28,7 +30,8 @@ export default function MobileLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement | null>(null);
-  const { unreadCount } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
 
@@ -95,7 +98,7 @@ export default function MobileLayout() {
     <div className="MobileAppWrapper flex h-screen w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
 
       {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
-      <aside className="hidden lg:flex lg:flex-col border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_92%,transparent)] backdrop-blur-xl">
+      <aside className="hidden h-screen overflow-hidden lg:flex lg:flex-col border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_92%,transparent)] backdrop-blur-xl">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-4 border-b border-white/8">
@@ -109,7 +112,7 @@ export default function MobileLayout() {
         </div>
 
         {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 no-scrollbar">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-sidebar">
 
           <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
           <NavSection label="Cuentas Corrientes" items={accountingNav} isActive={isActive} navigate={navigate} />
@@ -127,7 +130,7 @@ export default function MobileLayout() {
           <button
             className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-default-400 hover:bg-white/5 hover:text-foreground transition"
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => setShowNotifications(true)}
           >
             <div className="relative">
               <Bell size={15} />
@@ -167,9 +170,77 @@ export default function MobileLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:overflow-hidden lg:pb-0">
+      <main ref={mainRef} className="flex-1 overflow-hidden pb-20 lg:pb-0">
         <Outlet />
       </main>
+
+      {/* ── Notifications slide-over ─────────────────────────────────── */}
+      <div
+        className={`fixed inset-0 z-[60] transition-all duration-300 ${showNotifications ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+        onClick={() => setShowNotifications(false)}
+      />
+      <div
+        className={`fixed right-0 top-0 z-[70] h-screen w-full max-w-sm overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar ${showNotifications ? "translate-x-0" : "translate-x-full"}`}
+        style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
+      >
+        {/* Header */}
+        <div className="page-header flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="section-kicker">Sistema</p>
+            <h2 className="page-title">Notificaciones</h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
+                onClick={() => void markAllAsRead()}
+              >
+                <CheckCheck size={13} />
+                Marcar todas
+              </button>
+            )}
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+              onClick={() => setShowNotifications(false)}
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="space-y-2 px-4 pb-8">
+          {notifications.length > 0 ? (
+            notifications.map((notification) => (
+              <button
+                key={notification._id}
+                className={`list-row w-full ${!notification.isRead ? "border-primary/20 bg-primary/5" : ""}`}
+                onClick={() => void markAsRead(notification._id)}
+              >
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${!notification.isRead ? "bg-primary/12 text-primary" : "bg-content2/70 text-default-400"}`}>
+                  <Bell size={15} />
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-sm font-semibold text-foreground">{notification.title}</p>
+                  <p className="mt-0.5 text-xs text-default-500 line-clamp-2">{notification.message}</p>
+                  <p className="mt-1 text-[10px] text-default-400">{new Date(notification.createdAt).toLocaleString()}</p>
+                </div>
+                {!notification.isRead && (
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                )}
+              </button>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-content2/60 text-default-400">
+                <Bell size={24} />
+              </div>
+              <p className="mt-4 text-sm font-semibold text-foreground">Todo en orden</p>
+              <p className="mt-1 text-xs text-default-400">No hay notificaciones por ahora.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Mobile bottom bar ────────────────────────────────────────── */}
       {!hideBottomBar && (
