@@ -397,8 +397,13 @@ function EntryRow({
             {formatCompactCurrency(signed, currency)}
           </span>
         </div>
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-default-400">
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-default-400">
           <span>{formatDate(entry.date)}</span>
+          {entry.order && (
+            <span className="rounded-full bg-default-100 px-2 py-0.5 text-[10px] font-semibold text-default-500">
+              Venta
+            </span>
+          )}
           {entry.paymentMethod && (
             <>
               <span>·</span>

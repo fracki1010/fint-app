@@ -233,25 +233,38 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
-      <header className="app-topbar px-6 pt-6 pb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <div className="section-kicker">Fint Suite</div>
-            <div>
-              <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-                Panel Ejecutivo
-              </h1>
-              <p className="text-sm text-default-500">
-                Operacion comercial, ventas e inventario en una sola vista.
-              </p>
-            </div>
-          </div>
+    <div className="relative flex min-h-screen w-full flex-col bg-background pb-24 font-sans lg:pb-8">
 
-          <div className="flex items-center gap-3 text-default-500">
+      {/* ── Desktop header ──────────────────────────────────────────── */}
+      <header className="page-header">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="page-title">Panel Ejecutivo</h1>
+            <p className="page-subtitle">Operación comercial, ventas e inventario en una sola vista.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* KPI hero — visible solo en desktop */}
+            <div className="hidden lg:flex items-center gap-6">
+              <div className="text-right">
+                <p className="stat-card-label">Ventas del mes</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">
+                  {formatCompactCurrency(dashboard.sales.monthSales, currency)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="stat-card-label">Ticket promedio</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">
+                  {formatCompactCurrency(dashboard.sales.averageTicket, currency)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-xs font-bold text-primary">
+                <TrendingUp size={13} />
+                Monitoreo activo
+              </div>
+            </div>
             <button
               aria-label="Ir a notificaciones"
-              className="relative flex h-10 w-10 items-center justify-center rounded-2xl app-panel-soft"
+              className="relative flex h-9 w-9 items-center justify-center rounded-xl app-panel-soft hover:bg-content2 transition"
               type="button"
               onClick={() =>
                 notificationsSectionRef.current?.scrollIntoView({
@@ -260,15 +273,18 @@ export default function DashboardPage() {
                 })
               }
             >
-              <Bell size={18} />
+              <Bell size={16} />
               {unreadCount > 0 && (
-                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-background" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger ring-2 ring-background" />
               )}
             </button>
           </div>
         </div>
+      </header>
 
-        <div className="mt-5 app-panel rounded-[28px] p-5">
+      {/* ── Mobile hero card ─────────────────────────────────────────── */}
+      <div className="px-4 pt-5 lg:hidden">
+        <div className="app-panel rounded-[28px] p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="section-kicker">Resumen Comercial</p>
@@ -276,33 +292,24 @@ export default function DashboardPage() {
                 {formatCompactCurrency(dashboard.sales.monthSales, currency)}
               </h2>
               <p className="mt-2 text-sm text-default-500">
-                {dashboard.sales.totalOrdersMonth} ventas del mes y ticket
-                promedio de{" "}
+                {dashboard.sales.totalOrdersMonth} ventas · ticket prom.{" "}
                 {formatCompactCurrency(dashboard.sales.averageTicket, currency)}
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
               <TrendingUp size={14} />
-              Monitoreo activo
+              Activo
             </div>
           </div>
-
-          <div className="mt-5 h-28 w-full">
-            <svg
-              className="h-full w-full fill-none stroke-primary"
-              preserveAspectRatio="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="4"
-              viewBox="0 0 400 120"
-            >
+          <div className="mt-5 h-24 w-full">
+            <svg className="h-full w-full fill-none stroke-primary" preserveAspectRatio="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" viewBox="0 0 400 120">
               <path d="M0 94C18 92 26 48 50 46C76 43 83 77 104 76C125 75 135 56 158 56C182 56 194 90 217 92C248 94 255 30 282 26C306 23 319 61 341 67C364 73 380 48 400 40" />
             </svg>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="space-y-7 px-6 py-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+      <div className="space-y-6 px-4 py-5 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6 lg:py-6">
         <section className="lg:col-span-5" ref={notificationsSectionRef}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="section-kicker">Notificaciones</h2>
@@ -388,72 +395,61 @@ export default function DashboardPage() {
         </section>
 
         <section className="lg:col-span-12">
-          <h2 className="mb-4 section-kicker">Indicadores</h2>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div className="app-panel rounded-[24px] p-5">
-              <div className="flex items-center gap-2 text-primary">
-                <Wallet size={16} />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  Cobrado
-                </span>
+          <h2 className="mb-3 section-kicker">Indicadores</h2>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+
+            <div className="stat-card">
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Cobrado</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Wallet size={14} />
+                </div>
               </div>
-              <div className="mt-5 text-[clamp(1.35rem,5vw,1.875rem)] font-semibold leading-tight tracking-[-0.03em] text-foreground overflow-hidden text-ellipsis whitespace-nowrap">
-                {formatCompactCurrency(
-                  dashboard.sales.collectedMonth,
-                  currency,
-                )}
+              <div className="mt-4 stat-card-value">
+                {formatCompactCurrency(dashboard.sales.collectedMonth, currency)}
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-default-500">
-                Ingreso efectivamente pagado en el mes actual.
-              </p>
+              <p className="stat-card-sub">Ingreso efectivo del mes actual.</p>
             </div>
 
-            <div className="app-panel rounded-[24px] p-5">
-              <div className="flex items-center gap-2 text-danger">
-                <AlertTriangle size={16} />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  Stock Bajo
-                </span>
+            <div className="stat-card">
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Stock Bajo</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/10 text-danger">
+                  <AlertTriangle size={14} />
+                </div>
               </div>
-              <div className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-foreground">
+              <div className="mt-4 stat-card-value text-danger">
                 {dashboard.inventory.lowStockCount.toString().padStart(2, "0")}
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-default-500">
-                Productos por debajo del minimo operativo.
-              </p>
+              <p className="stat-card-sub">Productos bajo el mínimo operativo.</p>
             </div>
 
-            <div className="app-panel rounded-[24px] p-5">
-              <div className="flex items-center gap-2 text-primary">
-                <FileText size={16} />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  Pendientes
-                </span>
+            <div className="stat-card">
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Pendientes</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                  <FileText size={14} />
+                </div>
               </div>
-              <div className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-foreground">
+              <div className="mt-4 stat-card-value">
                 {dashboard.operations.pendingOrders.toString().padStart(2, "0")}
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-default-500">
-                Ordenes que siguen abiertas dentro del circuito comercial.
-              </p>
+              <p className="stat-card-sub">Órdenes abiertas en el circuito.</p>
             </div>
 
-            <div className="app-panel rounded-[24px] p-5">
-              <div className="flex items-center gap-2 text-warning">
-                <Users size={16} />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  Deuda
-                </span>
+            <div className="stat-card">
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Con Deuda</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                  <Users size={14} />
+                </div>
               </div>
-              <div className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-foreground">
-                {dashboard.customers.customersWithDebt
-                  .toString()
-                  .padStart(2, "0")}
+              <div className="mt-4 stat-card-value">
+                {dashboard.customers.customersWithDebt.toString().padStart(2, "0")}
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-default-500">
-                Clientes con saldo pendiente por cobrar.
-              </p>
+              <p className="stat-card-sub">Clientes con saldo pendiente.</p>
             </div>
+
           </div>
         </section>
 

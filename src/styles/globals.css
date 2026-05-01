@@ -362,3 +362,147 @@ select.corp-input {
     padding: 14px 18px;
   }
 }
+
+/* ── Desktop page shell ──────────────────────────────────────────────── */
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgb(69 101 149 / 0.14);
+  background: color-mix(in srgb, var(--heroui-background) 82%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 14px 16px;
+}
+
+@media (min-width: 1024px) {
+  .page-header {
+    padding: 18px 28px;
+  }
+}
+
+.page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--heroui-foreground);
+  line-height: 1.2;
+}
+
+@media (min-width: 1024px) {
+  .page-title {
+    font-size: 1.6rem;
+  }
+}
+
+.page-subtitle {
+  font-size: 0.78rem;
+  color: var(--heroui-default-400);
+  margin-top: 2px;
+}
+
+/* ── Stat card ───────────────────────────────────────────────────────── */
+
+.stat-card {
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgb(69 101 149 / 0.14);
+  background: color-mix(in srgb, var(--heroui-content1) 90%, transparent);
+  box-shadow: 0 4px 16px rgb(13 79 169 / 0.05);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 8px 28px rgb(13 79 169 / 0.1);
+  transform: translateY(-1px);
+}
+
+.stat-card-value {
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--heroui-foreground);
+  line-height: 1.1;
+}
+
+.stat-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--heroui-default-400);
+}
+
+.stat-card-sub {
+  font-size: 0.75rem;
+  color: var(--heroui-default-500);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ── List row ────────────────────────────────────────────────────────── */
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  border: 1px solid rgb(69 101 149 / 0.1);
+  background: color-mix(in srgb, var(--heroui-content2) 55%, transparent);
+  padding: 14px 16px;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.list-row:hover {
+  border-color: rgb(13 79 169 / 0.25);
+  background: color-mix(in srgb, var(--heroui-primary) 5%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgb(13 79 169 / 0.07);
+}
+
+.list-row:active {
+  transform: scale(0.995);
+}
+
+/* ── Search bar ──────────────────────────────────────────────────────── */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid rgb(69 101 149 / 0.18);
+  background: color-mix(in srgb, var(--heroui-content2) 70%, transparent);
+  padding: 8px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-bar:focus-within {
+  border-color: rgb(13 79 169 / 0.4);
+  box-shadow: 0 0 0 3px rgb(13 79 169 / 0.08);
+}
+
+/* ── Badge pill ──────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* ── Sidebar accent line (left border on active) ─────────────────────── */
+
+.sidebar-glow {
+  box-shadow:
+    inset 0 0 0 1px rgb(13 79 169 / 0.3),
+    0 0 16px rgb(13 79 169 / 0.12);
+}

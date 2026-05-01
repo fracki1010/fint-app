@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   LayoutGrid,
   ClipboardList,
@@ -17,15 +19,49 @@ import {
   Bell,
   Truck,
   UserCog,
+  LogOut,
+  Building2,
 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export default function MobileLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const mainRef = useRef<HTMLElement | null>(null);
   const { unreadCount } = useNotifications();
+  const { user, logout } = useAuth();
+  const { can, roleLabel } = usePermissions();
 
-  const tabs = [
+  const operationNav = [
+    { path: "/", label: "Inicio", icon: LayoutGrid },
+    { path: "/sales", label: "Ventas", icon: ReceiptText },
+    { path: "/clients", label: "Clientes", icon: Users },
+    { path: "/products", label: "Productos", icon: ClipboardList },
+    { path: "/supplies", label: "Insumos", icon: Package },
+    { path: "/purchases", label: "Compras", icon: ShoppingCart },
+    { path: "/suppliers", label: "Proveedores", icon: Truck },
+    { path: "/recipes", label: "Recetas", icon: ChefHat },
+  ];
+
+  const accountingNav = [
+    { path: "/client-account", label: "Cta. Clientes", icon: CreditCard },
+    { path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 },
+  ];
+
+  const financialNav = [
+    { path: "/financial/dashboard", label: "Panel Financiero", icon: LayoutGrid },
+    { path: "/financial/accounting", label: "Contabilidad", icon: FileSpreadsheet },
+    { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
+    { path: "/financial/projections", label: "Proyecciones", icon: LineChart },
+    { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },
+  ];
+
+  const adminNav = [
+    ...(can.manageTeam ? [{ path: "/team", label: "Equipo", icon: UserCog }] : []),
+    { path: "/settings", label: "Ajustes", icon: Settings },
+  ];
+
+  const mobileBottomTabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
     { path: "/products", label: "PRODUCTOS", icon: ClipboardList },
     { path: "/supplies", label: "INSUMOS", icon: Package },
@@ -33,41 +69,6 @@ export default function MobileLayout() {
     { path: "/sales", label: "VENTAS", icon: ReceiptText },
     { path: "/clients", label: "CLIENTES", icon: Users },
     { path: "/settings", label: "AJUSTES", icon: Settings },
-  ];
-  const desktopMainNav = [
-    ...tabs,
-    { path: "/suppliers", label: "PROVEEDORES", icon: Truck },
-    { path: "/recipes", label: "RECETAS", icon: ChefHat },
-    { path: "/supplier-account", label: "CTA. PROVEEDORES", icon: CreditCard },
-    { path: "/client-account", label: "CTA. CLIENTES", icon: CreditCard },
-    { path: "/team", label: "EQUIPO", icon: UserCog },
-  ];
-  const desktopFinancialNav = [
-    {
-      path: "/financial/dashboard",
-      label: "PANEL FINANCIERO",
-      icon: LayoutGrid,
-    },
-    {
-      path: "/financial/accounting",
-      label: "CONTABILIDAD",
-      icon: FileSpreadsheet,
-    },
-    {
-      path: "/financial/product-analysis",
-      label: "ANALISIS PRODUCTOS",
-      icon: ChartNoAxesCombined,
-    },
-    {
-      path: "/financial/projections",
-      label: "PROYECCIONES",
-      icon: LineChart,
-    },
-    {
-      path: "/financial/purchases",
-      label: "COSTOS Y COMPRAS",
-      icon: ShoppingCart,
-    },
   ];
 
   const hideBottomBar =
@@ -81,133 +82,123 @@ export default function MobileLayout() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [location.pathname]);
 
+  const isActive = (path: string) =>
+    path === "/"
+      ? location.pathname === "/"
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const userInitials = user?.fullName
+    ? user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "??";
+
   return (
-    <div className="MobileAppWrapper flex h-screen w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_90%,transparent)] p-5 lg:block">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Fint Suite</p>
-            <p className="text-xs text-default-500">Panel Operativo</p>
+    <div className="MobileAppWrapper flex h-screen w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+
+      {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
+      <aside className="hidden lg:flex lg:flex-col border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_92%,transparent)] backdrop-blur-xl">
+
+        {/* Brand */}
+        <div className="px-5 pt-6 pb-4 border-b border-white/8">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Logo" className="h-9 w-9 rounded-xl object-contain" />
+            <div>
+              <p className="text-[15px] font-bold tracking-tight text-foreground">Fint Suite</p>
+              <p className="text-[11px] text-default-400">Panel Operativo</p>
+            </div>
           </div>
+        </div>
+
+        {/* Nav sections */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 no-scrollbar">
+
+          <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
+          <NavSection label="Cuentas Corrientes" items={accountingNav} isActive={isActive} navigate={navigate} />
+
+          {can.viewFinancial && (
+            <NavSection label="Centro Financiero" items={financialNav} isActive={isActive} navigate={navigate} />
+          )}
+
+          <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={navigate} />
+        </nav>
+
+        {/* User footer */}
+        <div className="border-t border-white/8 px-4 py-4">
+          {/* Notifications badge */}
           <button
-            className="relative flex h-8 w-8 items-center justify-center rounded-xl text-default-400 transition hover:bg-content2 hover:text-foreground"
+            className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-default-400 hover:bg-white/5 hover:text-foreground transition"
             type="button"
             onClick={() => navigate("/")}
           >
-            <Bell size={16} />
+            <div className="relative">
+              <Bell size={15} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="flex-1 text-left text-xs font-semibold">Notificaciones</span>
             {unreadCount > 0 && (
-              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                {unreadCount > 9 ? "9+" : unreadCount}
+              <span className="rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-bold text-danger">
+                {unreadCount}
               </span>
             )}
           </button>
-        </div>
-        <div className="mt-6">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-default-400">
-            Operacion
-          </p>
-          <nav className="mt-2 space-y-2">
-            {desktopMainNav.map((tab) => {
-              const Icon = tab.icon;
-              const isActive =
-                tab.path === "/"
-                  ? location.pathname === "/"
-                  : location.pathname === tab.path ||
-                    location.pathname.startsWith(`${tab.path}/`);
 
-              return (
-                <button
-                  key={tab.path}
-                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                    isActive
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-transparent text-default-500 hover:border-white/10 hover:text-foreground"
-                  }`}
-                  onClick={() => navigate(tab.path)}
-                  type="button"
-                >
-                  <Icon size={16} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="mt-6">
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-default-400">
-            Centro Financiero
-          </p>
-          <nav className="mt-2 space-y-2">
-            {desktopFinancialNav.map((tab) => {
-              const Icon = tab.icon;
-              const isActive =
-                location.pathname === tab.path ||
-                location.pathname.startsWith(`${tab.path}/`);
-
-              return (
-                <button
-                  key={tab.path}
-                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                    isActive
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-transparent text-default-500 hover:border-white/10 hover:text-foreground"
-                  }`}
-                  onClick={() => navigate(tab.path)}
-                  type="button"
-                >
-                  <Icon size={16} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* User info */}
+          <div className="flex items-center gap-3 rounded-xl bg-white/4 border border-white/8 px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-xs font-bold text-primary">
+              {userInitials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-foreground">{user?.fullName || "Usuario"}</p>
+              <p className="truncate text-[10px] text-default-400">{roleLabel}</p>
+            </div>
+            <button
+              className="shrink-0 rounded-lg p-1.5 text-default-400 hover:bg-white/8 hover:text-danger transition"
+              title="Cerrar sesión"
+              type="button"
+              onClick={() => logout()}
+            >
+              <LogOut size={13} />
+            </button>
+          </div>
         </div>
       </aside>
 
-      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0">
+      {/* ── Main content ─────────────────────────────────────────────── */}
+      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:overflow-hidden lg:pb-0">
         <Outlet />
       </main>
 
+      {/* ── Mobile bottom bar ────────────────────────────────────────── */}
       {!hideBottomBar && (
         <nav className="fixed bottom-0 w-full border-t border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_88%,transparent)] backdrop-blur-xl flex justify-around items-center pt-3 pb-6 px-2 z-50 shadow-[0_-18px_40px_rgba(5,18,15,0.16)] lg:hidden">
-          {tabs.map((tab) => {
-            const isActive =
-              tab.path === "/"
-                ? location.pathname === "/"
-                : location.pathname === tab.path ||
-                  location.pathname.startsWith(`${tab.path}/`);
+          {mobileBottomTabs.map((tab) => {
+            const active = isActive(tab.path);
             const Icon = tab.icon;
 
             return (
               <button
                 key={tab.path}
                 className={`flex flex-col items-center justify-center gap-1 w-16 rounded-2xl py-1.5 transition-all ${
-                  isActive
-                    ? "text-primary scale-105"
-                    : "text-default-400 hover:text-default-600"
+                  active ? "text-primary scale-105" : "text-default-400 hover:text-default-600"
                 }`}
                 onClick={() => navigate(tab.path)}
               >
                 <div className="relative">
-                <Icon
-                  className={
-                    isActive
-                      ? "fill-primary/15 bg-primary/12 rounded-xl p-1 shadow-[0_8px_20px_rgba(88,176,156,0.18)]"
-                      : ""
-                  }
-                  size={24}
-                  strokeWidth={isActive ? 2.5 : 2}
-                />
-                {tab.path === "/" && unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
+                  <Icon
+                    className={active ? "fill-primary/15 bg-primary/12 rounded-xl p-1 shadow-[0_8px_20px_rgba(88,176,156,0.18)]" : ""}
+                    size={24}
+                    strokeWidth={active ? 2.5 : 2}
+                  />
+                  {tab.path === "/" && unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </div>
-                <span
-                  className={`text-[10px] font-bold tracking-tight ${isActive ? "opacity-100" : "opacity-70"}`}
-                >
+                <span className={`text-[10px] font-bold tracking-tight ${active ? "opacity-100" : "opacity-70"}`}>
                   {tab.label}
                 </span>
               </button>
@@ -215,6 +206,59 @@ export default function MobileLayout() {
           })}
         </nav>
       )}
+    </div>
+  );
+}
+
+// ── NavSection ──────────────────────────────────────────────────────────
+
+function NavSection({
+  label,
+  items,
+  isActive,
+  navigate,
+}: {
+  label: string;
+  items: { path: string; label: string; icon: React.ElementType }[];
+  isActive: (path: string) => boolean;
+  navigate: (path: string) => void;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div>
+      <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">
+        {label}
+      </p>
+      <div className="space-y-0.5">
+        {items.map((item) => {
+          const active = isActive(item.path);
+          const Icon = item.icon;
+
+          return (
+            <button
+              key={item.path}
+              className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold transition-all ${
+                active
+                  ? "bg-primary/12 text-primary border border-primary/20 shadow-sm shadow-primary/10"
+                  : "text-default-500 hover:bg-white/5 hover:text-foreground border border-transparent"
+              }`}
+              onClick={() => navigate(item.path)}
+              type="button"
+            >
+              <Icon
+                size={15}
+                strokeWidth={active ? 2.5 : 2}
+                className={active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}
+              />
+              <span>{item.label}</span>
+              {active && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
