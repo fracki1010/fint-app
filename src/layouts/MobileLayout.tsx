@@ -10,7 +10,6 @@ import {
   Users,
   Settings,
   ChartNoAxesCombined,
-  FileSpreadsheet,
   LineChart,
   Package,
   ShoppingCart,
@@ -53,7 +52,7 @@ export default function MobileLayout() {
 
   const financialNav = [
     { path: "/financial/dashboard", label: "Panel Financiero", icon: LayoutGrid },
-    { path: "/financial/accounting", label: "Contabilidad", icon: FileSpreadsheet },
+    { path: "/financial/accounting", label: "Contabilidad", icon: ReceiptText },
     { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
     { path: "/financial/projections", label: "Proyecciones", icon: LineChart },
     { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },

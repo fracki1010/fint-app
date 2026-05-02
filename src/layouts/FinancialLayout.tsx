@@ -3,7 +3,7 @@ import {
   Bell,
   ChartNoAxesCombined,
   Cog,
-  FileSpreadsheet,
+  ReceiptText,
   LayoutGrid,
   LineChart,
   Settings as SettingsIcon,
@@ -21,7 +21,7 @@ const financialNav = [
     path: "/financial/accounting",
     label: "Contabilidad",
     mobileLabel: "CONTA",
-    icon: FileSpreadsheet,
+    icon: ReceiptText,
   },
   {
     path: "/financial/product-analysis",
