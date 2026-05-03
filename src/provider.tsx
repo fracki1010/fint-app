@@ -1,10 +1,9 @@
+import { useEffect } from "react";
 import type { NavigateOptions } from "react-router-dom";
 
 import { HeroUIProvider } from "@heroui/system";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useHref, useNavigate } from "react-router-dom";
 
-import { useSettings } from "@/hooks/useSettings";
 import { useThemeStore } from "@/stores/themeStore";
 import { AppToastProvider } from "@/components/AppToast";
 
@@ -16,21 +15,18 @@ declare module "@react-types/shared" {
 
 export function Provider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const { settings } = useSettings();
   const theme = useThemeStore((state) => state.theme);
 
-  const activeTheme = settings?.theme || theme;
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    root.style.colorScheme = theme;
+  }, [theme]);
 
   return (
     <HeroUIProvider navigate={navigate} useHref={useHref}>
-      <NextThemesProvider
-        attribute="class"
-        defaultTheme={activeTheme}
-        enableSystem={false}
-        forcedTheme={activeTheme}
-      >
-        <AppToastProvider>{children}</AppToastProvider>
-      </NextThemesProvider>
+      <AppToastProvider>{children}</AppToastProvider>
     </HeroUIProvider>
   );
 }

@@ -78,6 +78,19 @@ export interface FinancialProductAnalysisResponse {
     volume: number;
     status: string;
   }>;
+  allProducts: Array<{
+    name: string;
+    category: string;
+    netMargin: number;
+    roi: number;
+    volume: number;
+    status: string;
+  }>;
+  kpis: {
+    stockRotation: number;
+    avgMargin: number;
+    activeSkus: number;
+  };
 }
 
 export interface FinancialProjectionsResponse {

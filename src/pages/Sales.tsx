@@ -12,6 +12,11 @@ import {
   ChevronRight,
   ArrowLeft,
   X,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  ScanBarcode,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@heroui/button";
@@ -62,19 +67,21 @@ function getCommercialStatus(order: Order): SalesStatus {
   return "Pendiente";
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  Confirmada: "bg-primary/15 text-primary",
-  Cancelada: "bg-danger/15 text-danger",
-  Pendiente: "bg-default/40 text-default-600",
-  Pagado: "bg-success/15 text-success",
-  Parcial: "bg-warning/15 text-warning",
-  Entregada: "bg-success/15 text-success",
-  Preparando: "bg-primary/15 text-primary",
+const STATUS_STYLES: Record<string, { dot: string; bg: string; text: string }> = {
+  Confirmada: { dot: "bg-primary", bg: "bg-primary/10", text: "text-primary" },
+  Cancelada:  { dot: "bg-danger",  bg: "bg-danger/10",  text: "text-danger"  },
+  Pendiente:  { dot: "bg-default-400", bg: "bg-default/20", text: "text-default-600" },
+  Pagado:     { dot: "bg-success", bg: "bg-success/10", text: "text-success" },
+  Parcial:    { dot: "bg-warning", bg: "bg-warning/10", text: "text-warning" },
+  Entregada:  { dot: "bg-success", bg: "bg-success/10", text: "text-success" },
+  Preparando: { dot: "bg-primary", bg: "bg-primary/10", text: "text-primary" },
 };
 
 function StatusBadge({ label }: { label: string }) {
+  const style = STATUS_STYLES[label] ?? STATUS_STYLES.Pendiente;
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STATUS_COLORS[label] ?? "bg-default/40 text-default-600"}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${style.bg} ${style.text}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
       {label}
     </span>
   );
@@ -160,16 +167,16 @@ function DetailPanel({
   return (
     <div className="flex h-full flex-col">
       {/* Panel header */}
-      <div className={`shrink-0 border-b border-white/10 px-6 py-4 ${isDesktop ? "bg-background/60 backdrop-blur-sm" : "bg-background"}`}>
+      <div className={`shrink-0 border-b border-[color:rgb(var(--warm-border)/0.12)] px-6 py-4 ${isDesktop ? "bg-background/60 backdrop-blur-sm" : "bg-background"}`}>
         {!isDesktop && (
-          <button className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-default-500" onClick={onBack}>
+          <button className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-default-500 hover:text-foreground transition" onClick={onBack}>
             <ArrowLeft size={14} /> Volver a ventas
           </button>
         )}
         {isDesktop && (
           <div className="mb-3 flex justify-end">
             <button
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[color:rgb(var(--warm-border)/0.12)] bg-white/5 text-default-400 transition hover:text-foreground"
               onClick={onClose}
             >
               <X size={15} />
@@ -183,7 +190,7 @@ function DetailPanel({
           </div>
         ) : (
           <>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-default-400">Detalle de venta</p>
+            <p className="section-kicker">Detalle de venta</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-foreground">
               {selectedOrder?.orderNumber || `Pedido #${orderId.slice(-6)}`}
             </h2>
@@ -222,12 +229,12 @@ function DetailPanel({
           <div className="space-y-4">
             {/* Client + amount */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
+              <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
                 <p className="section-kicker">Cliente</p>
                 <p className="mt-2 font-semibold text-foreground">{getClientName(selectedOrder.client)}</p>
                 <p className="mt-0.5 text-xs text-default-400">{getClientPhone(selectedOrder.client)}</p>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
+              <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
                 <p className="section-kicker">Importe</p>
                 <p className="mt-2 text-xl font-bold tracking-tight text-foreground">
                   {formatCurrency(Number(selectedOrder.totalAmount || 0), currency)}
@@ -237,8 +244,8 @@ function DetailPanel({
             </div>
 
             {/* Status selectors */}
-            <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
-              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-default-400">Actualizar estados</p>
+            <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-default-400">Actualizar estados</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <div className="mb-1.5 flex items-center gap-1.5 text-primary">
@@ -289,16 +296,16 @@ function DetailPanel({
             </div>
 
             {/* Items */}
-            <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
+            <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
               <p className="mb-3 text-sm font-bold text-foreground">Items del pedido</p>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {selectedOrder.items.map((item, i) => (
-                  <div key={`${item.product}-${i}`} className="flex items-center justify-between rounded-xl bg-content2/60 px-3 py-2.5">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{item.product}</p>
+                  <div key={`${item.product}-${i}`} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{item.product}</p>
                       <p className="text-xs text-default-400">{item.quantity} × {formatCurrency(Number(item.price || 0), currency)}</p>
                     </div>
-                    <p className="text-sm font-bold text-foreground">
+                    <p className="ml-3 shrink-0 text-sm font-bold text-foreground">
                       {formatCurrency(Number(item.quantity || 0) * Number(item.price || 0), currency)}
                     </p>
                   </div>
@@ -307,7 +314,7 @@ function DetailPanel({
             </div>
 
             {/* Notes */}
-            <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
+            <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
               <p className="mb-2 text-sm font-bold text-foreground">Notas</p>
               <textarea
                 className="corp-input min-h-20 w-full rounded-xl px-3 py-2.5 text-sm"
@@ -318,7 +325,7 @@ function DetailPanel({
             </div>
 
             {/* Movements */}
-            <div className="rounded-2xl border border-white/8 bg-content2/50 p-4">
+            <div className="rounded-2xl border border-[color:rgb(var(--warm-border)/0.10)] bg-content2/50 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-bold text-foreground">Movimientos de stock</p>
                 <span className="text-xs text-default-400">{movements.length} registros</span>
@@ -332,14 +339,14 @@ function DetailPanel({
                   ))}
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {movements.length > 0 ? visibleMovements.map((m) => (
-                  <div key={m._id} className="flex items-center justify-between rounded-xl bg-content2/60 px-3 py-2.5">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{m.product?.name || "Movimiento"}</p>
+                  <div key={m._id} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{m.product?.name || "Movimiento"}</p>
                       <p className="text-xs text-default-400">{m.reason || m.type}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                       <p className="text-sm font-semibold text-foreground">{m.type} {m.quantity}</p>
                       <p className="text-xs text-default-400">{new Date(m.createdAt).toLocaleDateString()}</p>
                     </div>
@@ -350,7 +357,7 @@ function DetailPanel({
               </div>
               {movements.length > MOVEMENTS_PREVIEW_LIMIT && (
                 <button
-                  className="mt-3 w-full rounded-xl border border-white/10 py-2 text-xs font-semibold text-default-500 hover:bg-content2/40 transition"
+                  className="mt-3 w-full rounded-xl border border-[color:rgb(var(--warm-border)/0.10)] py-2 text-xs font-semibold text-default-500 hover:bg-content2/40 transition"
                   onClick={() => setShowAllMovements((p) => !p)}
                 >
                   {showAllMovements ? "Ver menos" : `Ver todos (${movements.length})`}
@@ -361,7 +368,7 @@ function DetailPanel({
             {/* Actions */}
             <div className="flex gap-3 pb-2">
               <button
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-content2/50 py-3 text-sm font-semibold text-default-600 hover:bg-content2 transition"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[color:rgb(var(--warm-border)/0.12)] bg-content2/50 py-3 text-sm font-semibold text-default-600 hover:bg-content2 transition"
                 onClick={handleDownloadInvoice}
               >
                 <FileDown size={16} /> Descargar factura
@@ -436,6 +443,9 @@ export default function SalesPage() {
 
   const totalSales = useMemo(() => safeOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0), [safeOrders]);
 
+  const confirmedCount = useMemo(() => safeOrders.filter((o) => getCommercialStatus(o) === "Confirmada").length, [safeOrders]);
+  const paidCount = useMemo(() => safeOrders.filter((o) => o.paymentStatus === "Pagado").length, [safeOrders]);
+
   useEffect(() => {
     const target = loadMoreRef.current;
     if (!target || !hasNextPage || isDesktop) return;
@@ -472,38 +482,62 @@ export default function SalesPage() {
             <h1 className="page-title">Ventas</h1>
             {!isHeaderCompact && <p className="page-subtitle">Seguimiento de operaciones y estados</p>}
           </div>
-          <Link
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition"
-            to="/new-operation"
-          >
-            <Plus size={15} /> Nueva venta
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/20 transition"
+              to="/quick-sale"
+            >
+              <ScanBarcode size={15} /> Venta Rápida
+            </Link>
+            <Link
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition"
+              to="/new-operation"
+            >
+              <Plus size={15} /> Nueva venta
+            </Link>
+          </div>
         </div>
 
-        {/* KPI mini */}
+        {/* KPI strip */}
         {!isHeaderCompact && (
           <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
             <div className="stat-card !p-4">
-              <p className="stat-card-label">Operaciones</p>
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Operaciones</span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ReceiptText size={13} />
+                </div>
+              </div>
               <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{total || safeOrders.length}</p>
             </div>
             <div className="stat-card !p-4">
-              <p className="stat-card-label">Facturado</p>
+              <div className="flex items-center justify-between">
+                <span className="stat-card-label">Facturado</span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <TrendingUp size={13} />
+                </div>
+              </div>
               <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{formatCompactCurrency(totalSales, currency)}</p>
             </div>
             {isDesktop && (
               <>
                 <div className="stat-card !p-4">
-                  <p className="stat-card-label">Confirmadas</p>
-                  <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-                    {safeOrders.filter((o) => getCommercialStatus(o) === "Confirmada").length}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="stat-card-label">Confirmadas</span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <CheckCircle2 size={13} />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{confirmedCount}</p>
                 </div>
                 <div className="stat-card !p-4">
-                  <p className="stat-card-label">Pagadas</p>
-                  <p className={`mt-2 text-2xl font-bold tracking-tight ${safeOrders.filter((o) => o.paymentStatus === "Pagado").length > 0 ? "text-success" : "text-foreground"}`}>
-                    {safeOrders.filter((o) => o.paymentStatus === "Pagado").length}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="stat-card-label">Pagadas</span>
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/10 text-success">
+                      <CircleDollarSign size={13} />
+                    </div>
+                  </div>
+                  <p className={`mt-2 text-2xl font-bold tracking-tight ${paidCount > 0 ? "text-success" : "text-foreground"}`}>{paidCount}</p>
                 </div>
               </>
             )}
@@ -520,7 +554,7 @@ export default function SalesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button className="text-default-400 hover:text-foreground" onClick={() => setSearchQuery("")}>×</button>
+            <button className="text-default-400 hover:text-foreground transition" onClick={() => setSearchQuery("")}>×</button>
           )}
         </div>
       </div>
@@ -530,7 +564,11 @@ export default function SalesPage() {
         {(["all", ...statuses] as ("all" | SalesStatus)[]).map((f) => (
           <button
             key={f}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition ${activeFilter === f ? "bg-primary text-white shadow-md shadow-primary/30" : "bg-content2/60 text-default-500 hover:bg-content2"}`}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition ${
+              activeFilter === f
+                ? "bg-primary text-white shadow-md shadow-primary/25"
+                : "bg-content2/60 text-default-500 hover:bg-content2"
+            }`}
             onClick={() => setActiveFilter(f)}
           >
             {f === "all" ? "Todas" : f}
@@ -557,18 +595,18 @@ export default function SalesPage() {
                   key={order._id}
                   className={`w-full rounded-2xl border px-4 py-3.5 text-left transition-all ${
                     isSelected
-                      ? "border-primary/30 bg-primary/8 shadow-sm shadow-primary/10"
-                      : "border-white/6 bg-content2/40 hover:border-primary/20 hover:bg-primary/5"
+                      ? "border-primary/30 bg-primary/8 shadow-[0_0_0_1px_rgb(var(--warm-glow)/0.15),0_4px_16px_rgb(var(--warm-glow)/0.10)]"
+                      : "border-[color:rgb(var(--warm-border)/0.08)] bg-content2/40 hover:border-primary/20 hover:bg-primary/5"
                   }`}
                   onClick={() => navigate(`/sales/${order._id}`)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isSelected ? "bg-primary/20 text-primary" : "bg-content2 text-default-400"}`}>
-                      <ReceiptText size={15} />
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isSelected ? "bg-primary/15 text-primary" : "bg-content2 text-default-400"}`}>
+                      <ReceiptText size={16} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">{getClientName(order.client)}</p>
-                      <div className="mt-1 flex items-center gap-2">
+                      <div className="mt-0.5 flex items-center gap-1.5">
                         <span className="text-[11px] text-default-400">{order.orderNumber || `#${order._id.slice(-6)}`}</span>
                         <span className="text-[11px] text-default-400">·</span>
                         <span className="text-[11px] text-default-400">{new Date(order.createdAt).toLocaleDateString()}</span>
@@ -583,10 +621,10 @@ export default function SalesPage() {
                       </div>
                     )}
                     <div className="shrink-0 text-right">
-                      {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Importe</p>}
+                      {isDesktop && <p className="text-[10px] uppercase tracking-[0.12em] text-default-400">Importe</p>}
                       <p className="text-sm font-bold text-foreground">{formatCompactCurrency(Number(order.totalAmount || 0), currency)}</p>
                     </div>
-                    {isDesktop && <ChevronRight size={14} className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} />}
+                    {isDesktop && <ChevronRight size={14} className={`shrink-0 transition-colors ${isSelected ? "text-primary" : "text-default-300"}`} />}
                   </div>
                 </button>
               );
@@ -619,18 +657,31 @@ export default function SalesPage() {
         )}
       </div>
 
-      {/* Mobile FAB */}
+      {/* Mobile FABs */}
       {!isDesktop && (
-        <Button
-          isIconOnly
-          as={Link}
-          className="fixed bottom-[100px] right-6 z-10 rounded-full shadow-lg shadow-primary/35 lg:hidden"
-          color="primary"
-          size="lg"
-          to="/new-operation"
-        >
-          <Plus size={24} />
-        </Button>
+        <div className="fixed bottom-[100px] right-6 z-10 flex flex-col gap-3 lg:hidden">
+          <Button
+            isIconOnly
+            as={Link}
+            className="rounded-full shadow-lg shadow-primary/35"
+            color="primary"
+            size="lg"
+            to="/new-operation"
+          >
+            <Plus size={24} />
+          </Button>
+          <Button
+            isIconOnly
+            as={Link}
+            className="rounded-full shadow-lg shadow-primary/25"
+            color="default"
+            size="lg"
+            variant="bordered"
+            to="/quick-sale"
+          >
+            <ScanBarcode size={22} />
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -647,7 +698,7 @@ export default function SalesPage() {
           onClick={() => navigate("/sales")}
         />
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out ${orderId ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-[color:rgb(var(--warm-border)/0.12)] shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${orderId ? "translate-x-0" : "translate-x-full"}`}
           style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
         >
           {orderId && (

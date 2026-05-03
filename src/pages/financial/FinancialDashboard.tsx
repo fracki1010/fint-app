@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { AlertTriangle, Bolt } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, Bolt, FileDown } from "lucide-react";
 
 import { FinancialFilterBar } from "@/components/financial/FinancialFilterBar";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/financial/FinancialState";
 import { useFinancialOverview } from "@/hooks/useFinancial";
 import { useFinancialFilters } from "@/hooks/useFinancialFilters";
+import { downloadExport } from "@/utils/export";
 
 function statusTone(status: string) {
   if (status === "Verificado") return "text-success";
@@ -23,6 +24,7 @@ export default function FinancialDashboardPage() {
   });
   const { data, loading, error } = useFinancialOverview(filters);
   const categories = data?.availableCategories || [];
+  const [exporting, setExporting] = useState(false);
 
   const kpis = useMemo(
     () =>
@@ -56,11 +58,31 @@ export default function FinancialDashboardPage() {
         onReset={resetFilters}
       />
 
-      <div>
-        <h1 className="financial-page-title">Panel Financiero</h1>
-        <p className="financial-page-subtitle">
-          Vision consolidada de ingresos, categorias y alertas operativas.
-        </p>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="financial-page-title">Panel Financiero</h1>
+          <p className="financial-page-subtitle">
+            Vision consolidada de ingresos, categorias y alertas operativas.
+          </p>
+        </div>
+        <button
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          disabled={exporting}
+          onClick={() => {
+            setExporting(true);
+            downloadExport("sales", {
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+              category: filters.category,
+            })
+              .catch(() => {})
+              .finally(() => setExporting(false));
+          }}
+          type="button"
+        >
+          <FileDown size={15} />
+          {exporting ? "Exportando..." : "Exportar"}
+        </button>
       </div>
 
       {loading && !data && <FinancialLoadingState />}

@@ -1,3 +1,4 @@
+import { FileDown } from "lucide-react";
 import { FinancialFilterBar } from "@/components/financial/FinancialFilterBar";
 import {
   FinancialEmptyState,
@@ -6,12 +7,20 @@ import {
 } from "@/components/financial/FinancialState";
 import { useFinancialAccounting } from "@/hooks/useFinancial";
 import { useFinancialFilters } from "@/hooks/useFinancialFilters";
+import { downloadExport } from "@/utils/export";
 
-function ledgerStatusTone(status: string) {
-  if (status === "Conciliado") return "text-success";
-  if (status === "Pendiente") return "text-warning";
+function ledgerStatusBadge(status: string) {
+  if (status === "Conciliado")
+    return "inline-flex items-center rounded-full bg-success/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-success";
+  if (status === "Pendiente")
+    return "inline-flex items-center rounded-full bg-warning/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-warning";
+  return "inline-flex items-center rounded-full bg-danger/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-danger";
+}
 
-  return "text-danger";
+function deltaColor(delta: string) {
+  if (delta.startsWith("+") && !delta.startsWith("+0.0")) return "text-success";
+  if (delta.startsWith("-")) return "text-danger";
+  return "text-default-400";
 }
 
 export default function AccountingStatementsPage() {
@@ -40,20 +49,6 @@ export default function AccountingStatementsPage() {
 
   return (
     <section className="space-y-6 overflow-x-hidden">
-      <FinancialFilterBar
-        categories={categories}
-        filters={filters}
-        onChange={setFilters}
-        onReset={resetFilters}
-      />
-      {loading && !data && <FinancialLoadingState />}
-      {error && <FinancialErrorState message={error} />}
-      {!loading &&
-        !error &&
-        data &&
-        summary.length === 0 &&
-        ledger.length === 0 && <FinancialEmptyState label="Contabilidad" />}
-
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-default-500">
@@ -63,14 +58,48 @@ export default function AccountingStatementsPage() {
             Contabilidad y Estados
           </h1>
         </div>
+        <button
+          className="flex items-center gap-2 rounded-xl border border-divider/70 px-4 py-2 text-sm font-semibold text-default-600 transition-colors hover:bg-content2/60"
+          onClick={resetFilters}
+          type="button"
+        >
+          Reiniciar
+        </button>
+        <button
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          onClick={() => {
+            downloadExport("accounting", {
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+              category: filters.category,
+            }).catch(() => {});
+          }}
+          type="button"
+        >
+          <FileDown size={15} />
+          Exportar
+        </button>
       </div>
+
+      <FinancialFilterBar
+        categories={categories}
+        filters={filters}
+        hideHeader
+        onChange={setFilters}
+      />
+
+      {loading && !data && <FinancialLoadingState />}
+      {error && <FinancialErrorState message={error} />}
+      {!loading &&
+        !error &&
+        data &&
+        summary.length === 0 &&
+        ledger.length === 0 && <FinancialEmptyState label="Contabilidad" />}
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         <article className="financial-card">
           <div className="flex items-center justify-between">
-            <h2 className="financial-section-title">
-              Resumen de Balance
-            </h2>
+            <h2 className="financial-section-title">Resumen de Balance</h2>
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               FY 2024 T3
             </span>
@@ -84,7 +113,9 @@ export default function AccountingStatementsPage() {
                 <p className="mt-2 text-2xl font-semibold tracking-[-0.02em]">
                   {item.value}
                 </p>
-                <p className="mt-1 text-xs text-primary">{item.delta}</p>
+                <p className={`mt-1 text-xs font-medium ${deltaColor(item.delta)}`}>
+                  {item.delta}
+                </p>
               </div>
             ))}
           </div>
@@ -131,30 +162,30 @@ export default function AccountingStatementsPage() {
           <table className="w-full min-w-[820px]">
             <thead>
               <tr className="text-left text-xs uppercase tracking-[0.14em] text-default-500">
-                <th className="pb-3">Fecha</th>
-                <th className="pb-3">Descripcion</th>
-                <th className="pb-3">Categoria</th>
-                <th className="pb-3">Ref ID</th>
-                <th className="pb-3 text-right">Debito (-)</th>
-                <th className="pb-3 text-right">Credito (+)</th>
+                <th className="pb-3 pr-4">Fecha</th>
+                <th className="pb-3 pr-4">Descripción</th>
+                <th className="pb-3 pr-4">Categoría</th>
+                <th className="pb-3 pr-4">Ref ID</th>
+                <th className="pb-3 pr-4 text-right">Débito (-)</th>
+                <th className="pb-3 pr-4 text-right">Crédito (+)</th>
                 <th className="pb-3 text-right">Estado</th>
               </tr>
             </thead>
             <tbody>
               {ledger.map((row) => (
                 <tr className="border-t border-divider/70" key={row.refId}>
-                  <td className="py-3 text-sm text-default-500">{row.date}</td>
-                  <td className="py-3 text-sm font-medium">{row.description}</td>
-                  <td className="py-3 text-sm text-default-500">{row.category}</td>
-                  <td className="py-3 text-sm text-default-500">{row.refId}</td>
-                  <td className="py-3 text-right text-sm font-medium">{row.debit}</td>
-                  <td className="py-3 text-right text-sm font-medium">{row.credit}</td>
-                  <td
-                    className={`py-3 text-right text-sm font-semibold ${ledgerStatusTone(
-                      row.status,
-                    )}`}
-                  >
-                    {row.status}
+                  <td className="py-3 pr-4 text-sm text-default-500">{row.date}</td>
+                  <td className="py-3 pr-4 text-sm font-medium">{row.description}</td>
+                  <td className="py-3 pr-4 text-sm text-default-500">{row.category}</td>
+                  <td className="py-3 pr-4 text-sm text-default-500">{row.refId}</td>
+                  <td className="py-3 pr-4 text-right text-sm font-medium text-danger">
+                    {row.debit !== "—" ? row.debit : <span className="text-default-400">—</span>}
+                  </td>
+                  <td className="py-3 pr-4 text-right text-sm font-medium">
+                    {row.credit !== "—" ? row.credit : <span className="text-default-400">—</span>}
+                  </td>
+                  <td className="py-3 text-right">
+                    <span className={ledgerStatusBadge(row.status)}>{row.status}</span>
                   </td>
                 </tr>
               ))}

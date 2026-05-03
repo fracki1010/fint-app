@@ -22,8 +22,11 @@ import {
   Building2,
   X,
   CheckCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { useThemeStore } from "@/stores/themeStore";
+import logo from "@/assets/logo-ambar-5.svg";
 
 export default function MobileLayout() {
   const location = useLocation();
@@ -33,6 +36,7 @@ export default function MobileLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
+  const { theme, toggleTheme } = useThemeStore();
 
   const operationNav = [
     { path: "/", label: "Inicio", icon: LayoutGrid },
@@ -102,7 +106,7 @@ export default function MobileLayout() {
         {/* Brand */}
         <div className="px-5 pt-6 pb-4 border-b border-white/8">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-9 w-9 rounded-xl object-contain" />
+            <img src={logo} alt="Logo" className="h-14 w-14 rounded-xl object-contain" />
             <div>
               <p className="text-[15px] font-bold tracking-tight text-foreground">Fint Suite</p>
               <p className="text-[11px] text-default-400">Panel Operativo</p>
@@ -125,27 +129,37 @@ export default function MobileLayout() {
 
         {/* User footer */}
         <div className="border-t border-white/8 px-4 py-4">
-          {/* Notifications badge */}
-          <button
-            className="mb-3 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-default-400 hover:bg-white/5 hover:text-foreground transition"
-            type="button"
-            onClick={() => setShowNotifications(true)}
-          >
-            <div className="relative">
-              <Bell size={15} />
+          {/* Notifications + theme toggle row */}
+          <div className="mb-3 flex items-center gap-2">
+            <button
+              className="flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-default-400 hover:bg-white/5 hover:text-foreground transition"
+              type="button"
+              onClick={() => setShowNotifications(true)}
+            >
+              <div className="relative">
+                <Bell size={15} />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </div>
+              <span className="flex-1 text-left text-xs font-semibold">Notificaciones</span>
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
+                <span className="rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-bold text-danger">
+                  {unreadCount}
                 </span>
               )}
-            </div>
-            <span className="flex-1 text-left text-xs font-semibold">Notificaciones</span>
-            {unreadCount > 0 && (
-              <span className="rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-bold text-danger">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+            </button>
+            <button
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 text-default-400 hover:bg-white/5 hover:text-foreground transition"
+              title={theme === "dark" ? "Cambiar a claro" : "Cambiar a oscuro"}
+              type="button"
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          </div>
 
           {/* User info */}
           <div className="flex items-center gap-3 rounded-xl bg-white/4 border border-white/8 px-3 py-2.5">
@@ -179,7 +193,7 @@ export default function MobileLayout() {
         onClick={() => setShowNotifications(false)}
       />
       <div
-        className={`fixed right-0 top-0 z-[70] h-screen w-full max-w-sm overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar ${showNotifications ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed right-0 top-0 z-[70] h-screen w-full max-w-sm overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar ${showNotifications ? "translate-x-0" : "translate-x-full"}`}
         style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
       >
         {/* Header */}
@@ -243,7 +257,7 @@ export default function MobileLayout() {
 
       {/* ── Mobile bottom bar ────────────────────────────────────────── */}
       {!hideBottomBar && (
-        <nav className="fixed bottom-0 w-full border-t border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_88%,transparent)] backdrop-blur-xl flex justify-around items-center pt-3 pb-6 px-2 z-50 shadow-[0_-18px_40px_rgba(5,18,15,0.16)] lg:hidden">
+        <nav className="fixed bottom-0 w-full border-t border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_88%,transparent)] backdrop-blur-xl flex justify-around items-center pt-3 pb-6 px-2 z-50 shadow-[0_-18px_40px_rgba(20,12,8,0.20)] lg:hidden">
           {mobileBottomTabs.map((tab) => {
             const active = isActive(tab.path);
             const Icon = tab.icon;
@@ -258,7 +272,7 @@ export default function MobileLayout() {
               >
                 <div className="relative">
                   <Icon
-                    className={active ? "fill-primary/15 bg-primary/12 rounded-xl p-1 shadow-[0_8px_20px_rgba(88,176,156,0.18)]" : ""}
+                    className={active ? "fill-primary/15 bg-primary/12 rounded-xl p-1 shadow-[0_8px_20px_rgba(217,119,6,0.18)]" : ""}
                     size={24}
                     strokeWidth={active ? 2.5 : 2}
                   />

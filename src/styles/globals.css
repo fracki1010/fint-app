@@ -7,10 +7,16 @@
 :root {
   color-scheme: light;
   font-family:
-    "IBM Plex Sans", "Segoe UI", "SF Pro Text", "Helvetica Neue", sans-serif;
+    "Work Sans", "Segoe UI", "SF Pro Text", "Helvetica Neue", sans-serif;
+  --warm-border: 180 140 100;
+  --warm-glow: 217 119 6;
+  --warm-shadow: 40 25 15;
 }
 
 .dark {
+  --warm-border: 200 170 140;
+  --warm-glow: 245 158 11;
+  --warm-shadow: 15 10 8;
   color-scheme: dark;
 }
 
@@ -23,28 +29,35 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top, rgb(13 79 169 / 0.12), transparent 30%),
-    radial-gradient(circle at 88% 12%, rgb(15 118 110 / 0.08), transparent 26%),
-    linear-gradient(180deg, rgb(13 79 169 / 0.04), transparent 24%),
+    radial-gradient(circle at top, rgb(var(--warm-glow) / 0.08), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgb(15 118 110 / 0.06), transparent 26%),
+    linear-gradient(180deg, rgb(var(--warm-glow) / 0.03), transparent 24%),
     var(--heroui-background);
   color: var(--heroui-foreground);
 }
 
 .dark body {
   background:
-    radial-gradient(circle at top, rgb(13 79 169 / 0.16), transparent 28%),
-    radial-gradient(circle at 88% 12%, rgb(201 162 39 / 0.12), transparent 24%),
-    linear-gradient(180deg, rgb(10 22 44 / 0.05), transparent 24%),
+    radial-gradient(circle at top, rgb(var(--warm-glow) / 0.14), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgb(45 212 191 / 0.08), transparent 24%),
+    linear-gradient(180deg, rgb(var(--warm-shadow) / 0.12), transparent 24%),
     var(--heroui-background);
 }
 
 ::selection {
-  background: rgb(13 79 169 / 0.26);
+  background: rgb(var(--warm-glow) / 0.20);
 }
 
 * {
   box-sizing: border-box;
 }
+
+html,
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -52,7 +65,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(67 100 148 / 0.4);
+  background: rgb(var(--warm-border) / 0.30);
   border-radius: 999px;
 }
 
@@ -71,7 +84,7 @@ body {
 }
 
 .scrollbar-sidebar::-webkit-scrollbar {
-  width: 3px;
+  width: 2px;
 }
 
 .scrollbar-sidebar::-webkit-scrollbar-track {
@@ -79,26 +92,28 @@ body {
 }
 
 .scrollbar-sidebar::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.1);
+  background: rgb(var(--warm-glow) / 0.25);
   border-radius: 999px;
 }
 
 .scrollbar-sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgb(255 255 255 / 0.22);
+  background: rgb(var(--warm-glow) / 0.40);
 }
+
+/* ── Mobile wrapper ───────────────────────────────────────────────────── */
 
 .MobileAppWrapper {
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(circle at top right, rgb(13 79 169 / 0.11), transparent 30%),
-    radial-gradient(circle at bottom left, rgb(15 118 110 / 0.08), transparent 34%);
+    radial-gradient(circle at top right, rgb(var(--warm-glow) / 0.08), transparent 30%),
+    radial-gradient(circle at bottom left, rgb(15 118 110 / 0.06), transparent 34%);
 }
 
 .dark .MobileAppWrapper {
   background:
-    radial-gradient(circle at top right, rgb(13 79 169 / 0.14), transparent 28%),
-    radial-gradient(circle at bottom left, rgb(201 162 39 / 0.1), transparent 32%);
+    radial-gradient(circle at top right, rgb(var(--warm-glow) / 0.12), transparent 28%),
+    radial-gradient(circle at bottom left, rgb(45 212 191 / 0.06), transparent 32%);
 }
 
 .MobileAppWrapper::before {
@@ -108,88 +123,92 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.45), transparent 24%),
-    linear-gradient(0deg, rgb(13 79 169 / 0.04), transparent 25%);
+    linear-gradient(180deg, rgb(255 255 255 / 0.40), transparent 22%),
+    linear-gradient(0deg, rgb(var(--warm-glow) / 0.03), transparent 24%);
 }
 
 .dark .MobileAppWrapper::before {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 18%),
-    linear-gradient(0deg, rgb(0 0 0 / 0.06), transparent 22%);
+    linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 16%),
+    linear-gradient(0deg, rgb(0 0 0 / 0.05), transparent 20%);
 }
 
+/* ── Surface components ───────────────────────────────────────────────── */
+
 .app-topbar {
-  background-color: var(--heroui-content1);
   background: color-mix(in srgb, var(--heroui-content1) 84%, transparent);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgb(69 101 149 / 0.18);
-  box-shadow: 0 14px 34px rgb(13 79 169 / 0.08);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgb(var(--warm-border) / 0.14);
+  box-shadow: 0 14px 34px rgb(var(--warm-glow) / 0.06);
 }
 
 .dark .app-topbar {
-  border-bottom: 1px solid rgb(69 101 149 / 0.24);
-  box-shadow: 0 18px 40px rgb(10 22 44 / 0.1);
+  border-bottom: 1px solid rgb(var(--warm-border) / 0.12);
+  box-shadow: 0 18px 40px rgb(var(--warm-shadow) / 0.18);
 }
 
 .app-panel {
-  background-color: var(--heroui-content1);
-  background: color-mix(in srgb, var(--heroui-content1) 88%, transparent);
-  border: 1px solid rgb(69 101 149 / 0.14);
-  box-shadow: 0 12px 28px rgb(13 79 169 / 0.07);
+  background: color-mix(in srgb, var(--heroui-content1) 90%, transparent);
+  border: 1px solid rgb(var(--warm-border) / 0.12);
+  box-shadow: 0 12px 28px rgb(var(--warm-glow) / 0.06);
 }
 
 .dark .app-panel {
-  border: 1px solid rgb(69 101 149 / 0.2);
-  box-shadow: 0 14px 34px rgb(10 22 44 / 0.1);
+  border: 1px solid rgb(var(--warm-border) / 0.10);
+  box-shadow: 0 14px 34px rgb(var(--warm-shadow) / 0.18);
 }
 
 .app-panel-soft {
-  background-color: var(--heroui-content2);
-  background: color-mix(in srgb, var(--heroui-content1) 70%, transparent);
-  border: 1px solid rgb(69 101 149 / 0.12);
+  background: color-mix(in srgb, var(--heroui-content2) 70%, transparent);
+  border: 1px solid rgb(var(--warm-border) / 0.08);
 }
 
 .dark .app-panel-soft {
-  border: 1px solid rgb(69 101 149 / 0.16);
+  border: 1px solid rgb(var(--warm-border) / 0.08);
 }
 
 .modal-surface {
-  background-color: var(--heroui-content1) !important;
-  background: var(--heroui-content1) !important;
+  background-color: hsl(var(--heroui-content1)) !important;
   opacity: 1 !important;
-  border: 1px solid rgb(69 101 149 / 0.26);
-  box-shadow: 0 24px 56px rgb(10 22 44 / 0.24);
+  border: 1px solid rgb(var(--warm-border) / 0.18);
+  box-shadow: 0 24px 56px rgb(var(--warm-shadow) / 0.25);
 }
-
 
 .bottom-sheet-surface {
-  background-color: var(--heroui-content1) !important;
-  background: var(--heroui-content1) !important;
-  border-top: 1px solid rgb(69 101 149 / 0.24);
-  box-shadow: 0 -18px 40px rgb(10 22 44 / 0.16);
+  background-color: hsl(var(--heroui-content1)) !important;
+  border-top: 1px solid rgb(var(--warm-border) / 0.16);
+  box-shadow: 0 -18px 40px rgb(var(--warm-shadow) / 0.16);
 }
 
+/* ── Typography ───────────────────────────────────────────────────────── */
+
+/* Kicker / overline — uses secondary (teal) as spec */
 .section-kicker {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgb(45 212 191);
+  color: var(--heroui-secondary);
 }
 
+/* ── Form controls ────────────────────────────────────────────────────── */
+
 .corp-input {
-  background-color: var(--heroui-content1);
-  border: 1px solid rgb(69 101 149 / 0.26);
   background: color-mix(in srgb, var(--heroui-content1) 72%, transparent);
+  border: 1.5px solid rgb(var(--warm-border) / 0.20);
+  border-radius: 14px;
   color: var(--heroui-foreground);
+  height: 44px;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 select.corp-input {
   appearance: none;
   background:
-    linear-gradient(45deg, transparent 50%, rgb(45 212 191) 50%),
-    linear-gradient(135deg, rgb(45 212 191) 50%, transparent 50%),
+    linear-gradient(45deg, transparent 50%, var(--heroui-secondary) 50%),
+    linear-gradient(135deg, var(--heroui-secondary) 50%, transparent 50%),
     color-mix(in srgb, var(--heroui-content1) 72%, transparent);
   background-position:
     calc(100% - 18px) calc(50% - 2px),
@@ -211,13 +230,14 @@ select.corp-input {
 .corp-input:focus,
 .corp-input:focus-visible {
   outline: none;
-  border-color: rgb(13 79 169 / 0.72);
+  border-color: rgb(var(--warm-glow) / 0.40);
+  background: color-mix(in srgb, var(--heroui-content1) 90%, transparent);
   box-shadow:
-    0 0 0 4px rgb(13 79 169 / 0.12),
+    0 0 0 3px rgb(var(--warm-glow) / 0.08),
     inset 0 1px 0 rgb(255 255 255 / 0.04);
 }
 
-/* iOS Safari zooms inputs <16px and breaks bottom drawers when keyboard opens. */
+/* iOS Safari: prevents zoom on inputs < 16px */
 .keyboard-safe-form .corp-input {
   font-size: 16px;
 }
@@ -228,6 +248,8 @@ select.corp-input {
   }
 }
 
+/* ── Financial layout ─────────────────────────────────────────────────── */
+
 .financial-shell {
   display: grid;
   grid-template-columns: 244px minmax(0, 1fr);
@@ -237,9 +259,10 @@ select.corp-input {
   position: sticky;
   top: 0;
   min-height: 100vh;
-  border-right: 1px solid rgb(69 101 149 / 0.2);
-  background: color-mix(in srgb, var(--heroui-content1) 86%, transparent);
+  border-right: 1px solid rgb(var(--warm-border) / 0.14);
+  background: color-mix(in srgb, var(--heroui-content1) 88%, transparent);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 28px 18px;
 }
 
@@ -250,15 +273,15 @@ select.corp-input {
   gap: 10px;
   border: 1px solid transparent;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--heroui-default-600);
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .financial-brand-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--heroui-foreground);
@@ -266,7 +289,7 @@ select.corp-input {
 
 .financial-brand-subtitle {
   margin-top: 4px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--heroui-default-500);
 }
 
@@ -274,13 +297,13 @@ select.corp-input {
   font-size: clamp(2rem, 2.8vw, 3.1rem);
   font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 1.05;
+  line-height: 1.1;
   color: var(--heroui-foreground);
 }
 
 .financial-page-subtitle {
   margin-top: 8px;
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   color: var(--heroui-default-500);
 }
 
@@ -294,26 +317,28 @@ select.corp-input {
 .financial-icon {
   width: 18px;
   height: 18px;
-  stroke-width: 2.15;
+  stroke-width: 2;
 }
 
 .financial-side-item:hover {
-  border-color: rgb(69 101 149 / 0.2);
+  border-color: rgb(var(--warm-glow) / 0.16);
   color: var(--heroui-foreground);
-  background: rgb(255 255 255 / 0.02);
+  background: rgb(var(--warm-glow) / 0.04);
 }
 
+/* Active: left border 3px + tinted bg per spec */
 .financial-side-item.is-active {
-  border-color: rgb(13 79 169 / 0.4);
+  border-color: rgb(var(--warm-glow) / 0.30);
   color: var(--heroui-primary);
-  background: rgb(13 79 169 / 0.1);
+  background: rgb(var(--warm-glow) / 0.08);
+  box-shadow: inset 3px 0 0 var(--heroui-primary);
 }
 
 .financial-header {
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid rgb(69 101 149 / 0.2);
+  border-bottom: 1px solid rgb(var(--warm-border) / 0.14);
   background: color-mix(in srgb, var(--heroui-content1) 82%, transparent);
   backdrop-filter: blur(14px);
   padding: 16px 32px;
@@ -326,8 +351,13 @@ select.corp-input {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  border: 1px solid rgb(69 101 149 / 0.2);
+  border: 1px solid rgb(var(--warm-border) / 0.14);
   background: rgb(255 255 255 / 0.02);
+  transition: background 0.15s ease;
+}
+
+.financial-icon-btn:hover {
+  background: rgb(var(--warm-glow) / 0.05);
 }
 
 .financial-sidebar-actions {
@@ -342,8 +372,8 @@ select.corp-input {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 12px;
-  border: 1px solid rgb(69 101 149 / 0.2);
+  border-radius: 10px;
+  border: 1px solid rgb(var(--warm-border) / 0.14);
   background: color-mix(in srgb, var(--heroui-content1) 88%, transparent);
   padding: 9px 10px;
   font-size: 12px;
@@ -351,24 +381,22 @@ select.corp-input {
   color: var(--heroui-default-600);
 }
 
+/* Financial card — per spec */
 .financial-card {
-  border: 1px solid rgb(69 101 149 / 0.2);
+  border: 1px solid rgb(var(--warm-border) / 0.14);
   border-radius: 20px;
   background: color-mix(in srgb, var(--heroui-content1) 90%, transparent);
-  box-shadow: 0 14px 36px rgb(10 22 44 / 0.08);
+  box-shadow: 0 12px 28px rgb(var(--warm-glow) / 0.06);
   padding: 22px;
 }
 
+/* Accent card */
 .financial-card-accent {
   background:
-    radial-gradient(circle at 82% 20%, rgb(147 197 253 / 0.18), transparent 34%),
-    linear-gradient(
-      120deg,
-      rgb(9 51 100 / 0.96) 10%,
-      rgb(11 72 139 / 0.92) 72%,
-      rgb(12 94 173 / 0.9) 100%
-    );
+    radial-gradient(circle at 82% 18%, rgb(255 255 255 / 0.06), transparent 38%),
+    linear-gradient(135deg, #D97706 0%, #92400E 100%);
   color: white;
+  border-color: transparent;
 }
 
 @media (max-width: 1024px) {
@@ -385,22 +413,22 @@ select.corp-input {
   }
 }
 
-/* ── Desktop page shell ──────────────────────────────────────────────── */
+/* ── Desktop page shell ───────────────────────────────────────────────── */
 
 .page-header {
   position: sticky;
   top: 0;
   z-index: 20;
-  border-bottom: 1px solid rgb(69 101 149 / 0.14);
-  background: color-mix(in srgb, var(--heroui-background) 82%, transparent);
+  border-bottom: 1px solid rgb(var(--warm-border) / 0.12);
+  background: color-mix(in srgb, var(--heroui-background) 84%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  padding: 14px 16px;
+  padding: 14px 24px;
 }
 
 @media (min-width: 1024px) {
   .page-header {
-    padding: 18px 28px;
+    padding: 18px 32px;
   }
 }
 
@@ -424,19 +452,19 @@ select.corp-input {
   margin-top: 2px;
 }
 
-/* ── Stat card ───────────────────────────────────────────────────────── */
+/* ── Stat card (KPI) ──────────────────────────────────────────────────── */
 
 .stat-card {
   border-radius: 20px;
   padding: 20px;
-  border: 1px solid rgb(69 101 149 / 0.14);
+  border: 1px solid rgb(var(--warm-border) / 0.12);
   background: color-mix(in srgb, var(--heroui-content1) 90%, transparent);
-  box-shadow: 0 4px 16px rgb(13 79 169 / 0.05);
-  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 4px 16px rgb(var(--warm-glow) / 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 8px 28px rgb(13 79 169 / 0.1);
+  box-shadow: 0 8px 28px rgb(var(--warm-glow) / 0.08);
   transform: translateY(-1px);
 }
 
@@ -463,16 +491,16 @@ select.corp-input {
   line-height: 1.4;
 }
 
-/* ── List row ────────────────────────────────────────────────────────── */
+/* ── List row ─────────────────────────────────────────────────────────── */
 
 .list-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-radius: 16px;
-  border: 1px solid rgb(69 101 149 / 0.1);
+  border-radius: 14px;
+  border: 1px solid rgb(var(--warm-border) / 0.08);
   background: color-mix(in srgb, var(--heroui-content2) 55%, transparent);
-  padding: 14px 16px;
+  padding: 12px 16px;
   text-align: left;
   width: 100%;
   transition: all 0.15s ease;
@@ -480,35 +508,35 @@ select.corp-input {
 }
 
 .list-row:hover {
-  border-color: rgb(13 79 169 / 0.25);
-  background: color-mix(in srgb, var(--heroui-primary) 5%, transparent);
+  border-color: rgb(var(--warm-glow) / 0.20);
+  background: color-mix(in srgb, var(--heroui-primary) 4%, transparent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgb(13 79 169 / 0.07);
+  box-shadow: 0 4px 16px rgb(var(--warm-glow) / 0.06);
 }
 
 .list-row:active {
   transform: scale(0.995);
 }
 
-/* ── Search bar ──────────────────────────────────────────────────────── */
+/* ── Search bar ───────────────────────────────────────────────────────── */
 
 .search-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   border-radius: 14px;
-  border: 1px solid rgb(69 101 149 / 0.18);
+  border: 1px solid rgb(var(--warm-border) / 0.12);
   background: color-mix(in srgb, var(--heroui-content2) 70%, transparent);
   padding: 8px 14px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .search-bar:focus-within {
-  border-color: rgb(13 79 169 / 0.4);
-  box-shadow: 0 0 0 3px rgb(13 79 169 / 0.08);
+  border-color: rgb(var(--warm-glow) / 0.35);
+  box-shadow: 0 0 0 3px rgb(var(--warm-glow) / 0.08);
 }
 
-/* ── Badge pill ──────────────────────────────────────────────────────── */
+/* ── Badge pill ───────────────────────────────────────────────────────── */
 
 .badge {
   display: inline-flex;
@@ -521,10 +549,207 @@ select.corp-input {
   letter-spacing: 0.01em;
 }
 
-/* ── Sidebar accent line (left border on active) ─────────────────────── */
+/* ── Sidebar active glow ──────────────────────────────────────────────── */
 
 .sidebar-glow {
   box-shadow:
-    inset 0 0 0 1px rgb(13 79 169 / 0.3),
-    0 0 16px rgb(13 79 169 / 0.12);
+    inset 0 0 0 1px rgb(var(--warm-glow) / 0.25),
+    0 0 16px rgb(var(--warm-glow) / 0.08);
+}
+
+/* ── Mejoras de accesibilidad ─────────────────────────────────────────── */
+
+/* Focus visible para todos los elementos interactivos */
+:focus-visible {
+  outline: 2px solid var(--heroui-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--heroui-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link para navegación por teclado */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--heroui-primary);
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Mejor contraste en textos */
+.text-high-contrast {
+  color: var(--heroui-foreground);
+}
+
+/* Animaciones de transición suaves */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estados hover mejorados */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgb(var(--warm-glow) / 0.14);
+}
+
+/* Gradientes sutiles para cards */
+.card-gradient {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--heroui-content1) 95%, transparent) 0%,
+    color-mix(in srgb, var(--heroui-content2) 90%, transparent) 100%
+  );
+}
+
+/* Animación de entrada para elementos */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* Stagger animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* Mejoras de scrollbar para listas */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--warm-glow) / 0.25) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(var(--warm-glow) / 0.25);
+  border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--warm-glow) / 0.40);
+}
+
+/* Mejoras de loading skeleton */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--heroui-content2) 60%, transparent) 25%,
+    color-mix(in srgb, var(--heroui-content2) 80%, transparent) 50%,
+    color-mix(in srgb, var(--heroui-content2) 60%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Tooltip mejorado */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 6px 12px;
+  background: var(--heroui-content1);
+  color: var(--heroui-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid rgb(var(--warm-border) / 0.16);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.10);
+  z-index: 1000;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* Mejoras de responsive */
+@media (max-width: 640px) {
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-card-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mejoras de contraste en modo oscuro */
+.dark .text-default-500 {
+  color: rgb(156 163 175);
+}
+
+.dark .text-default-400 {
+  color: rgb(156 163 175);
 }

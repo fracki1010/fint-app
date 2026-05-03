@@ -29,6 +29,7 @@ import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
+import { useThemeStore } from "@/stores/themeStore";
 
 const UNIT_OPTIONS = [
   { key: "unidad", label: "Unidad" },
@@ -55,6 +56,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
   const { settings, loading, error, updateSettings } = useSettings();
+  const setTheme = useThemeStore((s) => s.setTheme);
   const { logout } = useAuth();
   const { showToast } = useAppToast();
   const {
@@ -538,6 +540,7 @@ export default function SettingsPage() {
     }
 
     if (activeSection === "apariencia") {
+      const currentTheme = (formData.theme as "light" | "dark") || "dark";
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-default-200/70 bg-content1/60 p-4">
@@ -548,40 +551,31 @@ export default function SettingsPage() {
               Elige como quieres ver toda la interfaz.
             </p>
 
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <Button
                 className="justify-start"
                 color="primary"
-                variant={formData.theme === "light" ? "solid" : "flat"}
-                onClick={() => handleInputChange("theme", "light")}
+                variant={currentTheme === "light" ? "solid" : "flat"}
+                onClick={() => {
+                  handleInputChange("theme", "light");
+                  setTheme("light");
+                }}
               >
                 Claro
               </Button>
               <Button
                 className="justify-start"
                 color="primary"
-                variant={formData.theme === "dark" ? "solid" : "flat"}
-                onClick={() => handleInputChange("theme", "dark")}
+                variant={currentTheme === "dark" ? "solid" : "flat"}
+                onClick={() => {
+                  handleInputChange("theme", "dark");
+                  setTheme("dark");
+                }}
               >
                 Oscuro
               </Button>
             </div>
           </div>
-
-          <Select
-            label="Tema visual"
-            selectedKeys={[formData.theme || "light"]}
-            variant="bordered"
-            onSelectionChange={(keys) =>
-              handleInputChange(
-                "theme",
-                Array.from(keys)[0] as "light" | "dark",
-              )
-            }
-          >
-            <SelectItem key="light">Claro</SelectItem>
-            <SelectItem key="dark">Oscuro</SelectItem>
-          </Select>
         </div>
       );
     }

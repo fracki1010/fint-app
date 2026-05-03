@@ -22,6 +22,7 @@ const RecipesPage = lazy(() => import("@/pages/Recipes"));
 const SuppliersPage = lazy(() => import("@/pages/Suppliers"));
 const TeamPage = lazy(() => import("@/pages/Team"));
 const ClientAccountPage = lazy(() => import("@/pages/ClientAccount"));
+const QuickSalePage = lazy(() => import("@/pages/QuickSale"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const FinancialDashboardPage = lazy(
   () => import("@/pages/financial/FinancialDashboard"),
@@ -93,6 +94,7 @@ function App() {
             element={<MovementDetailPage />}
             path="/movements/:movementId"
           />
+          <Route element={<QuickSalePage />} path="/quick-sale" />
           <Route element={<NewOperationPage />} path="/new-operation" />
           <Route element={<SuppliesPage />} path="/supplies" />
           <Route element={<SuppliesPage />} path="/supplies/:supplyId" />

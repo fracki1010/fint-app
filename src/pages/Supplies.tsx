@@ -694,7 +694,7 @@ export default function SuppliesPage() {
             <h1 className="page-title">Insumos</h1>
           </div>
           <button
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(88,176,156,0.35)] transition hover:scale-105"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105"
             onClick={() => { resetForm(); setShowCreateModal(true); }}
           >
             <Plus size={18} />
@@ -842,7 +842,7 @@ export default function SuppliesPage() {
 
       {!isDesktop && (
         <button
-          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition-transform hover:scale-105 active:scale-95"
+          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition-transform hover:scale-105 active:scale-95"
           onClick={() => { resetForm(); setShowCreateModal(true); }}
         >
           <Plus size={26} strokeWidth={2.5} />
@@ -892,7 +892,7 @@ export default function SuppliesPage() {
           onClick={() => navigate("/supplies")}
         />
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out ${supplyId ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${supplyId ? "translate-x-0" : "translate-x-full"}`}
           style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
         >
           {supplyId && (

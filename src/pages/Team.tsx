@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Loader2,
   Mail,
@@ -16,8 +16,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { TeamMember, UserRole } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
-
-// ── Constants ─────────────────────────────────────────────────────────
 
 const ROLES: { value: UserRole; label: string; description: string }[] = [
   { value: "admin", label: "Administrador", description: "Acceso completo a todo el sistema" },
@@ -44,7 +42,63 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// ── Form ──────────────────────────────────────────────────────────────
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    setIsDesktop(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return isDesktop;
+}
+
+function Dialog({ isOpen, onClose, title, children }: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+        onClick={onClose}
+      />
+      <div className="modal-surface relative z-10 w-full max-w-md rounded-2xl">
+        <div className="flex items-center justify-between border-b border-[color:rgb(var(--warm-border)/0.12)] px-5 py-3.5">
+          <h2 className="text-base font-bold text-foreground">{title}</h2>
+          <button
+            className="rounded-xl p-1.5 text-default-500 transition hover:bg-default-100"
+            type="button"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="px-5 pb-5 pt-4">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type FormMode = "create" | "edit";
 
@@ -73,18 +127,15 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
     }
   };
 
-  const inputCls =
-    "w-full rounded-xl border border-white/10 bg-default-100 px-3 py-2 text-sm text-foreground placeholder:text-default-300 focus:outline-none focus:ring-2 focus:ring-primary/40";
-
   return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="text-xs font-semibold text-default-400">
+        <label className="mb-1.5 block text-sm font-semibold text-foreground">
           Nombre completo <span className="text-danger">*</span>
         </label>
         <input
           required
-          className={`mt-1 ${inputCls}`}
+          className="corp-input w-full"
           placeholder="Juan García"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
@@ -93,12 +144,12 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
 
       {mode === "create" && (
         <div>
-          <label className="text-xs font-semibold text-default-400">
+          <label className="mb-1.5 block text-sm font-semibold text-foreground">
             Email <span className="text-danger">*</span>
           </label>
           <input
             required
-            className={`mt-1 ${inputCls}`}
+            className="corp-input w-full"
             placeholder="juan@empresa.com"
             type="email"
             value={email}
@@ -108,14 +159,14 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
       )}
 
       <div>
-        <label className="text-xs font-semibold text-default-400">
+        <label className="mb-1.5 block text-sm font-semibold text-foreground">
           {mode === "create" ? "Contraseña" : "Nueva contraseña"}{" "}
           {mode === "create" && <span className="text-danger">*</span>}
-          {mode === "edit" && <span className="text-default-300">(dejar vacío para no cambiar)</span>}
+          {mode === "edit" && <span className="text-default-500">(dejar vacío para no cambiar)</span>}
         </label>
         <input
           required={mode === "create"}
-          className={`mt-1 ${inputCls}`}
+          className="corp-input w-full"
           minLength={mode === "create" ? 6 : undefined}
           placeholder={mode === "create" ? "Mínimo 6 caracteres" : "••••••"}
           type="password"
@@ -125,15 +176,15 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-default-400">Rol</label>
-        <div className="mt-2 space-y-2">
+        <label className="mb-1.5 block text-sm font-semibold text-foreground">Rol</label>
+        <div className="mt-1 space-y-2">
           {ROLES.map((r) => (
             <button
               key={r.value}
               className={`w-full rounded-xl border px-3 py-2.5 text-left transition ${
                 role === r.value
-                  ? "border-primary/40 bg-primary/10"
-                  : "border-white/10 hover:border-white/20"
+                  ? "border-primary bg-primary/10"
+                  : "border-default-200 bg-default-50 hover:border-default-300 hover:bg-default-100"
               }`}
               type="button"
               onClick={() => setRole(r.value)}
@@ -144,22 +195,22 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
                 </span>
                 {role === r.value && <Shield size={14} className="text-primary" />}
               </div>
-              <p className="mt-0.5 text-xs text-default-400">{r.description}</p>
+              <p className="mt-0.5 text-xs text-default-500">{r.description}</p>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-2">
         <button
-          className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-default-400 transition hover:text-foreground"
+          className="flex-1 rounded-xl border border-default-200 bg-default-50 py-2.5 text-sm font-semibold text-foreground transition hover:bg-default-100"
           type="button"
           onClick={onCancel}
         >
           Cancelar
         </button>
         <button
-          className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+          className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           disabled={saving}
           type="submit"
         >
@@ -169,8 +220,6 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
     </form>
   );
 }
-
-// ── Member card ───────────────────────────────────────────────────────
 
 function MemberCard({
   member,
@@ -185,7 +234,7 @@ function MemberCard({
 }) {
   return (
     <button
-      className={`w-full rounded-2xl border border-white/10 bg-content1 p-4 text-left transition ${canManage ? "hover:border-primary/30 hover:bg-content2" : "cursor-default"} ${!member.isActive ? "opacity-50" : ""}`}
+      className={`w-full rounded-2xl border border-default-200 bg-content1 p-4 text-left transition ${canManage ? "hover:border-primary/30 hover:bg-content2" : "cursor-default"} ${!member.isActive ? "opacity-50" : ""}`}
       type="button"
       onClick={canManage ? onClick : undefined}
     >
@@ -207,7 +256,7 @@ function MemberCard({
               </span>
             )}
           </div>
-          <p className="flex items-center gap-1 text-xs text-default-400">
+          <p className="flex items-center gap-1 text-xs text-default-500">
             <Mail size={10} />
             {member.email}
           </p>
@@ -220,11 +269,9 @@ function MemberCard({
   );
 }
 
-// ── Drawer ────────────────────────────────────────────────────────────
-
 type DrawerMode = "edit" | "confirmDeactivate";
 
-interface MemberDrawerProps {
+interface MemberPanelProps {
   member: TeamMember | null;
   drawerMode: DrawerMode;
   onClose: () => void;
@@ -235,7 +282,7 @@ interface MemberDrawerProps {
   deactivating: boolean;
 }
 
-function MemberDrawer({
+function MemberPanel({
   member,
   drawerMode,
   onClose,
@@ -244,86 +291,140 @@ function MemberDrawer({
   onDeactivate,
   saving,
   deactivating,
-}: MemberDrawerProps) {
+}: MemberPanelProps) {
+  const isDesktop = useIsDesktop();
+
   if (!member) return null;
 
+  const title = drawerMode === "confirmDeactivate" ? "¿Desactivar usuario?" : "Editar miembro";
+
+  const content = drawerMode === "edit" ? (
+    <>
+      <MemberForm
+        initial={{ fullName: member.fullName, role: member.role }}
+        mode="edit"
+        saving={saving}
+        onCancel={onClose}
+        onSave={onSaveEdit}
+      />
+      {member.isActive && (
+        <button
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-danger/30 py-2.5 text-sm font-semibold text-danger transition hover:bg-danger/10"
+          type="button"
+          onClick={() => onSetMode("confirmDeactivate")}
+        >
+          <UserX size={14} />
+          Desactivar usuario
+        </button>
+      )}
+      {!member.isActive && (
+        <button
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-success/30 py-2.5 text-sm font-semibold text-success transition hover:bg-success/10"
+          type="button"
+          onClick={() => onSaveEdit({ isActive: true })}
+        >
+          <UserCheck size={14} />
+          Reactivar usuario
+        </button>
+      )}
+    </>
+  ) : (
+    <div className="space-y-4 py-2">
+      <p className="text-center text-sm text-default-500">
+        <span className="font-semibold text-foreground">{member.fullName}</span> perderá el acceso al sistema.
+        Podés reactivarlo en cualquier momento.
+      </p>
+      <div className="flex gap-2">
+        <button
+          className="flex-1 rounded-xl border border-default-200 bg-default-50 py-2.5 text-sm font-semibold text-foreground hover:bg-default-100"
+          type="button"
+          onClick={() => onSetMode("edit")}
+        >
+          Cancelar
+        </button>
+        <button
+          className="flex-1 rounded-xl bg-danger py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          disabled={deactivating}
+          type="button"
+          onClick={onDeactivate}
+        >
+          {deactivating ? "Desactivando..." : "Desactivar"}
+        </button>
+      </div>
+    </div>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog isOpen={!!member} onClose={onClose} title={title}>
+        {content}
+      </Dialog>
+    );
+  }
+
   return (
-    <Drawer isOpen placement="bottom" onClose={onClose}>
+    <Drawer isOpen={!!member} placement="bottom" onClose={onClose}>
       <DrawerContent className="max-h-[92dvh] rounded-t-3xl bg-content1">
         <DrawerBody className="overflow-y-auto px-4 py-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-bold text-foreground">
-              {drawerMode === "confirmDeactivate" ? "¿Desactivar usuario?" : "Editar miembro"}
-            </h2>
-            <button className="rounded-xl p-1.5 text-default-400 hover:bg-content2" type="button" onClick={onClose}>
+            <h2 className="text-base font-bold text-foreground">{title}</h2>
+            <button className="rounded-xl p-1.5 text-default-500 hover:bg-default-100 transition" type="button" onClick={onClose}>
               <X size={18} />
             </button>
           </div>
-
-          {drawerMode === "edit" && (
-            <>
-              <MemberForm
-                initial={{ fullName: member.fullName, role: member.role }}
-                mode="edit"
-                saving={saving}
-                onCancel={onClose}
-                onSave={onSaveEdit}
-              />
-              {member.isActive && (
-                <button
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-danger/30 py-2.5 text-sm font-semibold text-danger transition hover:bg-danger/10"
-                  type="button"
-                  onClick={() => onSetMode("confirmDeactivate")}
-                >
-                  <UserX size={14} />
-                  Desactivar usuario
-                </button>
-              )}
-              {!member.isActive && (
-                <button
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-success/30 py-2.5 text-sm font-semibold text-success transition hover:bg-success/10"
-                  type="button"
-                  onClick={() => onSaveEdit({ isActive: true })}
-                >
-                  <UserCheck size={14} />
-                  Reactivar usuario
-                </button>
-              )}
-            </>
-          )}
-
-          {drawerMode === "confirmDeactivate" && (
-            <div className="space-y-4 py-2">
-              <p className="text-center text-sm text-default-400">
-                <span className="font-semibold text-foreground">{member.fullName}</span> perderá el acceso al sistema.
-                Podés reactivarlo en cualquier momento.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-default-400 hover:text-foreground"
-                  type="button"
-                  onClick={() => onSetMode("edit")}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="flex-1 rounded-xl bg-danger py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                  disabled={deactivating}
-                  type="button"
-                  onClick={onDeactivate}
-                >
-                  {deactivating ? "Desactivando..." : "Desactivar"}
-                </button>
-              </div>
-            </div>
-          )}
+          {content}
         </DrawerBody>
       </DrawerContent>
     </Drawer>
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────
+function InvitePanel({
+  isOpen,
+  onClose,
+  saving,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  saving: boolean;
+  onSave: (data: CreateTeamMemberPayload | UpdateTeamMemberPayload) => Promise<void>;
+}) {
+  const isDesktop = useIsDesktop();
+
+  const form = (
+    <MemberForm
+      mode="create"
+      saving={saving}
+      onCancel={onClose}
+      onSave={onSave}
+    />
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog isOpen={isOpen} onClose={onClose} title="Invitar miembro">
+        {form}
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer isOpen={isOpen} placement="bottom" onClose={onClose}>
+      <DrawerContent className="max-h-[92dvh] rounded-t-3xl bg-content1">
+        <DrawerBody className="overflow-y-auto px-4 py-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-bold text-foreground">Invitar miembro</h2>
+            <button className="rounded-xl p-1.5 text-default-500 hover:bg-default-100 transition" type="button" onClick={onClose}>
+              <X size={18} />
+            </button>
+          </div>
+          {form}
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
+  );
+}
 
 export default function TeamPage() {
   const { user } = useAuth();
@@ -387,7 +488,7 @@ export default function TeamPage() {
         </div>
         {can.manageTeam && (
           <button
-            className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90"
+            className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             type="button"
             onClick={() => setCreateOpen(true)}
           >
@@ -436,28 +537,14 @@ export default function TeamPage() {
         </>
       )}
 
-      {/* Create drawer */}
-      <Drawer isOpen={createOpen} placement="bottom" onClose={() => setCreateOpen(false)}>
-        <DrawerContent className="max-h-[92dvh] rounded-t-3xl bg-content1">
-          <DrawerBody className="overflow-y-auto px-4 py-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-bold">Invitar miembro</h2>
-              <button className="rounded-xl p-1.5 text-default-400 hover:bg-content2" type="button" onClick={() => setCreateOpen(false)}>
-                <X size={18} />
-              </button>
-            </div>
-            <MemberForm
-              mode="create"
-              saving={isCreating}
-              onCancel={() => setCreateOpen(false)}
-              onSave={handleCreate}
-            />
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+      <InvitePanel
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        saving={isCreating}
+        onSave={handleCreate}
+      />
 
-      {/* Edit drawer */}
-      <MemberDrawer
+      <MemberPanel
         deactivating={isDeactivating}
         drawerMode={drawerMode}
         member={selected}

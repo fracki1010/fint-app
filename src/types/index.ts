@@ -39,6 +39,7 @@ export interface Supplier {
 export interface Product {
   _id: string;
   sku?: string;
+  barcode?: string;
   name: string;
   description?: string;
   price: number;
@@ -211,6 +212,13 @@ export interface Recipe {
   deletedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export type PaymentMethod = "cash" | "card" | "transfer";
+
+export interface QuickSaleItem {
+  product: Product;
+  quantity: number;
 }
 
 export interface ProduceResult {

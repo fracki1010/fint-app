@@ -5,28 +5,32 @@ export function FinancialFilterBar({
   categories,
   onChange,
   onReset,
+  hideHeader,
 }: {
   filters: FinancialFilters;
   categories: string[];
   onChange: (next: FinancialFilters) => void;
   onReset?: () => void;
+  hideHeader?: boolean;
 }) {
   return (
     <div className="financial-card">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-default-500">
-          Filtros Financieros
-        </p>
-        {onReset && (
-          <button
-            className="rounded-lg border border-divider/70 px-3 py-1 text-xs font-semibold text-default-600 transition-colors hover:bg-content2/60"
-            onClick={onReset}
-            type="button"
-          >
-            Reiniciar
-          </button>
-        )}
-      </div>
+      {!hideHeader && (
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-default-500">
+            Filtros Financieros
+          </p>
+          {onReset && (
+            <button
+              className="rounded-lg border border-divider/70 px-3 py-1 text-xs font-semibold text-default-600 transition-colors hover:bg-content2/60"
+              onClick={onReset}
+              type="button"
+            >
+              Reiniciar
+            </button>
+          )}
+        </div>
+      )}
       <div className="grid gap-3 md:grid-cols-3">
         <label className="block">
           <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-default-500">

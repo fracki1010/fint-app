@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import {
   ArrowLeft,
   User,
@@ -11,6 +11,7 @@ import {
   Plus,
   Minus,
   Receipt,
+  ScanBarcode,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -18,8 +19,12 @@ import { useClients } from "@/hooks/useClients";
 import { useProducts } from "@/hooks/useProducts";
 import { useOrders } from "@/hooks/useOrders";
 import { useSettings } from "@/hooks/useSettings";
+import { useProductLookupManual } from "@/hooks/useProductLookup";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { Client, Product } from "@/types";
 import { useAppToast } from "@/components/AppToast";
+import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 import { formatCompactCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
 import {
@@ -41,11 +46,28 @@ export default function NewOperationPage() {
   const { settings } = useSettings();
   const { showToast } = useAppToast();
 
+  const isDesktop = useIsDesktop();
   const [clientSearch, setClientSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [notes, setNotes] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
+  const { searchProducts } = useProductLookupManual();
+  const scanHandlerRef = useRef<(code: string) => void>(() => {});
+
+  const {
+    state: scannerState,
+    error: scannerError,
+    videoRef,
+    startCameraScanner,
+    stopCameraScanner,
+    toggleCameraScanner,
+  } = useBarcodeScanner({
+    onScan: (code) => scanHandlerRef.current(code),
+    onError: (err) => showToast({ variant: "error", message: err.message }),
+    isMobile: !isDesktop,
+  });
 
   const filteredClients = useMemo(() => {
     if (!clientSearch) return [];
@@ -194,6 +216,22 @@ export default function NewOperationPage() {
     }
   };
 
+  scanHandlerRef.current = async (code: string) => {
+    const results = await searchProducts(code);
+    const exact = results.find(
+      (p) =>
+        p.barcode?.toUpperCase() === code.toUpperCase() ||
+        p.sku?.toUpperCase() === code.toUpperCase(),
+    );
+    const product = exact || results[0];
+    if (product) {
+      addToCart(product);
+      showToast({ variant: "success", message: `${product.name} agregado` });
+    } else {
+      showToast({ variant: "warning", message: `Producto no encontrado: "${code}"` });
+    }
+  };
+
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
@@ -312,18 +350,30 @@ export default function NewOperationPage() {
           </div>
 
           <div className="relative">
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
-                size={18}
-              />
-              <input
-                className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
-                placeholder="Buscar producto..."
-                type="text"
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-              />
+            <div className="relative flex gap-2">
+              <div className="relative flex-1">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+                  size={18}
+                />
+                <input
+                  className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
+                  placeholder="Buscar producto..."
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                />
+              </div>
+              <button
+                className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition hover:bg-primary/20"
+                onClick={() => {
+                  setShowScanner(true);
+                  if (!isDesktop) setTimeout(() => startCameraScanner(), 100);
+                }}
+                type="button"
+              >
+                <ScanBarcode size={20} />
+              </button>
             </div>
 
             {filteredProducts.length > 0 && (
@@ -461,7 +511,7 @@ export default function NewOperationPage() {
               <span className="text-[10px] font-semibold">Borrador</span>
             </button>
             <button
-              className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition hover:opacity-90 disabled:opacity-50"
+              className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
               disabled={isCreating || cart.length === 0 || !selectedClient}
               onClick={handleRegisterSale}
             >
@@ -485,7 +535,7 @@ export default function NewOperationPage() {
             <span className="text-[10px] font-semibold">Borrador</span>
           </button>
           <button
-            className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition hover:opacity-90 disabled:opacity-50"
+            className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
             disabled={isCreating || cart.length === 0 || !selectedClient}
             onClick={handleRegisterSale}
           >
@@ -500,6 +550,19 @@ export default function NewOperationPage() {
           </button>
         </div>
       </div>
+
+      <BarcodeScanner
+        isOpen={showScanner}
+        onClose={() => {
+          setShowScanner(false);
+          stopCameraScanner();
+        }}
+        onScan={() => {}}
+        videoRef={videoRef}
+        state={scannerState}
+        error={scannerError}
+        onToggle={toggleCameraScanner}
+      />
     </div>
   );
 }

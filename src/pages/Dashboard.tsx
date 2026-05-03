@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ShoppingCart,
   UserPlus,
@@ -15,13 +15,43 @@ import {
   ReceiptText,
   PackageCheck,
   ChartNoAxesCombined,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  ScanBarcode,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 
+
+
 import { useDashboard, useDashboardOptionalKpis } from "@/hooks/useDashboard";
 import { useSettings } from "@/hooks/useSettings";
 import { formatCompactCurrency } from "@/utils/currency";
+
+function relativeTime(date: string): string {
+  const now = Date.now();
+  const then = new Date(date).getTime();
+  const diffMin = Math.floor((now - then) / 60000);
+  if (diffMin < 1) return "ahora";
+  if (diffMin < 60) return `hace ${diffMin}m`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `hace ${diffH}h`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `hace ${diffD}d`;
+  return new Date(date).toLocaleDateString();
+}
+
+type Tone = "primary" | "success" | "danger" | "default";
+
+function iconBg(tone: Tone): string {
+  switch (tone) {
+    case "primary": return "bg-primary/12 text-primary";
+    case "success": return "bg-success/12 text-success";
+    case "danger": return "bg-danger/12 text-danger";
+    default: return "bg-content2 text-default-600";
+  }
+}
 
 export default function DashboardPage() {
   const [optionalRangeDays, setOptionalRangeDays] = useState(90);
@@ -64,7 +94,7 @@ export default function DashboardPage() {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
-      .slice(0, 6);
+      .slice(0, 8);
   }, [currency, dashboard]);
 
   const quickActions = [
@@ -73,42 +103,52 @@ export default function DashboardPage() {
       caption: "Registrar pedido",
       icon: ShoppingCart,
       to: "/new-operation",
+      primary: true,
+    },
+    {
+      label: "Venta Rápida",
+      caption: "Escanear productos",
+      icon: ScanBarcode,
+      to: "/quick-sale",
+      primary: false,
     },
     {
       label: "Cliente",
       caption: "Alta comercial",
       icon: UserPlus,
       to: "/clients",
+      primary: false,
     },
     {
       label: "Producto",
       caption: "Gestionar catalogo",
       icon: PackagePlus,
       to: "/products",
-    },
-    {
-      label: "Ajustes",
-      caption: "Reglas del negocio",
-      icon: ArrowUpRight,
-      to: "/settings",
+      primary: false,
     },
     {
       label: "Finanzas",
       caption: "Panel financiero",
       icon: ChartNoAxesCombined,
       to: "/financial/dashboard",
+      primary: false,
+    },
+    {
+      label: "Ajustes",
+      caption: "Reglas del negocio",
+      icon: ArrowUpRight,
+      to: "/settings",
+      primary: false,
     },
   ];
 
   const peakHour = useMemo(() => {
     if (!optionalKpis?.salesByHour?.length) return null;
-
     return [...optionalKpis.salesByHour].sort((a, b) => b.revenue - a.revenue)[0];
   }, [optionalKpis]);
 
   const peakWeekday = useMemo(() => {
     if (!optionalKpis?.salesByWeekday?.length) return null;
-
     return optionalKpis.salesByWeekday[0];
   }, [optionalKpis]);
 
@@ -226,93 +266,112 @@ export default function DashboardPage() {
     );
   }
 
+  const growthPct = dashboard.universalKpis.growth.salesMonthVsPreviousMonthPct;
+  const growthIcon = growthPct > 0 ? ArrowUp : growthPct < 0 ? ArrowDown : Minus;
+  const growthColor = growthPct > 0 ? "text-success" : growthPct < 0 ? "text-danger" : "text-default-400";
+
   return (
     <div className="relative flex h-full w-full flex-col overflow-y-auto bg-background pb-24 font-sans lg:pb-8">
 
-      {/* ── Desktop header ──────────────────────────────────────────── */}
-      <header className="page-header">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="page-title">Panel Ejecutivo</h1>
-            <p className="page-subtitle">Operación comercial, ventas e inventario en una sola vista.</p>
+      {/* ── Hero: Revenue + KPIs ───────────────────────────────────────── */}
+      <div className="financial-card-accent mx-4 mt-4 rounded-[28px] p-5 lg:mx-6 lg:mt-6 lg:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="section-kicker" style={{ color: "rgb(255 255 255 / 0.65)" }}>Resumen Comercial</p>
+            <h1 className="mt-2 text-[clamp(1.8rem,4.5vw,2.6rem)] font-bold tracking-[-0.04em] text-white leading-[1.1]">
+              {formatCompactCurrency(dashboard.sales.monthSales, currency)}
+            </h1>
+            <p className="mt-2 text-sm text-white/70">
+              {dashboard.sales.totalOrdersMonth} ventas · ticket prom.{" "}
+              {formatCompactCurrency(dashboard.sales.averageTicket, currency)}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* KPI hero — visible solo en desktop */}
-            <div className="hidden lg:flex items-center gap-6">
-              <div className="text-right">
-                <p className="stat-card-label">Ventas del mes</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">
-                  {formatCompactCurrency(dashboard.sales.monthSales, currency)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="stat-card-label">Ticket promedio</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">
-                  {formatCompactCurrency(dashboard.sales.averageTicket, currency)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-xs font-bold text-primary">
-                <TrendingUp size={13} />
-                Monitoreo activo
-              </div>
+          <div className="hidden shrink-0 lg:flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3.5 py-1.5 text-xs font-semibold text-white">
+              <TrendingUp size={14} />
+              Monitoreo activo
+            </div>
+            <div className={`flex items-center gap-1 text-sm font-semibold ${growthColor}`}>
+              {React.createElement(growthIcon, { size: 15 })}
+              {growthPct >= 0 ? "+" : ""}{growthPct.toFixed(1)}%
+              <span className="text-white/50 font-normal text-xs ml-0.5">vs mes ant.</span>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* ── Mobile hero card ─────────────────────────────────────────── */}
-      <div className="px-4 pt-5 lg:hidden">
-        <div className="app-panel rounded-[28px] p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="section-kicker">Resumen Comercial</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground truncate">
-                {formatCompactCurrency(dashboard.sales.monthSales, currency)}
-              </h2>
-              <p className="mt-2 text-sm text-default-500">
-                {dashboard.sales.totalOrdersMonth} ventas · ticket prom.{" "}
-                {formatCompactCurrency(dashboard.sales.averageTicket, currency)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-              <TrendingUp size={14} />
-              Activo
-            </div>
+        <div className="mt-5 flex items-stretch gap-3 overflow-x-auto no-scrollbar">
+          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Cobrado</span>
+            <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
+              {formatCompactCurrency(dashboard.sales.collectedMonth, currency)}
+            </span>
           </div>
-          <div className="mt-5 h-24 w-full">
-            <svg className="h-full w-full fill-none stroke-primary" preserveAspectRatio="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" viewBox="0 0 400 120">
-              <path d="M0 94C18 92 26 48 50 46C76 43 83 77 104 76C125 75 135 56 158 56C182 56 194 90 217 92C248 94 255 30 282 26C306 23 319 61 341 67C364 73 380 48 400 40" />
-            </svg>
+          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Stock Bajo</span>
+            <span className={`mt-1.5 text-lg font-bold tracking-tight ${dashboard.inventory.lowStockCount > 0 ? "text-danger" : "text-white"}`}>
+              {dashboard.inventory.lowStockCount}
+            </span>
           </div>
+          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Pendientes</span>
+            <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
+              {dashboard.operations.pendingOrders}
+            </span>
+          </div>
+          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Con Deuda</span>
+            <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
+              {dashboard.customers.customersWithDebt}
+            </span>
+          </div>
+          <div className="hidden min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3 lg:flex">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Margen Bruto</span>
+            <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
+              {dashboard.universalKpis.grossMarginPct.month.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 h-16 w-full lg:h-20">
+          <svg className="h-full w-full fill-none stroke-white/25" preserveAspectRatio="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 400 120">
+            <path d="M0 94C18 92 26 48 50 46C76 43 83 77 104 76C125 75 135 56 158 56C182 56 194 90 217 92C248 94 255 30 282 26C306 23 319 61 341 67C364 73 380 48 400 40" />
+          </svg>
         </div>
       </div>
 
-      <div className="space-y-6 px-4 py-5 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6 lg:py-6">
+      <div className="space-y-5 px-4 py-5 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5 lg:space-y-0 lg:px-6 lg:py-6">
+
+        {/* ── Quick Actions ─────────────────────────────────────────────── */}
         <section className="lg:col-span-12">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <h2 className="section-kicker">Acciones Rapidas</h2>
-            {loading && (
-              <Loader2 className="animate-spin text-primary" size={18} />
-            )}
+            {loading && <Loader2 className="animate-spin text-primary" size={18} />}
           </div>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-5 gap-2 lg:gap-3">
             {quickActions.map((action) => {
               const Icon = action.icon;
-
               return (
                 <Link
                   key={action.to}
-                  className="app-panel rounded-[24px] p-4 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+                  className={`app-panel rounded-2xl p-4 transition-all hover:-translate-y-0.5 active:scale-[0.98] lg:rounded-[22px] lg:p-5 ${
+                    action.primary
+                      ? "financial-card-accent !border-0 col-span-1 lg:col-span-1"
+                      : ""
+                  }`}
                   to={action.to}
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                    <Icon size={20} />
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl lg:h-11 lg:w-11 ${
+                    action.primary
+                      ? "bg-white/15 text-white rounded-2xl"
+                      : "bg-primary/12 text-primary rounded-xl"
+                  }`}>
+                    <Icon size={action.primary ? 20 : 18} />
                   </div>
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold text-foreground">
+                  <div className="mt-3">
+                    <p className={`text-sm font-semibold leading-tight ${action.primary ? "text-white" : "text-foreground"}`}>
                       {action.label}
                     </p>
-                    <p className="mt-1 text-[11px] leading-tight text-default-500">
+                    <p className={`mt-0.5 text-[11px] leading-tight ${action.primary ? "text-white/65" : "text-default-500"}`}>
                       {action.caption}
                     </p>
                   </div>
@@ -322,10 +381,10 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* ── Indicadores: detailed KPI cards ──────────────────────────── */}
         <section className="lg:col-span-12">
           <h2 className="mb-3 section-kicker">Indicadores</h2>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-
             <div className="stat-card">
               <div className="flex items-center justify-between">
                 <span className="stat-card-label">Cobrado</span>
@@ -333,7 +392,7 @@ export default function DashboardPage() {
                   <Wallet size={14} />
                 </div>
               </div>
-              <div className="mt-4 stat-card-value">
+              <div className="mt-3 stat-card-value">
                 {formatCompactCurrency(dashboard.sales.collectedMonth, currency)}
               </div>
               <p className="stat-card-sub">Ingreso efectivo del mes actual.</p>
@@ -346,10 +405,10 @@ export default function DashboardPage() {
                   <AlertTriangle size={14} />
                 </div>
               </div>
-              <div className="mt-4 stat-card-value text-danger">
+              <div className="mt-3 stat-card-value text-danger">
                 {dashboard.inventory.lowStockCount.toString().padStart(2, "0")}
               </div>
-              <p className="stat-card-sub">Productos bajo el mínimo operativo.</p>
+              <p className="stat-card-sub">Productos bajo el minimo operativo.</p>
             </div>
 
             <div className="stat-card">
@@ -359,10 +418,10 @@ export default function DashboardPage() {
                   <FileText size={14} />
                 </div>
               </div>
-              <div className="mt-4 stat-card-value">
+              <div className="mt-3 stat-card-value">
                 {dashboard.operations.pendingOrders.toString().padStart(2, "0")}
               </div>
-              <p className="stat-card-sub">Órdenes abiertas en el circuito.</p>
+              <p className="stat-card-sub">Ordenes abiertas en el circuito.</p>
             </div>
 
             <div className="stat-card">
@@ -372,15 +431,15 @@ export default function DashboardPage() {
                   <Users size={14} />
                 </div>
               </div>
-              <div className="mt-4 stat-card-value">
+              <div className="mt-3 stat-card-value">
                 {dashboard.customers.customersWithDebt.toString().padStart(2, "0")}
               </div>
               <p className="stat-card-sub">Clientes con saldo pendiente.</p>
             </div>
-
           </div>
         </section>
 
+        {/* ── Operacion + Top Products + Alertas ───────────────────────── */}
         <section className="grid gap-4 lg:col-span-12 lg:grid-cols-2">
           <div className="app-panel rounded-[28px] p-5">
             <div className="mb-4 flex items-center justify-between">
@@ -425,23 +484,22 @@ export default function DashboardPage() {
                 Ver catalogo
               </Link>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {dashboard.topProducts.length > 0 ? (
                 dashboard.topProducts.map((product, index) => (
                   <div
                     key={`${product.productId || product.name}-${index}`}
-                    className="flex items-center justify-between rounded-2xl bg-content2/55 px-4 py-3"
+                    className="flex items-center justify-between rounded-xl bg-content2/55 px-4 py-3"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {product.name}
                       </p>
-                      <p className="mt-1 text-xs text-default-500">
-                        {product.sku || "Sin SKU"} · {product.quantitySold}{" "}
-                        unidad(es)
+                      <p className="mt-0.5 text-xs text-default-500">
+                        {product.sku || "Sin SKU"} · {product.quantitySold} un.
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="ml-3 shrink-0 text-sm font-semibold text-foreground">
                       {formatCompactCurrency(product.revenue, currency)}
                     </p>
                   </div>
@@ -464,23 +522,22 @@ export default function DashboardPage() {
                 Ver movimientos
               </Link>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {dashboard.inventory.lowStockProducts.length > 0 ? (
                 dashboard.inventory.lowStockProducts.map((product) => (
                   <div
                     key={product._id}
-                    className="flex items-center justify-between rounded-2xl bg-content2/55 px-4 py-3"
+                    className="flex items-center justify-between rounded-xl bg-content2/55 px-4 py-3"
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {product.name}
                       </p>
-                      <p className="mt-1 text-xs text-default-500">
-                        {product.sku || "Sin SKU"} · minimo {product.minStock}{" "}
-                        {product.unitOfMeasure}
+                      <p className="mt-0.5 text-xs text-default-500">
+                        minimo {product.minStock} {product.unitOfMeasure}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-danger">
+                    <p className="ml-3 shrink-0 text-sm font-bold text-danger">
                       {product.stock} {product.unitOfMeasure}
                     </p>
                   </div>
@@ -494,6 +551,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* ── Metricas Opcionales ──────────────────────────────────────── */}
         <section className="app-panel rounded-[28px] p-5 lg:col-span-12">
           <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <h2 className="section-kicker">Metricas Opcionales por Rubro</h2>
@@ -631,51 +689,40 @@ export default function DashboardPage() {
           )}
         </section>
 
+        {/* ── Activity Feed + Universal KPIs ──────────────────────────── */}
         <section className="lg:col-span-7">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <h2 className="section-kicker">Actividad Reciente</h2>
             <Activity className="text-primary" size={18} />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {activityFeed.length > 0 ? (
               activityFeed.map((entry) => {
                 const Icon = entry.icon;
-
                 return (
                   <div
                     key={entry.id}
-                    className="app-panel rounded-[24px] p-4 transition-colors hover:bg-content2/70"
+                    className="app-panel rounded-2xl p-3.5 transition-colors hover:bg-content2/70"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-content2 text-default-600">
-                          <Icon size={18} />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold text-foreground">
-                            {entry.title}
-                          </h3>
-                          <p className="mt-1 text-xs text-default-500">
-                            {entry.subtitle}
-                          </p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg(entry.tone)}`}>
+                        <Icon size={16} />
                       </div>
-
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">
-                          {entry.amount}
-                        </p>
-                        <p className="mt-1 text-xs text-default-500">
-                          {new Date(entry.createdAt).toLocaleString()}
-                        </p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{entry.title}</p>
+                        <p className="truncate text-xs text-default-500">{entry.subtitle}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold text-foreground">{entry.amount}</p>
+                        <p className="text-[10px] text-default-400">{relativeTime(entry.createdAt)}</p>
                       </div>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <div className="app-panel rounded-[24px] p-6 text-center">
+              <div className="app-panel rounded-2xl p-6 text-center">
                 <p className="text-sm font-medium text-foreground">
                   Todavia no hay actividad operativa registrada
                 </p>

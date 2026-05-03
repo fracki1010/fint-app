@@ -10,6 +10,17 @@ import {
   PackageCheck,
   XCircle,
   Trash2,
+  Building2,
+  Calendar,
+  Hash,
+  CreditCard,
+  FileText,
+  Clock,
+  ChevronRight,
+  Receipt,
+  BadgeCheck,
+  Truck,
+  Ban,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
@@ -32,8 +43,6 @@ import { formatCompactCurrency, formatCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
 import { PaginationBar } from "@/components/PaginationBar";
 
-// ── Constants ─────────────────────────────────────────────────────────
-
 const STATUS_LABELS: Record<PurchaseStatus, string> = {
   DRAFT: "Borrador",
   CONFIRMED: "Confirmada",
@@ -42,38 +51,79 @@ const STATUS_LABELS: Record<PurchaseStatus, string> = {
 };
 
 const STATUS_COLORS: Record<PurchaseStatus, string> = {
-  DRAFT: "bg-default/15 text-default-600",
-  CONFIRMED: "bg-primary/15 text-primary",
-  RECEIVED: "bg-success/15 text-success",
-  CANCELLED: "bg-danger/15 text-danger",
+  DRAFT: "bg-amber-400/15 text-amber-500 dark:text-amber-400",
+  CONFIRMED: "bg-blue-500/15 text-blue-500 dark:text-blue-400",
+  RECEIVED: "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400",
+  CANCELLED: "bg-red-500/15 text-red-500 dark:text-red-400",
+};
+
+const STATUS_DOTS: Record<PurchaseStatus, string> = {
+  DRAFT: "bg-amber-400",
+  CONFIRMED: "bg-blue-500",
+  RECEIVED: "bg-emerald-500",
+  CANCELLED: "bg-red-500",
 };
 
 const PAYMENT_LABELS: Record<PaymentCondition, string> = {
   CASH: "Contado",
-  CREDIT: "Credito",
+  CREDIT: "Crédito 30d",
 };
 
-function getSupplierName(
-  supplier: string | { _id: string; name?: string; company?: string },
-) {
+const AVATAR_COLORS = [
+  "from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400",
+  "from-emerald-500/20 to-emerald-600/10 text-emerald-600 dark:text-emerald-400",
+  "from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400",
+  "from-violet-500/20 to-violet-600/10 text-violet-600 dark:text-violet-400",
+  "from-rose-500/20 to-rose-600/10 text-rose-600 dark:text-rose-400",
+];
+
+function supplierInitials(name: string) {
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function avatarColor(name: string) {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+function expectedDelivery(purchase: { date: string; status: string; receivedAt?: string | null }) {
+  if (purchase.status === "RECEIVED" && purchase.receivedAt) {
+    return purchase.receivedAt.slice(0, 10);
+  }
+  const d = new Date(purchase.date);
+  d.setDate(d.getDate() + 15);
+  return d.toISOString().slice(0, 10);
+}
+
+function isToday(dateStr: string) {
+  return dateStr === new Date().toISOString().slice(0, 10);
+}
+
+function getSupplierName(supplier: string | { _id: string; name?: string; company?: string }) {
   if (typeof supplier === "object" && supplier) {
     return supplier.company || supplier.name || "Proveedor desconocido";
   }
-
   return "Proveedor desconocido";
 }
 
-function getSupplyName(
-  supply: string | { _id: string; name?: string; sku?: string },
-) {
+function getSupplyName(supply: string | { _id: string; name?: string; sku?: string | null }) {
   if (typeof supply === "object" && supply) {
     return supply.name || "Insumo";
   }
-
   return "Insumo";
 }
 
-// ── Line item form ────────────────────────────────────────────────────
+function formatId(id: string) {
+  return `#${id.slice(-6).toUpperCase()}`;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 type LineItem = {
   supplyId: string;
@@ -104,8 +154,6 @@ const emptyForm: PurchaseFormState = {
   items: [{ supplyId: "", supplyName: "", quantity: "", unitCost: "" }],
 };
 
-// ── Create Purchase Modal ────────────────────────────────────────────
-
 function CreatePurchaseModal({
   isDesktop,
   onClose,
@@ -120,28 +168,18 @@ function CreatePurchaseModal({
   onSubmit: (form: PurchaseFormState) => void;
   submitting: boolean;
   suppliers: Array<{ _id: string; name: string; company?: string }>;
-  supplies: Array<{
-    _id: string;
-    name: string;
-    sku?: string | null;
-    referenceCost: number;
-    unit: string;
-  }>;
+  supplies: Array<{ _id: string; name: string; sku?: string | null; referenceCost: number; unit: string }>;
   currency: string;
 }) {
   const [form, setForm] = useState<PurchaseFormState>({ ...emptyForm });
 
-  const updateField = <K extends keyof PurchaseFormState>(
-    key: K,
-    value: PurchaseFormState[K],
-  ) => setForm((prev) => ({ ...prev, [key]: value }));
+  const updateField = <K extends keyof PurchaseFormState>(key: K, value: PurchaseFormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const updateItem = (idx: number, field: keyof LineItem, value: string) => {
     setForm((prev) => {
       const items = [...prev.items];
-
       items[idx] = { ...items[idx], [field]: value };
-
       return { ...prev, items };
     });
   };
@@ -149,81 +187,75 @@ function CreatePurchaseModal({
   const addLine = () =>
     setForm((prev) => ({
       ...prev,
-      items: [
-        ...prev.items,
-        { supplyId: "", supplyName: "", quantity: "", unitCost: "" },
-      ],
+      items: [...prev.items, { supplyId: "", supplyName: "", quantity: "", unitCost: "" }],
     }));
 
   const removeLine = (idx: number) =>
-    setForm((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== idx),
-    }));
+    setForm((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }));
 
-  const subtotal = form.items.reduce(
-    (sum, it) => sum + Number(it.quantity || 0) * Number(it.unitCost || 0),
-    0,
-  );
+  const subtotal = form.items.reduce((sum, it) => sum + Number(it.quantity || 0) * Number(it.unitCost || 0), 0);
   const taxAmount = subtotal * (Number(form.tax || 0) / 100);
   const total = subtotal + taxAmount;
 
   const formLayout = (
-    <div className="flex h-full flex-col overflow-x-hidden p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="section-kicker">Compras</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-            Nueva orden de compra
-          </h2>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b border-divider/10 px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25">
+            <Receipt size={16} />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-default-400">Compras</p>
+            <h2 className="mt-0.5 text-lg font-semibold tracking-[-0.02em] text-foreground">
+              Nueva orden de compra
+            </h2>
+          </div>
         </div>
         <button
-          className="app-panel-soft flex h-10 w-10 items-center justify-center rounded-2xl text-default-500"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-divider/20 text-default-400 hover:bg-content2/60 hover:text-foreground transition-colors"
           onClick={onClose}
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
-      <div className="mt-6 grid flex-1 gap-5 overflow-y-auto pr-1 pb-4">
-        {/* Supplier */}
-        <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-            Proveedor *
-          </span>
-          <Autocomplete
-            aria-label="Seleccionar proveedor"
-            classNames={{
-              base: "w-full",
-              listboxWrapper: "bg-content1",
-            }}
-            defaultItems={suppliers}
-            inputValue={form.supplierLabel}
-            placeholder="Buscar proveedor..."
-            variant="bordered"
-            onInputChange={(v) => updateField("supplierLabel", v)}
-            onSelectionChange={(key) => {
-              if (!key) return;
-              const s = suppliers.find((sup) => sup._id === String(key));
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="block">
+              <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+                <Building2 size={13} /> Proveedor *
+              </span>
+              <Autocomplete
+                aria-label="Seleccionar proveedor"
+                classNames={{
+                  base: "w-full",
+                  listboxWrapper: "bg-content1",
+                }}
+                defaultItems={suppliers}
+                inputValue={form.supplierLabel}
+                placeholder="Buscar proveedor..."
+                variant="bordered"
+                onInputChange={(v) => updateField("supplierLabel", v)}
+                onSelectionChange={(key) => {
+                  if (!key) return;
+                  const s = suppliers.find((sup) => sup._id === String(key));
+                  if (s) {
+                    updateField("supplierId", s._id);
+                    updateField("supplierLabel", s.company || s.name);
+                  }
+                }}
+              >
+                {(item) => (
+                  <AutocompleteItem key={item._id}>{item.company || item.name}</AutocompleteItem>
+                )}
+              </Autocomplete>
+            </label>
+          </div>
 
-              if (s) {
-                updateField("supplierId", s._id);
-                updateField("supplierLabel", s.company || s.name);
-              }
-            }}
-          >
-            {(item) => (
-              <AutocompleteItem key={item._id}>
-                {item.company || item.name}
-              </AutocompleteItem>
-            )}
-          </Autocomplete>
-        </label>
-
-        <div className="grid grid-cols-2 gap-4">
           <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Fecha *
+            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+              <Calendar size={13} /> Fecha *
             </span>
             <input
               className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
@@ -232,53 +264,51 @@ function CreatePurchaseModal({
               onChange={(e) => updateField("date", e.target.value)}
             />
           </label>
+
           <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Condicion de Pago
+            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+              <CreditCard size={13} /> Condición de Pago
             </span>
             <Select
               aria-label="Condicion de pago"
               classNames={{
-                trigger:
-                  "corp-input min-h-[48px] rounded-2xl px-4 text-sm text-foreground",
+                trigger: "min-h-[48px] rounded-2xl border-divider/25 bg-content2/40 px-4 text-sm text-foreground data-[focus=true]:border-blue-500/50",
                 value: "text-foreground",
                 popoverContent: "bg-content1 text-foreground",
               }}
               selectedKeys={[form.paymentCondition]}
               variant="bordered"
               onSelectionChange={(keys) =>
-                updateField(
-                  "paymentCondition",
-                  Array.from(keys)[0] as PaymentCondition,
-                )
+                updateField("paymentCondition", Array.from(keys)[0] as PaymentCondition)
               }
             >
               <SelectItem key="CASH">Contado</SelectItem>
-              <SelectItem key="CREDIT">Credito</SelectItem>
+              <SelectItem key="CREDIT">Crédito</SelectItem>
             </Select>
           </label>
         </div>
 
-        {/* Items */}
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-              Items *
+            <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+              <PackageCheck size={13} /> Items *
             </span>
             <button
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+              className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1.5 text-[11px] font-bold text-blue-500 hover:bg-blue-500/20 transition-colors"
               type="button"
               onClick={addLine}
             >
-              <Plus size={14} />
-              Linea
+              <Plus size={13} />
+              Agregar línea
             </button>
           </div>
-
           <div className="space-y-3">
             {form.items.map((item, idx) => (
-              <div key={idx} className="app-panel-soft rounded-[20px] p-4">
-                <div className="flex items-start gap-2">
+              <div
+                key={idx}
+                className="rounded-2xl border border-divider/15 bg-content2/30 p-4 transition-all hover:border-divider/25"
+              >
+                <div className="flex items-start gap-3">
                   <div className="flex-1">
                     <Autocomplete
                       aria-label="Insumo"
@@ -295,78 +325,59 @@ function CreatePurchaseModal({
                       onSelectionChange={(key) => {
                         if (!key) return;
                         const s = supplies.find((sp) => sp._id === String(key));
-
                         if (s) {
                           updateItem(idx, "supplyId", s._id);
                           updateItem(idx, "supplyName", s.name);
                           if (!item.unitCost && s.referenceCost) {
-                            updateItem(
-                              idx,
-                              "unitCost",
-                              String(s.referenceCost),
-                            );
+                            updateItem(idx, "unitCost", String(s.referenceCost));
                           }
                         }
                       }}
                     >
                       {(s) => (
                         <AutocompleteItem key={s._id}>
-                          {s.name}
-                          {s.sku ? ` (${s.sku})` : ""}
+                          {s.name}{s.sku ? ` (${s.sku})` : ""}
                         </AutocompleteItem>
                       )}
                     </Autocomplete>
                   </div>
                   {form.items.length > 1 && (
                     <button
-                      className="mt-1 text-default-400 hover:text-danger"
+                      className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-default-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
                       type="button"
                       onClick={() => removeLine(idx)}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-semibold uppercase text-default-400">
-                      Cantidad
-                    </span>
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Cant.</span>
                     <input
-                      className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                      className="corp-input w-full rounded-xl px-3 py-2 text-sm font-mono"
                       min="0.01"
                       step="0.01"
                       type="number"
                       value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(idx, "quantity", e.target.value)
-                      }
+                      onChange={(e) => updateItem(idx, "quantity", e.target.value)}
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-semibold uppercase text-default-400">
-                      Costo Unit.
-                    </span>
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Costo Unit.</span>
                     <input
-                      className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                      className="corp-input w-full rounded-xl px-3 py-2 text-sm font-mono"
                       min="0"
                       step="0.01"
                       type="number"
                       value={item.unitCost}
-                      onChange={(e) =>
-                        updateItem(idx, "unitCost", e.target.value)
-                      }
+                      onChange={(e) => updateItem(idx, "unitCost", e.target.value)}
                     />
                   </label>
                   <div>
-                    <span className="mb-1 block text-[10px] font-semibold uppercase text-default-400">
-                      Subtotal
-                    </span>
-                    <p className="rounded-xl bg-content2/60 px-3 py-2 text-sm font-semibold text-foreground">
-                      {formatCurrency(
-                        Number(item.quantity || 0) * Number(item.unitCost || 0),
-                        currency,
-                      )}
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Subtotal</span>
+                    <p className="rounded-xl bg-blue-500/5 px-3 py-2 text-sm font-mono font-semibold text-foreground">
+                      {formatCurrency(Number(item.quantity || 0) * Number(item.unitCost || 0), currency)}
                     </p>
                   </div>
                 </div>
@@ -375,13 +386,12 @@ function CreatePurchaseModal({
           </div>
         </div>
 
-        {/* Tax */}
         <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-            Impuesto (%)
+          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+            <Hash size={13} /> Impuesto (%)
           </span>
           <input
-            className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+            className="corp-input w-full rounded-2xl px-4 py-3 text-sm font-mono"
             min="0"
             step="0.01"
             type="number"
@@ -390,49 +400,43 @@ function CreatePurchaseModal({
           />
         </label>
 
-        {/* Notes */}
         <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">
-            Notas
+          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+            <FileText size={13} /> Notas
           </span>
           <textarea
-            className="corp-input min-h-16 w-full rounded-2xl px-4 py-3 text-sm"
+            className="corp-input min-h-[72px] w-full rounded-2xl px-4 py-3 text-sm resize-none"
             placeholder="Observaciones de la compra..."
             value={form.notes}
             onChange={(e) => updateField("notes", e.target.value)}
           />
         </label>
 
-        {/* Totals summary */}
-        <div className="app-panel-soft rounded-[20px] p-4">
-          <div className="flex justify-between text-sm text-default-600">
+        <div className="rounded-2xl border border-blue-500/15 bg-gradient-to-br from-blue-500/5 to-blue-600/5 p-5">
+          <div className="flex justify-between text-sm text-default-500">
             <span>Subtotal</span>
-            <span className="font-semibold text-foreground">
-              {formatCurrency(subtotal, currency)}
-            </span>
+            <span className="font-mono font-semibold text-foreground">{formatCurrency(subtotal, currency)}</span>
           </div>
-          <div className="mt-2 flex justify-between text-sm text-default-600">
+          <div className="mt-2 flex justify-between text-sm text-default-500">
             <span>Impuesto ({form.tax || 0}%)</span>
-            <span className="font-semibold text-foreground">
-              {formatCurrency(taxAmount, currency)}
-            </span>
+            <span className="font-mono font-semibold text-foreground">{formatCurrency(taxAmount, currency)}</span>
           </div>
-          <div className="mt-3 flex justify-between border-t border-divider/60 pt-3 text-base font-bold text-foreground">
+          <div className="mt-3 flex justify-between border-t border-blue-500/15 pt-3 text-base font-bold text-foreground">
             <span>Total</span>
-            <span>{formatCurrency(total, currency)}</span>
+            <span className="font-mono">{formatCurrency(total, currency)}</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
+      <div className="flex shrink-0 gap-3 border-t border-divider/10 px-6 py-4">
         <button
-          className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600"
+          className="flex-1 rounded-2xl border border-divider/20 px-4 py-3 text-sm font-semibold text-default-600 hover:bg-content2/60 transition-colors"
           onClick={onClose}
         >
           Cancelar
         </button>
         <button
-          className="flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          className="flex-1 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 hover:shadow-blue-500/35 transition-all"
           disabled={submitting}
           onClick={() => onSubmit(form)}
         >
@@ -447,10 +451,8 @@ function CreatePurchaseModal({
 
   if (!isDesktop) {
     return (
-      <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-[1px]">
-        <div className="h-[100dvh] w-screen overflow-hidden bg-background">
-          {formLayout}
-        </div>
+      <div className="fixed inset-0 z-[120] flex flex-col bg-background/95 backdrop-blur-sm">
+        <div className="flex-1 overflow-hidden">{formLayout}</div>
       </div>
     );
   }
@@ -463,9 +465,7 @@ function CreatePurchaseModal({
       placement="right"
       scrollBehavior="inside"
       size="xl"
-      onOpenChange={(open: boolean) => {
-        if (!open) onClose();
-      }}
+      onOpenChange={(open: boolean) => { if (!open) onClose(); }}
     >
       <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
@@ -473,8 +473,6 @@ function CreatePurchaseModal({
     </Drawer>
   );
 }
-
-// ── Main Page ─────────────────────────────────────────────────────────
 
 export default function PurchasesPage() {
   const navigate = useNavigate();
@@ -498,105 +496,88 @@ export default function PurchasesPage() {
     isCancelling,
   } = usePurchases();
 
-  const { purchase: detailPurchase, loading: detailLoading } =
-    usePurchaseDetail(purchaseId);
-
+  const { purchase: detailPurchase, loading: detailLoading } = usePurchaseDetail(purchaseId);
   const { supplies } = useSupplies();
   const { suppliers } = useSuppliers();
 
   const DESKTOP_PAGE_SIZE = 15;
   const [desktopPage, setDesktopPage] = useState(1);
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"all" | PurchaseStatus>(
-    "all",
-  );
+  const [activeFilter, setActiveFilter] = useState<"all" | PurchaseStatus>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Selected purchase from list or detail endpoint
-  const selectedPurchase =
-    detailPurchase || purchases.find((p) => p._id === purchaseId) || null;
+  const selectedPurchase = detailPurchase || purchases.find((p) => p._id === purchaseId) || null;
 
   const filteredPurchases = useMemo(() => {
     let result = purchases;
-
-    if (activeFilter !== "all") {
-      result = result.filter((p) => p.status === activeFilter);
-    }
-
+    if (activeFilter !== "all") result = result.filter((p) => p.status === activeFilter);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-
       result = result.filter(
-        (p) =>
-          getSupplierName(p.supplier).toLowerCase().includes(q) ||
-          p._id.toLowerCase().includes(q),
+        (p) => getSupplierName(p.supplier).toLowerCase().includes(q) || p._id.toLowerCase().includes(q),
       );
     }
-
     return result;
   }, [purchases, searchQuery, activeFilter]);
 
-  useEffect(() => {
-    setDesktopPage(1);
-  }, [searchQuery, activeFilter]);
+  useEffect(() => { setDesktopPage(1); }, [searchQuery, activeFilter]);
 
   const desktopItems = isDesktop
     ? filteredPurchases.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
     : filteredPurchases;
   const desktopTotalPages = Math.ceil(filteredPurchases.length / DESKTOP_PAGE_SIZE);
 
-  const totalPurchased = useMemo(
-    () => purchases.reduce((sum, p) => sum + (p.total || 0), 0),
-    [purchases],
-  );
+  const totalPurchased = useMemo(() => purchases.reduce((sum, p) => sum + (p.total || 0), 0), [purchases]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-
-    for (const p of purchases) {
-      counts[p.status] = (counts[p.status] || 0) + 1;
-    }
-
+    for (const p of purchases) counts[p.status] = (counts[p.status] || 0) + 1;
     return counts;
   }, [purchases]);
 
-  // ── Handlers ──────────────────────────────────────────────────────
+  const monthStats = useMemo(() => {
+    const now = new Date();
+    const thisM = now.getMonth(), thisY = now.getFullYear();
+    const prevM = thisM === 0 ? 11 : thisM - 1;
+    const prevY = thisM === 0 ? thisY - 1 : thisY;
+    let thisTotal = 0, thisCount = 0, prevTotal = 0, prevCount = 0;
+    const byMonth = new Map<string, number>();
+    for (const p of purchases) {
+      const d = new Date(p.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      byMonth.set(key, (byMonth.get(key) || 0) + (p.total || 0));
+      if (d.getMonth() === thisM && d.getFullYear() === thisY) { thisTotal += p.total || 0; thisCount++; }
+      else if (d.getMonth() === prevM && d.getFullYear() === prevY) { prevTotal += p.total || 0; prevCount++; }
+    }
+    const countDelta = prevCount > 0 ? ((thisCount - prevCount) / prevCount) * 100 : 0;
+    const costDelta = prevTotal > 0 ? ((thisTotal - prevTotal) / prevTotal) * 100 : 0;
+    const monthlyAvg = byMonth.size > 0
+      ? Array.from(byMonth.values()).reduce((a, b) => a + b, 0) / byMonth.size
+      : 0;
+    const pending = statusCounts["CONFIRMED"] || 0;
+    const received = statusCounts["RECEIVED"] || 0;
+    const pendingPct = pending + received > 0 ? Math.round((pending / (pending + received)) * 100) : 0;
+    return { countDelta, costDelta, monthlyAvg, pending, pendingPct };
+  }, [purchases, statusCounts]);
 
   const handleCreate = async (form: PurchaseFormState) => {
     if (!form.supplierId) {
       showToast({ variant: "warning", message: "Selecciona un proveedor." });
-
       return;
     }
-
-    const validItems = form.items.filter(
-      (it) =>
-        it.supplyId && Number(it.quantity) > 0 && Number(it.unitCost) >= 0,
-    );
-
+    const validItems = form.items.filter((it) => it.supplyId && Number(it.quantity) > 0 && Number(it.unitCost) >= 0);
     if (validItems.length === 0) {
-      showToast({
-        variant: "warning",
-        message: "Agrega al menos un item con insumo, cantidad y costo.",
-      });
-
+      showToast({ variant: "warning", message: "Agrega al menos un item con insumo, cantidad y costo." });
       return;
     }
-
-    const subtotal = validItems.reduce(
-      (sum, it) => sum + Number(it.quantity) * Number(it.unitCost),
-      0,
-    );
+    const subtotal = validItems.reduce((sum, it) => sum + Number(it.quantity) * Number(it.unitCost), 0);
     const taxAmount = subtotal * (Number(form.tax || 0) / 100);
-
     const items: CreatePurchaseItemPayload[] = validItems.map((it) => ({
       supplyItemId: it.supplyId,
       quantity: Number(it.quantity),
       unitCost: Number(it.unitCost),
       lineTotal: Number(it.quantity) * Number(it.unitCost),
     }));
-
     try {
       await createPurchase({
         supplierId: form.supplierId,
@@ -609,70 +590,43 @@ export default function PurchasesPage() {
         items,
       });
       setShowCreateModal(false);
-      showToast({
-        variant: "success",
-        message: "Orden de compra creada como borrador.",
-      });
+      showToast({ variant: "success", message: "Orden de compra creada como borrador." });
     } catch (error) {
-      showToast({
-        variant: "error",
-        message: getErrorMessage(error, "No se pudo crear la compra."),
-      });
+      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo crear la compra.") });
     }
   };
 
   const handleConfirm = async () => {
     if (!purchaseId) return;
-
     try {
       await confirmPurchase(purchaseId);
       showToast({ variant: "success", message: "Compra confirmada." });
     } catch (error) {
-      showToast({
-        variant: "error",
-        message: getErrorMessage(error, "No se pudo confirmar."),
-      });
+      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo confirmar.") });
     }
   };
 
   const handleReceive = async () => {
     if (!purchaseId) return;
-
-    const confirmed = window.confirm(
-      "Al recibir la compra se actualizara el stock de los insumos. ¿Continuar?",
-    );
-
+    const confirmed = window.confirm("Al recibir la compra se actualizará el stock de los insumos. ¿Continuar?");
     if (!confirmed) return;
-
     try {
       await receivePurchase(purchaseId);
-      showToast({
-        variant: "success",
-        message: "Compra recibida. Stock de insumos actualizado.",
-      });
+      showToast({ variant: "success", message: "Compra recibida. Stock de insumos actualizado." });
     } catch (error) {
-      showToast({
-        variant: "error",
-        message: getErrorMessage(error, "No se pudo recibir la compra."),
-      });
+      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo recibir la compra.") });
     }
   };
 
   const handleCancel = async () => {
     if (!purchaseId) return;
-
     const confirmed = window.confirm("¿Cancelar esta orden de compra?");
-
     if (!confirmed) return;
-
     try {
       await cancelPurchase(purchaseId);
       showToast({ variant: "success", message: "Compra cancelada." });
     } catch (error) {
-      showToast({
-        variant: "error",
-        message: getErrorMessage(error, "No se pudo cancelar."),
-      });
+      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo cancelar.") });
     }
   };
 
@@ -682,204 +636,236 @@ export default function PurchasesPage() {
     const status = selectedPurchase?.status;
 
     return (
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-none lg:pb-8">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-4xl lg:pb-8">
         <header
-          className={`app-topbar sticky top-0 z-30 border-b border-divider/60 bg-background/95 backdrop-blur-xl transition-all duration-300 ${
+          className={`app-topbar sticky top-0 z-30 transition-all duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
           }`}
         >
           <button
-            className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-default-500"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500 hover:text-foreground transition-colors"
             onClick={() => navigate("/purchases")}
           >
             <ArrowUpRight className="rotate-180" size={14} />
             Volver
           </button>
-          <p
-            className={`section-kicker transition-all duration-200 ${
-              isHeaderCompact
-                ? "mt-1 text-[10px] opacity-80"
-                : "mt-3 opacity-100"
-            }`}
-          >
+          <p className={`section-kicker transition-all duration-200 ${isHeaderCompact ? "mt-1 text-[10px] opacity-80" : "mt-3 opacity-100"}`}>
             Detalle de Compra
           </p>
-          <h1
-            className={`font-semibold tracking-[-0.03em] text-foreground transition-all duration-300 ${
-              isHeaderCompact ? "mt-1 text-xl" : "mt-2 text-[28px]"
-            }`}
-          >
-            OC #{purchaseId.slice(-6).toUpperCase()}
+          <h1 className={`font-bold tracking-[-0.03em] text-foreground transition-all duration-300 ${
+            isHeaderCompact ? "mt-1 text-xl" : "mt-2 text-[28px]"
+          }`}>
+            {formatId(purchaseId)}
           </h1>
         </header>
 
         <div className="flex-1 px-6 pb-6">
           {detailLoading && !selectedPurchase ? (
-            <div className="py-16 text-center text-default-400">
-              <Loader2 className="mx-auto mb-3 animate-spin" size={32} />
-              <p className="text-sm">Cargando detalle...</p>
+            <div className="flex flex-col items-center justify-center py-20 text-default-400">
+              <Loader2 className="mb-4 animate-spin" size={32} />
+              <p className="text-sm font-medium">Cargando detalle...</p>
             </div>
           ) : !selectedPurchase ? (
-            <div className="py-12 text-center">
-              <p className="text-sm font-semibold text-foreground">
-                Compra no encontrada
-              </p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <ShoppingBag className="mb-4 text-default-300" size={48} />
+              <p className="text-sm font-semibold text-foreground">Compra no encontrada</p>
             </div>
           ) : (
-            <>
-              {/* Status badge */}
-              <div className="mt-2 flex items-center gap-3">
-                <span
-                  className={`inline-flex rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.12em] ${STATUS_COLORS[selectedPurchase.status]}`}
-                >
+            <div className="space-y-5 pt-4">
+              {/* Status & payment badges */}
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] ${STATUS_COLORS[selectedPurchase.status]}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[selectedPurchase.status]}`} />
                   {STATUS_LABELS[selectedPurchase.status]}
                 </span>
-                <span className="rounded-full bg-content2/70 px-3 py-1.5 text-xs font-semibold text-default-600">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-default-100 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-default-600">
+                  <CreditCard size={12} />
                   {PAYMENT_LABELS[selectedPurchase.paymentCondition]}
                 </span>
               </div>
 
               {/* KPI cards */}
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <div className="app-panel-soft rounded-[24px] p-4">
-                  <p className="section-kicker">Proveedor</p>
-                  <p className="mt-3 text-lg font-semibold text-foreground">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/60 p-5">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">
+                    <Building2 size={13} />
+                    Proveedor
+                  </div>
+                  <p className="mt-3 text-lg font-bold text-foreground">
                     {getSupplierName(selectedPurchase.supplier)}
                   </p>
-                  <p className="mt-1 text-sm text-default-500">
-                    {selectedPurchase.date}
-                  </p>
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-default-500">
+                    <Calendar size={11} />
+                    {formatDate(selectedPurchase.date)}
+                  </div>
                 </div>
-                <div className="app-panel-soft rounded-[24px] p-4">
-                  <p className="section-kicker">Importe Total</p>
-                  <p className="mt-3 text-2xl font-semibold text-foreground">
+                <div className="rounded-2xl border border-blue-500/15 bg-gradient-to-br from-blue-500/5 to-blue-600/5 p-5">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">
+                    <Receipt size={13} />
+                    Importe Total
+                  </div>
+                  <p className="mt-3 text-2xl font-bold font-mono text-foreground">
                     {formatCurrency(selectedPurchase.total, currency)}
                   </p>
-                  <p className="mt-1 text-sm text-default-500">
-                    {selectedPurchase.items.length} item(s)
+                  <p className="mt-2 text-[11px] text-default-500">
+                    {selectedPurchase.items.length} item{selectedPurchase.items.length !== 1 ? "s" : ""}
+                    {" · "}{formatCurrency(selectedPurchase.subtotal, currency)} subtotal
                   </p>
                 </div>
               </div>
 
               {/* Items */}
-              <div className="mt-5 app-panel-soft rounded-[24px] p-5">
-                <h3 className="text-sm font-semibold text-foreground">
+              <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-5">
+                <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+                  <PackageCheck size={13} />
                   Items de la compra
                 </h3>
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-2">
                   {selectedPurchase.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between rounded-2xl bg-content2/55 px-4 py-3"
+                      className="flex items-center justify-between rounded-xl bg-content2/50 px-4 py-3 transition-colors hover:bg-content2/80"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {getSupplyName(item.supply)}
                         </p>
-                        <p className="mt-1 text-xs text-default-500">
-                          {item.quantity} x{" "}
-                          {formatCurrency(item.unitCost, currency)}
+                        <p className="mt-0.5 text-xs text-default-500 font-mono">
+                          {item.quantity} × {formatCurrency(item.unitCost, currency)}
                         </p>
                       </div>
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="ml-4 text-sm font-bold font-mono text-foreground">
                         {formatCurrency(item.lineTotal, currency)}
                       </p>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 space-y-1 border-t border-divider/60 pt-3 text-sm">
-                  <div className="flex justify-between text-default-600">
+                <div className="mt-4 space-y-1.5 border-t border-divider/10 pt-4 text-sm">
+                  <div className="flex justify-between text-default-500">
                     <span>Subtotal</span>
-                    <span>
+                    <span className="font-mono font-semibold text-foreground">
                       {formatCurrency(selectedPurchase.subtotal, currency)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-default-600">
+                  <div className="flex justify-between text-default-500">
                     <span>Impuesto</span>
-                    <span>
+                    <span className="font-mono font-semibold text-foreground">
                       {formatCurrency(selectedPurchase.tax, currency)}
                     </span>
                   </div>
-                  <div className="flex justify-between font-bold text-foreground">
+                  <div className="flex justify-between border-t border-divider/10 pt-1.5 text-base font-bold text-foreground">
                     <span>Total</span>
-                    <span>
-                      {formatCurrency(selectedPurchase.total, currency)}
-                    </span>
+                    <span className="font-mono">{formatCurrency(selectedPurchase.total, currency)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Notes */}
               {selectedPurchase.notes && (
-                <div className="mt-5 app-panel-soft rounded-[24px] p-5">
-                  <h3 className="text-sm font-semibold text-foreground">
+                <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-5">
+                  <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+                    <FileText size={13} />
                     Notas
                   </h3>
-                  <p className="mt-2 text-sm text-default-600">
-                    {selectedPurchase.notes}
-                  </p>
+                  <p className="mt-3 text-sm text-default-600 leading-relaxed">{selectedPurchase.notes}</p>
                 </div>
               )}
 
-              {/* Timestamps */}
-              <div className="mt-5 app-panel-soft rounded-[24px] p-5">
-                <h3 className="text-sm font-semibold text-foreground">
+              {/* Timeline history */}
+              <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-5">
+                <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+                  <Clock size={13} />
                   Historial
                 </h3>
-                <div className="mt-3 space-y-2 text-sm text-default-600">
+                <div className="mt-4 space-y-0">
                   {selectedPurchase.createdAt && (
-                    <p>
-                      <span className="font-semibold text-foreground">
-                        Creada:
-                      </span>{" "}
-                      {new Date(selectedPurchase.createdAt).toLocaleString()}
-                    </p>
+                    <div className="flex gap-4 pb-4 relative">
+                      <div className="flex flex-col items-center">
+                        <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/15 text-blue-500">
+                          <FileText size={13} />
+                        </div>
+                        <div className="mt-0 w-px flex-1 bg-divider/20" />
+                      </div>
+                      <div className="pb-2">
+                        <p className="text-sm font-semibold text-foreground">Orden creada</p>
+                        <p className="mt-0.5 text-xs text-default-500">
+                          {new Date(selectedPurchase.createdAt).toLocaleString("es-AR", {
+                            day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPurchase.status === "CONFIRMED" && selectedPurchase.createdAt && (
+                    <div className="flex gap-4 pb-4 relative">
+                      <div className="flex flex-col items-center">
+                        <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+                          <BadgeCheck size={13} />
+                        </div>
+                        <div className="mt-0 w-px flex-1 bg-divider/20" />
+                      </div>
+                      <div className="pb-2">
+                        <p className="text-sm font-semibold text-foreground">Compra confirmada</p>
+                        <p className="mt-0.5 text-xs text-blue-500 font-medium">Pendiente de recepción</p>
+                      </div>
+                    </div>
                   )}
                   {selectedPurchase.receivedAt && (
-                    <p>
-                      <span className="font-semibold text-success">
-                        Recibida:
-                      </span>{" "}
-                      {new Date(selectedPurchase.receivedAt).toLocaleString()}
-                    </p>
+                    <div className="flex gap-4 pb-4 relative">
+                      <div className="flex flex-col items-center">
+                        <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+                          <Truck size={13} />
+                        </div>
+                        <div className="mt-0 w-px flex-1 bg-divider/20" />
+                      </div>
+                      <div className="pb-2">
+                        <p className="text-sm font-semibold text-foreground">Mercadería recibida</p>
+                        <p className="mt-0.5 text-xs text-default-500">
+                          {new Date(selectedPurchase.receivedAt).toLocaleString("es-AR", {
+                            day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
                   )}
                   {selectedPurchase.cancelledAt && (
-                    <p>
-                      <span className="font-semibold text-danger">
-                        Cancelada:
-                      </span>{" "}
-                      {new Date(selectedPurchase.cancelledAt).toLocaleString()}
-                    </p>
+                    <div className="flex gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className="z-10 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/15 text-red-500">
+                          <Ban size={13} />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Compra cancelada</p>
+                        <p className="mt-0.5 text-xs text-default-500">
+                          {new Date(selectedPurchase.cancelledAt).toLocaleString("es-AR", {
+                            day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Contextual actions */}
-              <div className="mt-6 flex gap-3">
+              <div className="flex gap-3 pt-1">
                 {status === "DRAFT" && (
                   <>
                     <button
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 hover:shadow-blue-500/35 transition-all"
                       disabled={isConfirming}
                       onClick={handleConfirm}
                     >
-                      {isConfirming ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <CheckCircle2 size={18} />
-                      )}
+                      {isConfirming ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
                       Confirmar
                     </button>
                     <button
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-danger px-4 py-3 text-sm font-semibold text-danger-foreground disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 disabled:opacity-50 hover:shadow-red-500/35 transition-all"
                       disabled={isCancelling}
                       onClick={handleCancel}
                     >
-                      {isCancelling ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <XCircle size={18} />
-                      )}
+                      {isCancelling ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={18} />}
                       Cancelar
                     </button>
                   </>
@@ -887,40 +873,30 @@ export default function PurchasesPage() {
                 {status === "CONFIRMED" && (
                   <>
                     <button
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-success px-4 py-3 text-sm font-semibold text-success-foreground disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 hover:shadow-emerald-500/35 transition-all"
                       disabled={isReceiving}
                       onClick={handleReceive}
                     >
-                      {isReceiving ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <PackageCheck size={18} />
-                      )}
-                      Recibir Mercaderia
+                      {isReceiving ? <Loader2 className="animate-spin" size={18} /> : <PackageCheck size={18} />}
+                      Recibir
                     </button>
                     <button
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-danger px-4 py-3 text-sm font-semibold text-danger-foreground disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 disabled:opacity-50 hover:shadow-red-500/35 transition-all"
                       disabled={isCancelling}
                       onClick={handleCancel}
                     >
-                      {isCancelling ? (
-                        <Loader2 className="animate-spin" size={18} />
-                      ) : (
-                        <XCircle size={18} />
-                      )}
+                      {isCancelling ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={18} />}
                       Cancelar
                     </button>
                   </>
                 )}
                 {(status === "RECEIVED" || status === "CANCELLED") && (
-                  <div className="flex-1 rounded-2xl border border-divider/70 bg-content2/45 px-4 py-3 text-center text-xs text-default-500">
-                    Esta compra ya fue{" "}
-                    {status === "RECEIVED" ? "recibida" : "cancelada"} y no
-                    admite mas acciones.
+                  <div className="flex-1 rounded-2xl border border-divider/20 bg-content2/40 px-4 py-3.5 text-center text-xs text-default-500">
+                    Esta compra ya fue {status === "RECEIVED" ? "recibida" : "cancelada"} y no admite más acciones.
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -929,256 +905,394 @@ export default function PurchasesPage() {
 
   // ── List view ─────────────────────────────────────────────────────
 
+  const TAB_FILTERS = [
+    { key: "all" as const, label: "Todas" },
+    { key: "DRAFT" as const, label: "Borrador" },
+    { key: "CONFIRMED" as const, label: "Confirmadas" },
+    { key: "RECEIVED" as const, label: "Recibidas" },
+  ] as const;
+
   return (
-    <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
-      <header className="app-topbar px-6 pt-6 pb-5">
-        <div className="flex items-start justify-between gap-4">
+    <div className="relative flex h-full w-full flex-col font-sans">
+
+      {/* ── Desktop layout ─────────────────────────────────────── */}
+      <div className="hidden h-full flex-col lg:flex">
+        <header className="page-header flex shrink-0 items-center justify-between gap-4">
           <div>
-            <div className="section-kicker">Compras</div>
-            <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-              Ordenes de Compra
-            </h1>
-            <p className="mt-2 text-sm text-default-500">
-              Gestion de compras a proveedores e ingreso de mercaderia.
-            </p>
+            <p className="section-kicker">Operaciones</p>
+            <h1 className="page-title mt-0.5">Ordenes de Compra</h1>
           </div>
-          <button
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)]"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <Plus size={20} />
-          </button>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="app-panel rounded-[24px] p-4">
-            <p className="section-kicker">Compras</p>
-            <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">
-              {purchases.length}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="search-bar w-72">
+              <Search className="shrink-0 text-default-400" size={15} />
+              <input
+                className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-default-400"
+                placeholder="Buscar por proveedor o ID..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_8px_24px_rgba(59,130,246,0.40)] hover:scale-[1.02] active:scale-[0.98]"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={16} strokeWidth={2.5} />
+              Nueva Compra
+            </button>
           </div>
-          <div className="app-panel rounded-[24px] p-4">
-            <p className="section-kicker">Total Comprado</p>
-            <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-foreground">
-              {formatCompactCurrency(totalPurchased, currency)}
-            </p>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="stat-card relative overflow-hidden">
+              <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-blue-500/5" />
+              <p className="stat-card-label flex items-center gap-1.5">
+                <ShoppingBag size={12} />
+                Compras Realizadas
+              </p>
+              <p className="stat-card-value mt-3">{purchases.length}</p>
+              <p className="stat-card-sub">
+                {monthStats.countDelta !== 0 && (
+                  <span className={monthStats.countDelta > 0 ? "text-emerald-600 font-semibold" : "text-red-600 font-semibold"}>
+                    {monthStats.countDelta > 0 ? "▲" : "▼"} {Math.abs(monthStats.countDelta).toFixed(1)}%
+                  </span>
+                )}{" "}
+                vs mes anterior
+              </p>
+            </div>
+            <div className="stat-card relative overflow-hidden">
+              <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-emerald-500/5" />
+              <p className="stat-card-label flex items-center gap-1.5">
+                <Receipt size={12} />
+                Total Invertido
+              </p>
+              <p className="stat-card-value mt-3 font-mono">{formatCurrency(totalPurchased, currency)}</p>
+              <p className="stat-card-sub">
+                Promedio mensual:{" "}
+                <span className="font-semibold font-mono text-foreground">
+                  {formatCompactCurrency(monthStats.monthlyAvg, currency)}
+                </span>
+              </p>
+            </div>
+            <div className="stat-card relative overflow-hidden">
+              <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-amber-500/5" />
+              <p className="stat-card-label flex items-center gap-1.5">
+                <Clock size={12} />
+                Pendientes Recepción
+              </p>
+              <p className="stat-card-value mt-3">{monthStats.pending}</p>
+              <div className="mt-3 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-content3">
+                  <div
+                    className="h-full rounded-full bg-amber-400 transition-all"
+                    style={{ width: `${monthStats.pendingPct}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold font-mono text-amber-500">{monthStats.pendingPct}%</span>
+              </div>
+            </div>
+            <div className="stat-card relative overflow-hidden">
+              <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-red-500/5" />
+              <p className="stat-card-label flex items-center gap-1.5">
+                <ArrowUpRight size={12} />
+                Variación Costos
+              </p>
+              <p className={`stat-card-value mt-3 font-mono ${
+                monthStats.costDelta < 0 ? "text-red-600" : monthStats.costDelta > 0 ? "text-emerald-600" : ""
+              }`}>
+                {monthStats.costDelta > 0 ? "+" : ""}{monthStats.costDelta.toFixed(1)}%
+              </p>
+              <p className="stat-card-sub">Impacto en margen bruto</p>
+            </div>
           </div>
-        </div>
 
-        <div className="relative mt-4">
-          <Search
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-default-400"
-            size={18}
-          />
-          <input
-            className="corp-input w-full rounded-2xl py-3.5 pl-11 pr-4 text-sm text-foreground"
-            placeholder="Buscar por proveedor o ID..."
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </header>
+          {/* Table card */}
+          <div className="financial-card !p-0 overflow-hidden">
+            <div className="flex items-center justify-between border-b border-divider/10 px-5 py-3.5">
+              <div className="flex items-center gap-1">
+                {TAB_FILTERS.map((f) => {
+                  const count = f.key === "all" ? purchases.length : statusCounts[f.key] || 0;
+                  if (f.key !== "all" && count === 0) return null;
+                  return (
+                    <button
+                      key={f.key}
+                      className={`relative rounded-lg px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                        activeFilter === f.key
+                          ? "bg-blue-500 text-white shadow-sm"
+                          : "text-default-500 hover:text-foreground hover:bg-content2/60"
+                      }`}
+                      onClick={() => setActiveFilter(f.key)}
+                    >
+                      {f.label}
+                      <span className={`ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+                        activeFilter === f.key ? "bg-white/20 text-white" : "bg-default-200/60 text-default-500"
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-      {/* Filters */}
-      <div className="px-6 py-5">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {(
-            [
-              { key: "all" as const, label: "Todas" },
-              { key: "DRAFT" as const, label: "Borrador" },
-              { key: "CONFIRMED" as const, label: "Confirmadas" },
-              { key: "RECEIVED" as const, label: "Recibidas" },
-              { key: "CANCELLED" as const, label: "Canceladas" },
-            ] as const
-          ).map((filter) => {
-            const count =
-              filter.key === "all"
-                ? purchases.length
-                : statusCounts[filter.key] || 0;
-
-            if (filter.key !== "all" && count === 0) return null;
-
-            return (
-              <button
-                key={filter.key}
-                className={`shrink-0 rounded-full px-5 py-2 text-[12px] font-semibold tracking-wide transition ${
-                  activeFilter === filter.key
-                    ? filter.key === "CANCELLED"
-                      ? "bg-danger text-danger-foreground"
-                      : "bg-primary text-primary-foreground"
-                    : "app-panel-soft text-default-600"
-                }`}
-                onClick={() => setActiveFilter(filter.key)}
-              >
-                {filter.label} ({count})
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* List */}
-      <div className="flex-1 space-y-3 px-6 pb-6">
-        {loading && purchases.length === 0 ? (
-          <div className="app-panel rounded-[24px] py-12 text-center text-default-400">
-            <Loader2 className="mx-auto mb-3 animate-spin" size={32} />
-            <p className="text-sm font-medium">Cargando compras...</p>
-          </div>
-        ) : filteredPurchases.length > 0 ? (
-          <>
-            {/* Desktop table */}
-            <div className="hidden lg:block">
-              <div className="app-panel overflow-x-auto rounded-[24px] p-2">
+            <div className="overflow-x-auto">
+              {loading && purchases.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-default-400">
+                  <Loader2 className="mb-3 animate-spin" size={28} />
+                  <p className="text-sm font-medium">Cargando compras...</p>
+                </div>
+              ) : filteredPurchases.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-default-100">
+                    <ShoppingBag className="text-default-300" size={28} />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {searchQuery || activeFilter !== "all"
+                      ? "Sin resultados"
+                      : "Crea tu primera orden de compra"}
+                  </p>
+                  <p className="mt-1 text-xs text-default-500">
+                    {searchQuery || activeFilter !== "all"
+                      ? "No se encontraron compras con los filtros aplicados."
+                      : "Usa el botón Nueva Compra para empezar."}
+                  </p>
+                </div>
+              ) : (
                 <table className="w-full min-w-[900px]">
                   <thead>
-                    <tr className="text-left text-xs uppercase tracking-[0.16em] text-default-500">
-                      <th className="px-3 pb-3 pt-2">OC</th>
-                      <th className="px-3 pb-3 pt-2">Proveedor</th>
-                      <th className="px-3 pb-3 pt-2">Fecha</th>
-                      <th className="px-3 pb-3 pt-2">Estado</th>
-                      <th className="px-3 pb-3 pt-2">Pago</th>
-                      <th className="px-3 pb-3 pt-2 text-right">Total</th>
-                      <th className="px-3 pb-3 pt-2 text-right">Accion</th>
+                    <tr className="text-left text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">
+                      <th className="px-5 pb-3 pt-4">OC</th>
+                      <th className="px-4 pb-3 pt-4">Proveedor</th>
+                      <th className="px-4 pb-3 pt-4">Emisión</th>
+                      <th className="px-4 pb-3 pt-4">Entrega</th>
+                      <th className="px-4 pb-3 pt-4">Estado</th>
+                      <th className="px-4 pb-3 pt-4">Pago</th>
+                      <th className="px-4 pb-3 pt-4 text-right">Total</th>
+                      <th className="px-5 pb-3 pt-4 text-right w-16"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(isDesktop ? desktopItems : filteredPurchases).map((purchase) => (
-                      <tr
-                        key={purchase._id}
-                        className="cursor-pointer border-t border-divider/60"
-                        onClick={() => navigate(`/purchases/${purchase._id}`)}
-                      >
-                        <td className="px-3 py-3 text-sm font-semibold text-foreground">
-                          #{purchase._id.slice(-6).toUpperCase()}
-                        </td>
-                        <td className="px-3 py-3 text-sm text-default-600">
-                          {getSupplierName(purchase.supplier)}
-                        </td>
-                        <td className="px-3 py-3 text-sm text-default-500">
-                          {purchase.date}
-                        </td>
-                        <td className="px-3 py-3 text-sm">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${STATUS_COLORS[purchase.status]}`}
-                          >
-                            {STATUS_LABELS[purchase.status]}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-sm text-default-500">
-                          {PAYMENT_LABELS[purchase.paymentCondition]}
-                        </td>
-                        <td className="px-3 py-3 text-right text-sm font-semibold text-foreground">
-                          {formatCompactCurrency(purchase.total, currency)}
-                        </td>
-                        <td className="px-3 py-3 text-right text-sm text-primary">
-                          Ver detalle
-                        </td>
-                      </tr>
-                    ))}
+                    {desktopItems.map((purchase) => {
+                      const name = getSupplierName(purchase.supplier);
+                      const delivery = expectedDelivery(purchase);
+                      return (
+                        <tr
+                          key={purchase._id}
+                          className="group cursor-pointer border-t border-divider/10 transition-colors hover:bg-blue-500/5"
+                          onClick={() => navigate(`/purchases/${purchase._id}`)}
+                        >
+                          <td className="px-5 py-4">
+                            <span className="text-sm font-bold font-mono text-blue-500">
+                              {formatId(purchase._id)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-[11px] font-bold ${avatarColor(name)}`}>
+                                {supplierInitials(name)}
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">{name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm font-mono text-default-500">{formatDate(purchase.date)}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            {isToday(delivery) ? (
+                              <span className="inline-flex items-center gap-1 text-sm font-bold text-amber-500">
+                                <Clock size={13} />
+                                Hoy
+                              </span>
+                            ) : (
+                              <span className="text-sm font-mono text-default-500">{formatDate(delivery)}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${STATUS_COLORS[purchase.status]}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[purchase.status]}`} />
+                              {STATUS_LABELS[purchase.status]}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-default-500">
+                              {PAYMENT_LABELS[purchase.paymentCondition]}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <span className="text-sm font-bold font-mono text-foreground">
+                              {formatCurrency(purchase.total, currency)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <ChevronRight size={15} className="text-default-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
-              </div>
-              {isDesktop && (
-                <PaginationBar
-                  from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
-                  page={desktopPage}
-                  to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, filteredPurchases.length)}
-                  total={filteredPurchases.length}
-                  totalPages={desktopTotalPages}
-                  onNext={() => setDesktopPage((p) => p + 1)}
-                  onPrev={() => setDesktopPage((p) => p - 1)}
-                />
               )}
             </div>
 
-            {/* Mobile cards */}
-            <div className="space-y-3 lg:hidden">
-              {filteredPurchases.map((purchase) => (
-                <button
-                  key={purchase._id}
-                  className="app-panel flex w-full items-start justify-between rounded-[26px] p-4 text-left"
-                  onClick={() => navigate(`/purchases/${purchase._id}`)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
-                        purchase.status === "CANCELLED"
-                          ? "bg-danger/15 text-danger"
-                          : purchase.status === "RECEIVED"
-                            ? "bg-success/15 text-success"
-                            : "bg-primary/12 text-primary"
-                      }`}
-                    >
-                      <ShoppingBag size={22} />
-                    </div>
-                    <div>
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        {getSupplierName(purchase.supplier)}
-                      </h3>
-                      <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-default-400">
-                        OC #{purchase._id.slice(-6).toUpperCase()} ·{" "}
-                        {purchase.date}
-                      </p>
-                      <div className="mt-2 flex gap-2">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${STATUS_COLORS[purchase.status]}`}
-                        >
-                          {STATUS_LABELS[purchase.status]}
-                        </span>
-                        <span className="rounded-full bg-content2/70 px-2.5 py-1 text-[10px] font-semibold text-default-500">
-                          {PAYMENT_LABELS[purchase.paymentCondition]}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-[0.16em] text-default-400">
-                      Total
-                    </p>
-                    <p className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-foreground">
-                      {formatCompactCurrency(purchase.total, currency)}
-                    </p>
-                    <ArrowUpRight
-                      className="ml-auto mt-3 text-default-300"
-                      size={18}
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="app-panel rounded-[24px] py-12 text-center text-default-400">
-            <ShoppingBag className="mx-auto mb-4 h-16 w-16" />
-            <p className="text-sm font-medium text-foreground">
-              No hay compras para mostrar
-            </p>
-            <p className="mx-auto mt-2 max-w-xs text-sm text-default-500">
-              {searchQuery || activeFilter !== "all"
-                ? "No se encontraron compras con los filtros aplicados."
-                : "Crea tu primera orden de compra."}
-            </p>
+            <PaginationBar
+              from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
+              label={`Mostrando ${desktopItems.length} de ${filteredPurchases.length} órdenes`}
+              page={desktopPage}
+              to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, filteredPurchases.length)}
+              total={filteredPurchases.length}
+              totalPages={desktopTotalPages}
+              onNext={() => setDesktopPage((p) => p + 1)}
+              onPage={(p) => setDesktopPage(p)}
+              onPrev={() => setDesktopPage((p) => p - 1)}
+            />
           </div>
-        )}
+        </div>
       </div>
 
-      {/* FAB */}
-      <button
-        className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition-transform hover:scale-105 active:scale-95"
-        onClick={() => setShowCreateModal(true)}
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </button>
+      {/* ── Mobile layout ──────────────────────────────────────── */}
+      <div className="flex h-full w-full flex-col overflow-y-auto pb-24 lg:hidden">
+        <header className="app-topbar px-6 pt-6 pb-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="section-kicker">Compras</div>
+              <h1 className="mt-2 text-[28px] font-bold tracking-[-0.03em] text-foreground">
+                Ordenes de Compra
+              </h1>
+            </div>
+            <button
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+          <div className="relative mt-4">
+            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-default-400" size={18} />
+            <input
+              className="corp-input w-full rounded-2xl py-3.5 pl-11 pr-4 text-sm text-foreground"
+              placeholder="Buscar por proveedor o ID..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </header>
 
-      {/* Create modal */}
+        <div className="px-6 py-4">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {(
+              [
+                { key: "all" as const, label: "Todas" },
+                { key: "DRAFT" as const, label: "Borrador" },
+                { key: "CONFIRMED" as const, label: "Confirmadas" },
+                { key: "RECEIVED" as const, label: "Recibidas" },
+                { key: "CANCELLED" as const, label: "Canceladas" },
+              ] as const
+            ).map((filter) => {
+              const count = filter.key === "all" ? purchases.length : statusCounts[filter.key] || 0;
+              if (filter.key !== "all" && count === 0) return null;
+              return (
+                <button
+                  key={filter.key}
+                  className={`shrink-0 rounded-full px-5 py-2 text-[12px] font-bold tracking-wide transition-all ${
+                    activeFilter === filter.key
+                      ? filter.key === "CANCELLED"
+                        ? "bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md"
+                        : "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md"
+                      : "border border-divider/20 bg-content2/50 text-default-600 hover:bg-content2/80"
+                  }`}
+                  onClick={() => setActiveFilter(filter.key)}
+                >
+                  {filter.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-3 px-6 pb-6">
+          {loading && purchases.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-divider/10 bg-content2/40 py-16 text-default-400">
+              <Loader2 className="mb-3 animate-spin" size={32} />
+              <p className="text-sm font-medium">Cargando compras...</p>
+            </div>
+          ) : filteredPurchases.length > 0 ? (
+            filteredPurchases.map((purchase, i) => (
+              <button
+                key={purchase._id}
+                className="group relative flex w-full items-start justify-between rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-4 text-left transition-all hover:border-blue-500/25 hover:shadow-md active:scale-[0.99]"
+                onClick={() => navigate(`/purchases/${purchase._id}`)}
+                style={{ animationDelay: `${i * 30}ms` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${
+                    purchase.status === "CANCELLED" ? "from-red-500/15 to-red-600/10 text-red-500"
+                      : purchase.status === "RECEIVED" ? "from-emerald-500/15 to-emerald-600/10 text-emerald-500"
+                        : purchase.status === "CONFIRMED" ? "from-blue-500/15 to-blue-600/10 text-blue-500"
+                          : "from-amber-500/15 to-amber-600/10 text-amber-500"
+                  }`}>
+                    <ShoppingBag size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-bold text-foreground truncate max-w-[180px]">
+                      {getSupplierName(purchase.supplier)}
+                    </h3>
+                    <p className="mt-0.5 text-[10px] font-mono uppercase tracking-[0.12em] text-default-400">
+                      {formatId(purchase._id)} · {formatDate(purchase.date)}
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.06em] ${STATUS_COLORS[purchase.status]}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[purchase.status]}`} />
+                        {STATUS_LABELS[purchase.status]}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-default-100 px-2.5 py-1 text-[9px] font-bold text-default-500">
+                        <CreditCard size={10} />
+                        {PAYMENT_LABELS[purchase.paymentCondition]}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0 ml-3">
+                  <p className="text-base font-bold font-mono text-foreground">
+                    {formatCompactCurrency(purchase.total, currency)}
+                  </p>
+                  <ChevronRight size={15} className="text-default-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-divider/10 bg-content2/40 py-16">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-default-100">
+                <ShoppingBag className="text-default-300" size={28} />
+              </div>
+              <p className="text-sm font-semibold text-foreground">
+                {searchQuery || activeFilter !== "all" ? "Sin resultados" : "Crea tu primera compra"}
+              </p>
+              <p className="mt-1 text-xs text-default-500">
+                {searchQuery || activeFilter !== "all"
+                  ? "No se encontraron compras con los filtros aplicados."
+                  : "Usa el botón + para empezar."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <button
+          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-[0_16px_34px_rgba(59,130,246,0.35)] transition-all hover:scale-105 active:scale-95 hover:shadow-[0_16px_40px_rgba(59,130,246,0.45)]"
+          onClick={() => setShowCreateModal(true)}
+        >
+          <Plus size={26} strokeWidth={2.5} />
+        </button>
+      </div>
+
       {showCreateModal && (
         <CreatePurchaseModal
-          suppliers={suppliers}
           currency={currency}
           isDesktop={isDesktop}
           submitting={isCreating}
+          suppliers={suppliers}
           supplies={supplies}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreate}

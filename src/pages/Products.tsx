@@ -35,6 +35,7 @@ import { PaginationBar } from "@/components/PaginationBar";
 
 type ProductFormState = {
   sku: string;
+  barcode: string;
   name: string;
   description: string;
   price: string;
@@ -62,6 +63,7 @@ const MOVEMENTS_PREVIEW_LIMIT = 8;
 
 const emptyForm: ProductFormState = {
   sku: "",
+  barcode: "",
   name: "",
   description: "",
   price: "",
@@ -190,22 +192,19 @@ function ProductFormModal({
       >
         <div className="grid grid-cols-1 gap-4">
           <label className="block min-w-0">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">SKU</span>
-            <div className="space-y-2">
-              <input
-                className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                value={formData.sku}
-                onChange={(e) => onChange("sku", e.target.value.toUpperCase())}
-              />
-              <button
-                className="inline-flex max-w-full items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
-                type="button"
-                onClick={onUseSuggestedSku}
-              >
-                <WandSparkles size={14} />
-                <span className="truncate">Usar sugerencia {suggestedSku}</span>
-              </button>
-            </div>
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">Código de Barras</span>
+            <input
+              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
+              placeholder="Ej: 7791234567890"
+              value={formData.barcode}
+              onChange={(e) => onChange("barcode", e.target.value.toUpperCase())}
+            />
+            <p className="mt-1 text-[11px] text-default-400">EAN-13 o código del proveedor</p>
+          </label>
+
+          <label className="block min-w-0">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">Nombre</span>
+            <input className="corp-input w-full rounded-2xl px-4 py-3 text-sm" value={formData.name} onChange={(e) => onChange("name", e.target.value)} />
           </label>
 
           <label className="block min-w-0">
@@ -510,6 +509,10 @@ function ProductDetailPanel({
                   <span className="font-semibold text-default-400">SKU</span>
                   <span className="font-mono text-foreground">{product.sku || "No definido"}</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-default-400">Código de Barras</span>
+                  <span className="font-mono text-foreground">{product.barcode || "—"}</span>
+                </div>
                 <div className="flex items-start justify-between gap-3">
                   <span className="font-semibold text-default-400">Categorías</span>
                   <span className="text-right text-foreground">
@@ -665,6 +668,7 @@ export default function ProductsPage() {
     if (showEditModal && selectedProduct) {
       setFormData({
         sku: selectedProduct.sku || "",
+        barcode: selectedProduct.barcode || "",
         name: selectedProduct.name || "",
         description: selectedProduct.description || "",
         price: selectedProduct.price?.toString() || "",
@@ -778,6 +782,7 @@ export default function ProductsPage() {
 
   const buildPayload = () => ({
     sku: formData.sku || undefined,
+    barcode: formData.barcode || undefined,
     name: formData.name.trim(),
     description: formData.description.trim() || undefined,
     price: Number(formData.price || 0),
@@ -887,7 +892,7 @@ export default function ProductsPage() {
             <h1 className="page-title">Catálogo</h1>
           </div>
           <button
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(88,176,156,0.35)] transition hover:scale-105"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105"
             onClick={() => { resetForm(); setShowCreateModal(true); }}
           >
             <Plus size={18} />
@@ -993,7 +998,11 @@ export default function ProductsPage() {
                   <div className="min-w-0 flex-1 text-left">
                     <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <span className="font-mono text-xs text-default-400">{product.sku || "—"}</span>
+                      <span className="font-mono text-xs text-default-400">
+                        {product.barcode
+                          ? `${product.barcode.slice(0, 13)}`
+                          : product.sku || "—"}
+                      </span>
                       {productCats.slice(0, isDesktop ? 2 : 1).map((cat) => (
                         <span key={cat} className="badge bg-content2/70 text-default-500">{cat}</span>
                       ))}
@@ -1079,7 +1088,7 @@ export default function ProductsPage() {
       {/* Mobile FAB */}
       {!isDesktop && (
         <button
-          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(88,176,156,0.35)] transition-transform hover:scale-105 active:scale-95"
+          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition-transform hover:scale-105 active:scale-95"
           onClick={() => { resetForm(); setShowCreateModal(true); }}
         >
           <Plus size={26} strokeWidth={2.5} />
@@ -1147,7 +1156,7 @@ export default function ProductsPage() {
 
         {/* Slide-over panel */}
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(10,22,44,0.28)] transition-transform duration-300 ease-in-out ${productId ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${productId ? "translate-x-0" : "translate-x-full"}`}
           style={{ background: "color-mix(in srgb, var(--heroui-content1) 98%, transparent)" }}
         >
           {productId && (
