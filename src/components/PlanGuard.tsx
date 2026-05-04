@@ -1,17 +1,16 @@
-import { Navigate } from "react-router-dom";
 import { usePlanFeatures, Feature } from "@/hooks/usePlanFeatures";
+import UpgradeRequired from "@/pages/UpgradeRequired";
 
 interface PlanGuardProps {
   feature: Feature;
   children: React.ReactNode;
-  fallback?: string;
 }
 
-export default function PlanGuard({ feature, children, fallback = "/" }: PlanGuardProps) {
+export default function PlanGuard({ feature, children }: PlanGuardProps) {
   const { hasFeature } = usePlanFeatures();
 
   if (!hasFeature(feature)) {
-    return <Navigate to={fallback} replace />;
+    return <UpgradeRequired feature={feature} />;
   }
 
   return <>{children}</>;

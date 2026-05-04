@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
-import { Save, Loader2, ArrowLeft, Check, X, Zap, Building2, Crown, CreditCard, Calendar } from "lucide-react";
+import { Save, Loader2, ArrowLeft, Check, Zap, Building2, Crown, CreditCard, Calendar } from "lucide-react";
 
 import { useSettings, Setting } from "@/hooks/useSettings";
 import { useAppToast } from "@/components/AppToast";
@@ -101,9 +101,10 @@ function ChangePlanModal({
   );
 }
 
-function UsageBar({ label, current, max, percentage }: { label: string; current: number; max: number | "Infinity" | -1; percentage: number }) {
-  const isUnlimited = max === -1 || max === "Infinity";
-  const barColor = percentage >= 90 ? "var(--heroui-danger)" : percentage >= 70 ? "var(--heroui-warning)" : "var(--heroui-primary)";
+function UsageBar({ label, current, max, percentage }: { label: string; current: number; max: number | -1; percentage: number }) {
+  const isUnlimited = max === -1 || max === Infinity || max === 0;
+  const safePercentage = Number.isFinite(percentage) ? percentage : 0;
+  const barColor = safePercentage >= 90 ? "var(--heroui-danger)" : safePercentage >= 70 ? "var(--heroui-warning)" : "var(--heroui-primary)";
 
   return (
     <div className="rounded-xl bg-default-100/50 p-3">
@@ -117,7 +118,7 @@ function UsageBar({ label, current, max, percentage }: { label: string; current:
         <div className="mt-2 h-1.5 w-full rounded-full bg-default-200">
           <div
             className="h-1.5 rounded-full transition-all"
-            style={{ width: `${Math.min(100, percentage)}%`, backgroundColor: barColor }}
+            style={{ width: `${Math.min(100, safePercentage)}%`, backgroundColor: barColor }}
           />
         </div>
       ) : (
@@ -172,27 +173,27 @@ function PlanCard({
       <ul className="mt-3 space-y-1.5">
         <li className="flex items-center gap-1.5 text-xs text-default-500">
           <Check size={12} className="text-success shrink-0" />
-          {plan.maxUsers === Infinity ? "Usuarios ilimitados" : `Hasta ${plan.maxUsers} usuarios`}
+          {plan.maxUsers === -1 || plan.maxUsers === Infinity ? "Usuarios ilimitados" : `Hasta ${plan.maxUsers} usuarios`}
         </li>
         <li className="flex items-center gap-1.5 text-xs text-default-500">
           <Check size={12} className="text-success shrink-0" />
-          {plan.maxProducts === Infinity ? "Productos ilimitados" : `Hasta ${plan.maxProducts} productos`}
+          {plan.maxProducts === -1 || plan.maxProducts === Infinity ? "Productos ilimitados" : `Hasta ${plan.maxProducts} productos`}
         </li>
         <li className="flex items-center gap-1.5 text-xs text-default-500">
           <Check size={12} className="text-success shrink-0" />
-          {plan.maxOrdersPerMonth === Infinity ? "Ventas ilimitadas" : `Hasta ${plan.maxOrdersPerMonth} ventas/mes`}
+          {plan.maxOrdersPerMonth === -1 || plan.maxOrdersPerMonth === Infinity ? "Ventas ilimitadas" : `Hasta ${plan.maxOrdersPerMonth} ventas/mes`}
         </li>
       </ul>
 
-      {plan.features.length > 0 && (
+      {(plan.features?.length ?? 0) > 0 && (
         <div className="mt-3 space-y-1">
           <p className="text-[10px] font-bold uppercase tracking-wider text-default-400">Incluye</p>
           {plan.features.map((feat) => (
             <div key={feat} className="flex items-start gap-1.5 text-xs text-default-500">
-              <span className={`shrink-0 mt-0.5 ${featuresEnabled(plan) ? "text-success" : "text-default-300"}`}>
-                {featuresEnabled(plan) ? <Check size={11} /> : <X size={11} />}
+              <span className="shrink-0 mt-0.5 text-success">
+                <Check size={11} />
               </span>
-              <span className="truncate">{FEATURE_LABELS[feat as Feature] || feat}</span>
+              <span className="truncate">{FEATURE_LABELS[feat as Feature] || feat || "—"}</span>
             </div>
           ))}
         </div>
@@ -214,16 +215,12 @@ function PlanCard({
   );
 }
 
-function featuresEnabled(plan: AvailablePlan) {
-  return plan.features.length > 0;
-}
-
 export default function CompanyPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { settings, loading: settingsLoading, error, updateSettings, isUpdating } = useSettings();
   const { showToast } = useAppToast();
-  const { plan, availablePlans, loading: planLoading } = useTenantPlan();
+  const { plan, availablePlans, loading: planLoading, error: planError } = useTenantPlan();
   const changePlanMutation = useChangePlan();
   const createPreference = useCreatePaymentPreference();
   const { openCheckout } = useMercadoPago();
@@ -387,6 +384,17 @@ export default function CompanyPage() {
           {planLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : planError ? (
+            <div className="rounded-2xl border border-danger/20 bg-danger/10 p-4 text-center">
+              <p className="text-sm text-danger">{planError}</p>
+              <p className="mt-1 text-xs text-default-500">
+                No se pudieron cargar los datos del plan. Intentá recargar la página.
+              </p>
+            </div>
+          ) : !plan ? (
+            <div className="rounded-2xl border border-default-200 bg-default-50/50 p-4 text-center">
+              <p className="text-sm text-default-500">No hay información de plan disponible.</p>
             </div>
           ) : (
             <>

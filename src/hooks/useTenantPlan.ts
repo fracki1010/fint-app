@@ -31,26 +31,53 @@ export interface AvailablePlan {
   name: string;
   price: number;
   maxUsers: number;
-  maxProducts: number | "Infinity";
-  maxOrdersPerMonth: number | "Infinity";
+  maxProducts: number;
+  maxOrdersPerMonth: number;
   features: string[];
   isCurrent: boolean;
 }
 
+function normalizePlanInfo(plan: any): TenantPlanInfo | undefined {
+  if (!plan) return undefined;
+  return {
+    current: plan.current || "essential",
+    status: plan.status || "active",
+    limits: {
+      maxUsers: plan.limits?.maxUsers ?? 3,
+      maxProducts: plan.limits?.maxProducts ?? 200,
+      maxOrdersPerMonth: plan.limits?.maxOrdersPerMonth ?? 500,
+    },
+    usage: {
+      currentUsers: plan.usage?.currentUsers ?? 0,
+      currentProducts: plan.usage?.currentProducts ?? 0,
+      ordersThisMonth: plan.usage?.ordersThisMonth ?? 0,
+    },
+    usagePercentages: {
+      users: plan.usagePercentages?.users ?? 0,
+      products: plan.usagePercentages?.products ?? 0,
+      orders: plan.usagePercentages?.orders ?? 0,
+    },
+    billing: plan.billing || undefined,
+    trialEndsAt: plan.trialEndsAt || undefined,
+  };
+}
+
 export function useTenantPlan() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, isError } = useQuery({
     queryKey: ["tenant", "plan"],
     queryFn: async () => {
-      const response = await api.get("/api/tenant/plan");
+      const response = await api.get("/tenant/plan");
       return response.data;
     },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
   return {
-    plan: data?.plan as TenantPlanInfo | undefined,
+    plan: normalizePlanInfo(data?.plan),
     availablePlans: (data?.availablePlans as AvailablePlan[]) || [],
     loading: isLoading,
-    error: error?.message || null,
+    error: isError ? (error?.message || "Error al cargar el plan") : null,
   };
 }
 
@@ -59,7 +86,7 @@ export function useChangePlan() {
 
   return useMutation({
     mutationFn: async (plan: string) => {
-      const response = await api.post("/api/tenant/change-plan", { plan });
+      const response = await api.post("/tenant/change-plan", { plan });
       return response.data;
     },
     onSuccess: () => {

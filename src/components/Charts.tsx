@@ -3,18 +3,20 @@ export function BarChart({
   height = 160,
   color = "#3b82f6",
   formatValue,
+  light,
 }: {
   data: { label: string; value: number }[];
   height?: number;
   color?: string;
   formatValue?: (v: number) => string;
+  light?: boolean;
 }) {
   if (data.length === 0) return null;
 
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
-    <div className="flex items-end gap-[3px] h-full" style={{ height }}>
+    <div className="flex items-end gap-1 h-full" style={{ height }}>
       {data.map((d, i) => {
         const pct = (d.value / max) * 100;
 
@@ -24,22 +26,22 @@ export function BarChart({
             className="relative flex flex-col items-center justify-end flex-1 h-full"
           >
             {d.value > 0 && (
-              <span className="mb-1 text-[9px] font-semibold text-gray-400 leading-none">
+              <span className={`mb-0.5 text-[9px] font-semibold leading-none ${light ? "text-white/70" : "text-gray-400"}`}>
                 {formatValue ? formatValue(d.value) : d.value}
               </span>
             )}
             <div
-              className="w-full rounded-t transition-all duration-300"
+              className="w-full rounded-sm transition-all duration-300"
               style={{
                 height: `${Math.max(pct, d.value > 0 ? 4 : 0)}%`,
                 background: d.value > 0
-                  ? `linear-gradient(to top, ${color}88, ${color})`
+                  ? `linear-gradient(to top, ${color}44, ${color})`
                   : "transparent",
                 minHeight: d.value > 0 ? 4 : 0,
-                borderRadius: 2,
+                borderRadius: 3,
               }}
             />
-            <span className="mt-1 text-[8px] text-gray-500 leading-none truncate w-full text-center">
+            <span className={`mt-0.5 text-[9px] leading-none truncate w-full text-center font-medium ${light ? "text-white/50" : "text-gray-500"}`}>
               {d.label}
             </span>
           </div>

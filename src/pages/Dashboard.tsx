@@ -62,7 +62,7 @@ export default function DashboardPage() {
   const { dashboard, loading, error } = useDashboard();
   const { optionalKpis, loading: optionalLoading } =
     useDashboardOptionalKpis(optionalRangeDays);
-  const { sales: dailySales, loading: dailyLoading } = useDailySales(14);
+  const { sales: dailySales, loading: dailyLoading } = useDailySales(7);
   const { settings } = useSettings();
   const currency = settings?.currency || "USD";
 
@@ -337,7 +337,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-4 h-20 w-full lg:h-24">
+        <div className="mt-4 h-28 w-full lg:h-32">
           {dailyLoading ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 size={16} className="animate-spin text-white/40" />
@@ -345,12 +345,13 @@ export default function DashboardPage() {
           ) : dailySales.length > 0 ? (
             <BarChart
               data={dailySales.map((d) => ({
-                label: new Date(d.date).toLocaleDateString("es-AR", { weekday: "short", day: "numeric" }),
+                label: new Date(d.date).toLocaleDateString("es-AR", { day: "numeric" }),
                 value: d.revenue,
               }))}
-              height={80}
-              color="#60a5fa"
+              height={112}
+              color="#ffffff"
               formatValue={(v) => formatCompactCurrency(v, currency)}
+              light
             />
           ) : (
             <svg className="h-full w-full fill-none stroke-white/25" preserveAspectRatio="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 400 120">
@@ -555,11 +556,11 @@ export default function DashboardPage() {
                         {product.name}
                       </p>
                       <p className="mt-0.5 text-xs text-default-500">
-                        minimo {product.minStock} {product.unitOfMeasure}
+                        minimo {product.minStock} {product.unitOfMeasure || "unid."}
                       </p>
                     </div>
                     <p className="ml-3 shrink-0 text-sm font-bold text-danger">
-                      {product.stock} {product.unitOfMeasure}
+                      {product.stock} {product.unitOfMeasure || "unid."}
                     </p>
                   </div>
                 ))
@@ -597,11 +598,11 @@ export default function DashboardPage() {
                         {supply.name}
                       </p>
                       <p className="mt-0.5 text-xs text-default-500">
-                        minimo {supply.minStock} {supply.unit}
+                        minimo {supply.minStock} {supply.unit || "unid."}
                       </p>
                     </div>
                     <p className="ml-3 shrink-0 text-sm font-bold text-danger">
-                      {supply.currentStock} {supply.unit}
+                      {supply.currentStock} {supply.unit || "unid."}
                     </p>
                   </div>
                 ))
@@ -658,10 +659,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {dashboard.purchasing.lastReceivedPurchase.supplierName}
+                      {dashboard.purchasing.lastReceivedPurchase.supplierName || "Proveedor"}
                     </p>
                     <p className="text-xs text-default-500">
-                      {dashboard.purchasing.lastReceivedPurchase.itemCount} items
+                      {dashboard.purchasing.lastReceivedPurchase.itemCount ?? 0} items
                     </p>
                   </div>
                 </div>
@@ -669,13 +670,15 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-default-500">Total</span>
                     <span className="text-sm font-bold text-foreground">
-                      {formatCompactCurrency(dashboard.purchasing.lastReceivedPurchase.total, currency)}
+                      {formatCompactCurrency(dashboard.purchasing.lastReceivedPurchase.total ?? 0, currency)}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-xs text-default-500">Recibida</span>
                     <span className="text-xs text-default-400">
-                      {new Date(dashboard.purchasing.lastReceivedPurchase.receivedAt).toLocaleDateString("es-AR")}
+                      {dashboard.purchasing.lastReceivedPurchase.receivedAt
+                        ? new Date(dashboard.purchasing.lastReceivedPurchase.receivedAt).toLocaleDateString("es-AR")
+                        : "-"}
                     </span>
                   </div>
                 </div>

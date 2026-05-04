@@ -10,7 +10,7 @@ export interface CreatePreferenceResponse {
 export function useCreatePaymentPreference() {
   return useMutation({
     mutationFn: async (plan: string) => {
-      const response = await api.post("/api/payments/create-preference", { plan });
+      const response = await api.post("/payments/create-preference", { plan });
       return response.data as CreatePreferenceResponse;
     },
   });
