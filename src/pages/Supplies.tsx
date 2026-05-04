@@ -14,12 +14,14 @@ import {
   PackageSearch,
   ChevronRight,
   Layers3,
+  ShoppingBag,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { Select, SelectItem } from "@heroui/select";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 
 import { useSupplies, useSupplyMovements } from "@/hooks/useSupplies";
+import { usePurchases } from "@/hooks/usePurchases";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useSettings } from "@/hooks/useSettings";
 import { SupplyMovementType } from "@/types";
@@ -196,7 +198,7 @@ function SupplyFormModal({
 
   return (
     <Drawer hideCloseButton isOpen backdrop="opaque" placement="right" scrollBehavior="inside" size="xl" onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
@@ -290,10 +292,78 @@ function MovementFormModal({
 
   return (
     <Drawer hideCloseButton isOpen backdrop="opaque" placement="right" scrollBehavior="inside" size="xl" onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+// ── Related Purchases ─────────────────────────────────────────────────────────
+
+function RelatedPurchases({ supplyId, currency }: { supplyId: string; currency: string }) {
+  const { purchases, loading } = usePurchases();
+
+  const related = useMemo(() => {
+    return purchases.filter((p) =>
+      p.items.some((item) => {
+        const supply = item.supply;
+        if (typeof supply === "object" && supply) {
+          return supply._id === supplyId;
+        }
+        return supply === supplyId;
+      }),
+    );
+  }, [purchases, supplyId]);
+
+  if (loading && purchases.length === 0) {
+    return (
+      <div className="stat-card py-6 text-center text-default-400">
+        <Loader2 className="mx-auto mb-2 animate-spin" size={20} />
+        <p className="text-xs">Cargando compras...</p>
+      </div>
+    );
+  }
+
+  if (related.length === 0) return null;
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-bold text-foreground">Compras Relacionadas</p>
+        <span className="text-xs text-default-400">{related.length}</span>
+      </div>
+      <div className="space-y-2">
+        {related.slice(0, 5).map((purchase) => {
+          const supplierName =
+            typeof purchase.supplier === "object" && purchase.supplier
+              ? purchase.supplier.company || purchase.supplier.name || "Proveedor"
+              : "Proveedor";
+          return (
+            <Link
+              key={purchase._id}
+              className="list-row flex w-full items-center gap-3 hover:border-primary/30 hover:bg-primary/5"
+              to={`/purchases/${purchase._id}`}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                <ShoppingBag size={15} />
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="truncate text-sm font-semibold text-foreground">{supplierName}</p>
+                <p className="mt-0.5 text-xs text-default-400">
+                  {purchase.items.length} items · {new Date(purchase.date).toLocaleDateString("es-AR")}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-bold text-foreground">{formatCompactCurrency(purchase.total, currency)}</p>
+                <p className="mt-0.5 text-[10px] uppercase tracking-wide text-default-400">{purchase.status}</p>
+              </div>
+              <ChevronRight className="shrink-0 text-default-300" size={16} />
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -447,6 +517,9 @@ function SupplyDetailPanel({
                 </div>
               </div>
             </div>
+
+            {/* Related Purchases */}
+            <RelatedPurchases supplyId={supplyId} currency={currency} />
 
             {/* Movements */}
             <div>
@@ -772,7 +845,7 @@ export default function SuppliesPage() {
       </div>
 
       {/* Supply list */}
-      <div className="px-4 pb-6 space-y-2">
+      <div className="px-4 pb-28 space-y-2">
         {loading && supplies.length === 0 ? (
           <div className="py-16 text-center text-default-400">
             <Loader2 className="mx-auto mb-3 animate-spin" size={28} />
@@ -915,7 +988,7 @@ export default function SuppliesPage() {
 
   // Mobile: full-screen list
   return (
-    <div className="flex min-h-full flex-col bg-background pb-24">
+    <div className="flex min-h-full flex-col overflow-y-auto bg-background pb-28">
       {listPanel}
       {modals}
     </div>

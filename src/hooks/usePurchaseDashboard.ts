@@ -8,6 +8,7 @@ export interface PurchaseDashboard {
   pendingCount: number;
   inventoryValue: number;
   lowStockCount: number;
+  totalPayables: number;
   statusBreakdown: Record<string, number>;
   trend: { labels: string[]; totals: number[] };
   topSuppliers: { supplierId: string; name: string; total: number }[];

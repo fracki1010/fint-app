@@ -633,7 +633,7 @@ function ClientFormModal({
         if (!open) onClose();
       }}
     >
-      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
@@ -1293,7 +1293,7 @@ export default function ClientsPage() {
 
   // Panel de lista
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-24"}`}>
+    <div className={`flex flex-col overflow-y-auto ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -1493,7 +1493,7 @@ export default function ClientsPage() {
             }
           />
         ) : (
-          <div className="space-y-2 pb-4">
+          <div className="space-y-2 pb-28">
             {(isDesktop ? desktopItems : filteredAndSortedClients).map((client) => {
               const isSelected = client._id === clientId;
               const hasDebt = Number(client.debt || 0) > 0;

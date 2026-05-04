@@ -11,7 +11,7 @@ import {
   Trash2,
   PackageSearch,
   Archive,
-  WandSparkles,
+  ScanBarcode,
   ChevronRight,
   ArrowUpRight,
 } from "lucide-react";
@@ -32,6 +32,8 @@ import { useAppToast } from "@/components/AppToast";
 import { formatCompactCurrency } from "@/utils/currency";
 import { getErrorMessage } from "@/utils/errors";
 import { PaginationBar } from "@/components/PaginationBar";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 
 type ProductFormState = {
   sku: string;
@@ -110,8 +112,7 @@ function ProductFormModal({
   onAddCategory,
   onRemoveCategory,
   existingCategories,
-  suggestedSku,
-  onUseSuggestedSku,
+  
   suggestedPrices,
   onApplySuggestedPrice,
   onClose,
@@ -135,6 +136,30 @@ function ProductFormModal({
 }) {
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+
+  const {
+    state: barcodeState,
+    error: barcodeError,
+    setVideoContainer: setBarcodeContainer,
+    startCameraScanner: startBarcodeScan,
+    stopCameraScanner: stopBarcodeScan,
+    toggleCameraScanner: toggleBarcodeScan,
+  } = useBarcodeScanner({
+    onScan: (code) => {
+      onChange("barcode", code);
+      setShowBarcodeScanner(false);
+    },
+    onError: () => {},
+  });
+
+  useEffect(() => {
+    if (showBarcodeScanner) {
+      startBarcodeScan();
+    } else {
+      stopBarcodeScan();
+    }
+  }, [showBarcodeScanner, startBarcodeScan, stopBarcodeScan]);
 
   useEffect(() => {
     if (isDesktop) return;
@@ -193,13 +218,27 @@ function ProductFormModal({
         <div className="grid grid-cols-1 gap-4">
           <label className="block min-w-0">
             <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-default-500">Código de Barras</span>
-            <input
-              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-              placeholder="Ej: 7791234567890"
-              value={formData.barcode}
-              onChange={(e) => onChange("barcode", e.target.value.toUpperCase())}
-            />
-            <p className="mt-1 text-[11px] text-default-400">EAN-13 o código del proveedor</p>
+            <div className="flex gap-2">
+              <input
+                className="corp-input flex-1 rounded-2xl px-4 py-3 text-sm"
+                placeholder="Ej: 7791234567890"
+                value={formData.barcode}
+                onChange={(e) => onChange("barcode", e.target.value.toUpperCase())}
+              />
+              <button
+                className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition hover:bg-primary/20"
+                type="button"
+                onClick={() => setShowBarcodeScanner(true)}
+              >
+                <ScanBarcode size={20} />
+              </button>
+            </div>
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-default-400">
+              Escaneá o escribí el código de barras
+              {formData.barcode && (
+                <span className="font-semibold text-primary">· {formData.barcode}</span>
+              )}
+            </p>
           </label>
 
           <label className="block min-w-0">
@@ -320,6 +359,19 @@ function ProductFormModal({
         </div>
       </div>
 
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => {
+          setShowBarcodeScanner(false);
+          stopBarcodeScan();
+        }}
+        onScan={() => {}}
+        setVideoContainer={setBarcodeContainer}
+        state={barcodeState}
+        error={barcodeError}
+        onToggle={toggleBarcodeScan}
+      />
+
       <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
         <button className="app-panel-soft flex-1 rounded-2xl px-4 py-3 text-sm font-semibold text-default-600" onClick={onClose}>
           Cancelar
@@ -352,7 +404,7 @@ function ProductFormModal({
       size="xl"
       onOpenChange={(open: boolean) => { if (!open) onClose(); }}
     >
-      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
@@ -965,7 +1017,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Product list */}
-      <div className="px-4 pb-6 space-y-2">
+      <div className="px-4 pb-28 space-y-2">
         {loading && products.length === 0 ? (
           <div className="py-16 text-center text-default-400">
             <Loader2 className="mx-auto mb-3 animate-spin" size={28} />
@@ -1179,7 +1231,7 @@ export default function ProductsPage() {
 
   // Mobile: full-screen list
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-24">
+    <div className="flex min-h-screen flex-col overflow-y-auto bg-background pb-28">
       {listPanel}
       {modals}
     </div>

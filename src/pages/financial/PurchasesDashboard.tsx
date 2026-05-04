@@ -9,7 +9,9 @@ import {
   TrendingUp,
   ListOrdered,
   BarChart3,
+  CreditCard,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { usePurchaseDashboard } from "@/hooks/usePurchaseDashboard";
 import { useSettings } from "@/hooks/useSettings";
@@ -276,7 +278,7 @@ export default function PurchasesDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <KpiCard
           label="Gasto este mes"
           value={formatCurrency(data.thisMonthSpend, currency)}
@@ -305,6 +307,16 @@ export default function PurchasesDashboard() {
           accent={data.lowStockCount > 0}
           className={data.lowStockCount > 0 ? "border-amber-400/30" : ""}
         />
+        <Link to="/supplier-account" className="block">
+          <KpiCard
+            label="Cuentas por pagar"
+            value={formatCurrency(data.totalPayables, currency)}
+            sub="saldo deudor proveedores"
+            icon={CreditCard}
+            accent={data.totalPayables > 0}
+            className={data.totalPayables > 0 ? "border-danger/30 hover:border-danger/50" : "hover:border-primary/30"}
+          />
+        </Link>
       </div>
 
       <TrendChart labels={data.trend.labels} totals={data.trend.totals} currency={currency} />

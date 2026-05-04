@@ -13,9 +13,9 @@ import {
   ArrowLeft,
   X,
   TrendingUp,
-  Clock,
+  
   CheckCircle2,
-  AlertCircle,
+  
   ScanBarcode,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -474,7 +474,7 @@ export default function SalesPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-24"}`}>
+    <div className={`flex flex-col overflow-y-auto ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -587,7 +587,7 @@ export default function SalesPage() {
             <p className="text-xs">{searchQuery || activeFilter !== "all" ? "Probá con otros filtros." : "Aún no se registraron operaciones."}</p>
           </div>
         ) : (
-          <div className="space-y-2 pb-4">
+          <div className="space-y-2 pb-28">
             {(isDesktop ? desktopItems : filteredOrders).map((order) => {
               const isSelected = order._id === orderId;
               return (

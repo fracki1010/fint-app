@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import PlanGuard from "@/components/PlanGuard";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,7 +22,11 @@ const SupplierAccountPage = lazy(() => import("@/pages/SupplierAccount"));
 const RecipesPage = lazy(() => import("@/pages/Recipes"));
 const SuppliersPage = lazy(() => import("@/pages/Suppliers"));
 const TeamPage = lazy(() => import("@/pages/Team"));
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const CompanyPage = lazy(() => import("@/pages/admin/CompanyPage"));
 const ClientAccountPage = lazy(() => import("@/pages/ClientAccount"));
+const ClientAccountDetailPage = lazy(() => import("@/pages/ClientAccountDetail"));
+const SupplierAccountDetailPage = lazy(() => import("@/pages/SupplierAccountDetail"));
 const QuickSalePage = lazy(() => import("@/pages/QuickSale"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const FinancialDashboardPage = lazy(
@@ -39,6 +44,11 @@ const SpeculationsProjectionsPage = lazy(
 const PurchasesDashboardPage = lazy(
   () => import("@/pages/financial/PurchasesDashboard"),
 );
+const SuperAdminDashboardPage = lazy(() => import("@/pages/superadmin/SuperAdminDashboard"));
+const TenantListPage = lazy(() => import("@/pages/superadmin/TenantList"));
+const TenantCreatePage = lazy(() => import("@/pages/superadmin/TenantCreate"));
+const TenantDetailPage = lazy(() => import("@/pages/superadmin/TenantDetail"));
+const AuditLogPage = lazy(() => import("@/pages/superadmin/AuditLogPage"));
 
 function FullScreenLoader() {
   return (
@@ -62,23 +72,61 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function SuperAdminRouteGuard() {
+  const { user } = useAuth();
+  if (!user?.isSuperAdmin) {
+    return <Navigate replace to="/" />;
+  }
+  return <Outlet />;
+}
+
+function RegularRouteGuard({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user?.isSuperAdmin) {
+    return <Navigate replace to="/superadmin" />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <Suspense fallback={<FullScreenLoader />}>
       <Routes>
         <Route
           element={
-            isAuthenticated ? <Navigate replace to="/" /> : <LoginPage />
+            isAuthenticated
+              ? user?.isSuperAdmin
+                ? <Navigate replace to="/superadmin" />
+                : <Navigate replace to="/" />
+              : <LoginPage />
           }
           path="/login"
         />
 
+        {/* SuperAdmin Routes — separate from the regular app */}
         <Route
           element={
             <ProtectedLayout>
-              <MobileLayout />
+              <SuperAdminRouteGuard />
+            </ProtectedLayout>
+          }
+        >
+          <Route element={<SuperAdminDashboardPage />} path="/superadmin" />
+          <Route element={<TenantListPage />} path="/superadmin/tenants" />
+          <Route element={<TenantCreatePage />} path="/superadmin/tenants/new" />
+          <Route element={<TenantDetailPage />} path="/superadmin/tenants/:tenantId" />
+          <Route element={<AuditLogPage />} path="/superadmin/audit" />
+        </Route>
+
+        {/* Regular App Routes — superadmins can't access these */}
+        <Route
+          element={
+            <ProtectedLayout>
+              <RegularRouteGuard>
+                <MobileLayout />
+              </RegularRouteGuard>
             </ProtectedLayout>
           }
         >
@@ -100,13 +148,18 @@ function App() {
           <Route element={<SuppliesPage />} path="/supplies/:supplyId" />
           <Route element={<PurchasesPage />} path="/purchases" />
           <Route element={<PurchasesPage />} path="/purchases/:purchaseId" />
-          <Route element={<SupplierAccountPage />} path="/supplier-account" />
-          <Route element={<RecipesPage />} path="/recipes" />
+<Route element={<PlanGuard feature="supplier_account"><SupplierAccountPage /></PlanGuard>} path="/supplier-account" />
+<Route element={<PlanGuard feature="supplier_account"><SupplierAccountDetailPage /></PlanGuard>} path="/supplier-account/:supplierId" />
+<Route element={<PlanGuard feature="recipes"><RecipesPage /></PlanGuard>} path="/recipes" />
           <Route element={<SuppliersPage />} path="/suppliers" />
-          <Route element={<TeamPage />} path="/team" />
-          <Route element={<ClientAccountPage />} path="/client-account" />
+          <Route element={<AdminDashboard />} path="/admin" />
+          <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/admin/team" />
+          <Route element={<CompanyPage />} path="/admin/company" />
+          <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/team" />
+          <Route element={<PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard>} path="/client-account" />
+          <Route element={<PlanGuard feature="client_account"><ClientAccountDetailPage /></PlanGuard>} path="/client-account/:clientId" />
           <Route element={<SettingsPage />} path="/settings" />
-          <Route element={<FinancialLayout />}>
+          <Route element={<PlanGuard feature="financial_center"><FinancialLayout /></PlanGuard>}>
             <Route
               element={<Navigate replace to="/financial/dashboard" />}
               path="/financial"

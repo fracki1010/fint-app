@@ -72,3 +72,24 @@ export function useSuppliers(options?: { enabled?: boolean }) {
     isDeleting: deleteMutation.isPending,
   };
 }
+
+export function useSupplierDetail(id?: string) {
+  const {
+    data: supplier,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["supplier", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const response = await api.get<Supplier>(`/suppliers/${id}`);
+      return response.data;
+    },
+  });
+
+  return {
+    supplier,
+    loading,
+    error: error?.message || null,
+  };
+}

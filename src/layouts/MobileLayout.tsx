@@ -3,6 +3,8 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import PlanLimitBanner from "@/components/PlanLimitBanner";
 import {
   LayoutGrid,
   ClipboardList,
@@ -12,6 +14,7 @@ import {
   ChartNoAxesCombined,
   LineChart,
   Package,
+  ArrowRightLeft,
   ShoppingCart,
   CreditCard,
   ChefHat,
@@ -20,10 +23,12 @@ import {
   UserCog,
   LogOut,
   Building2,
+  Shield,
   X,
   CheckCheck,
   Sun,
   Moon,
+  MoreHorizontal,
 } from "lucide-react";
 import { useThemeStore } from "@/stores/themeStore";
 import logo from "@/assets/logo-ambar-5.svg";
@@ -36,7 +41,13 @@ export default function MobileLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
+  const { hasFeature } = usePlanFeatures();
   const { theme, toggleTheme } = useThemeStore();
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
+  const handleSheetNav = (path: string) => {
+    navigate(path);
+    setShowMoreSheet(false);
+  };
 
   const operationNav = [
     { path: "/", label: "Inicio", icon: LayoutGrid },
@@ -44,14 +55,15 @@ export default function MobileLayout() {
     { path: "/clients", label: "Clientes", icon: Users },
     { path: "/products", label: "Productos", icon: ClipboardList },
     { path: "/supplies", label: "Insumos", icon: Package },
+    { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     { path: "/purchases", label: "Compras", icon: ShoppingCart },
     { path: "/suppliers", label: "Proveedores", icon: Truck },
-    { path: "/recipes", label: "Recetas", icon: ChefHat },
+    ...(hasFeature("recipes") ? [{ path: "/recipes", label: "Recetas", icon: ChefHat }] : []),
   ];
 
   const accountingNav = [
-    { path: "/client-account", label: "Cta. Clientes", icon: CreditCard },
-    { path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 },
+    ...(hasFeature("client_account") ? [{ path: "/client-account", label: "Cta. Clientes", icon: CreditCard }] : []),
+    ...(hasFeature("supplier_account") ? [{ path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 }] : []),
   ];
 
   const financialNav = [
@@ -63,18 +75,19 @@ export default function MobileLayout() {
   ];
 
   const adminNav = [
-    ...(can.manageTeam ? [{ path: "/team", label: "Equipo", icon: UserCog }] : []),
+    { path: "/admin", label: "Panel Admin", icon: LayoutGrid },
+    ...(can.manageTeam && hasFeature("team_management") ? [{ path: "/admin/team", label: "Equipo", icon: UserCog }] : []),
+    { path: "/admin/company", label: "Empresa", icon: Building2 },
     { path: "/settings", label: "Ajustes", icon: Settings },
+    ...(user?.isSuperAdmin ? [{ path: "/superadmin", label: "SuperAdmin", icon: Shield }] : []),
   ];
 
   const mobileBottomTabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
     { path: "/products", label: "PRODUCTOS", icon: ClipboardList },
-    { path: "/supplies", label: "INSUMOS", icon: Package },
-    { path: "/purchases", label: "COMPRAS", icon: ShoppingCart },
     { path: "/sales", label: "VENTAS", icon: ReceiptText },
     { path: "/clients", label: "CLIENTES", icon: Users },
-    { path: "/settings", label: "AJUSTES", icon: Settings },
+    { path: null, label: "MÁS", icon: MoreHorizontal },
   ];
 
   const hideBottomBar =
@@ -120,7 +133,7 @@ export default function MobileLayout() {
           <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
           <NavSection label="Cuentas Corrientes" items={accountingNav} isActive={isActive} navigate={navigate} />
 
-          {can.viewFinancial && (
+          {can.viewFinancial && hasFeature("financial_center") && (
             <NavSection label="Centro Financiero" items={financialNav} isActive={isActive} navigate={navigate} />
           )}
 
@@ -183,7 +196,10 @@ export default function MobileLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main ref={mainRef} className="flex-1 overflow-hidden pb-20 lg:pb-0">
+      <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 lg:pb-0">
+        <div className="px-4 pt-3 lg:px-6 lg:pt-4">
+          <PlanLimitBanner />
+        </div>
         <Outlet />
       </main>
 
@@ -255,20 +271,73 @@ export default function MobileLayout() {
         </div>
       </div>
 
+      {/* ── Mobile More Sheet ────────────────────────────────────────── */}
+      <div
+        className={`fixed inset-0 z-[60] transition-all duration-300 ${showMoreSheet ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+        onClick={() => setShowMoreSheet(false)}
+      />
+      <div
+        className={`fixed bottom-0 z-[70] w-full max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-content1 transition-transform duration-300 ease-out scrollbar-sidebar ${showMoreSheet ? "translate-y-0" : "translate-y-full"}`}
+        style={{ boxShadow: "0 -24px 60px rgba(40,25,15,0.28)" }}
+      >
+        <div className="sticky top-0 z-10 flex items-center justify-center pt-3 pb-1 bg-inherit">
+          <div className="h-1 w-8 rounded-full bg-white/20" />
+        </div>
+
+        <div className="flex items-center justify-between px-5 py-2">
+          <h3 className="text-base font-bold text-foreground">Menú</h3>
+          <button
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+            onClick={() => setShowMoreSheet(false)}
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="px-3 pb-8 space-y-5">
+          <NavSection
+            label="Operación"
+            items={operationNav.filter(n => !["/", "/products", "/sales", "/clients"].includes(n.path))}
+            isActive={isActive}
+            navigate={handleSheetNav}
+          />
+          <NavSection
+            label="Cuentas Corrientes"
+            items={accountingNav}
+            isActive={isActive}
+            navigate={handleSheetNav}
+          />
+          {can.viewFinancial && hasFeature("financial_center") && (
+            <NavSection
+              label="Centro Financiero"
+              items={financialNav}
+              isActive={isActive}
+              navigate={handleSheetNav}
+            />
+          )}
+          <NavSection
+            label="Administración"
+            items={adminNav}
+            isActive={isActive}
+            navigate={handleSheetNav}
+          />
+        </div>
+      </div>
+
       {/* ── Mobile bottom bar ────────────────────────────────────────── */}
       {!hideBottomBar && (
         <nav className="fixed bottom-0 w-full border-t border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_88%,transparent)] backdrop-blur-xl flex justify-around items-center pt-3 pb-6 px-2 z-50 shadow-[0_-18px_40px_rgba(20,12,8,0.20)] lg:hidden">
           {mobileBottomTabs.map((tab) => {
-            const active = isActive(tab.path);
+            const active = tab.path ? isActive(tab.path) : showMoreSheet;
             const Icon = tab.icon;
 
             return (
               <button
-                key={tab.path}
+                key={tab.path || "more"}
                 className={`flex flex-col items-center justify-center gap-1 w-16 rounded-2xl py-1.5 transition-all ${
                   active ? "text-primary scale-105" : "text-default-400 hover:text-default-600"
                 }`}
-                onClick={() => navigate(tab.path)}
+                onClick={() => (tab.path ? navigate(tab.path) : setShowMoreSheet(true))}
               >
                 <div className="relative">
                   <Icon

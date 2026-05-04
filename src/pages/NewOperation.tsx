@@ -59,14 +59,13 @@ export default function NewOperationPage() {
   const {
     state: scannerState,
     error: scannerError,
-    videoRef,
+    setVideoContainer,
     startCameraScanner,
     stopCameraScanner,
     toggleCameraScanner,
   } = useBarcodeScanner({
     onScan: (code) => scanHandlerRef.current(code),
     onError: (err) => showToast({ variant: "error", message: err.message }),
-    isMobile: !isDesktop,
   });
 
   const filteredClients = useMemo(() => {
@@ -558,7 +557,7 @@ export default function NewOperationPage() {
           stopCameraScanner();
         }}
         onScan={() => {}}
-        videoRef={videoRef}
+        setVideoContainer={setVideoContainer}
         state={scannerState}
         error={scannerError}
         onToggle={toggleCameraScanner}

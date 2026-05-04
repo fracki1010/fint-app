@@ -9,8 +9,10 @@ import { Provider } from "./provider.tsx";
 
 import { AuthProvider } from "@/hooks/useAuth";
 import "@/styles/globals.css";
+import { initCapacitor } from "@/utils/capacitor";
 
 registerSW({ immediate: true });
+initCapacitor();
 
 const queryClient = new QueryClient();
 

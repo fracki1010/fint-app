@@ -896,7 +896,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-background pb-24 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start">
@@ -1103,8 +1103,8 @@ export default function SettingsPage() {
         <DrawerContent
           className={
             isDesktop
-              ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none"
-              : "h-screen w-screen max-w-none overflow-x-hidden rounded-none"
+              ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none bg-content1"
+              : "h-screen w-screen max-w-none overflow-x-hidden rounded-none bg-content1"
           }
         >
           <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">

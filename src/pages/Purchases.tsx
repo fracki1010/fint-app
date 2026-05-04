@@ -21,11 +21,14 @@ import {
   BadgeCheck,
   Truck,
   Ban,
+  ScanBarcode,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 import { Select, SelectItem } from "@heroui/select";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 
 import {
   usePurchases,
@@ -109,6 +112,13 @@ function getSupplierName(supplier: string | { _id: string; name?: string; compan
   return "Proveedor desconocido";
 }
 
+function getSupplierId(supplier: string | { _id: string; name?: string; company?: string }): string | null {
+  if (typeof supplier === "object" && supplier) {
+    return supplier._id;
+  }
+  return null;
+}
+
 function getSupplyName(supply: string | { _id: string; name?: string; sku?: string | null }) {
   if (typeof supply === "object" && supply) {
     return supply.name || "Insumo";
@@ -162,6 +172,7 @@ function CreatePurchaseModal({
   suppliers,
   supplies,
   currency,
+  showToast,
 }: {
   isDesktop: boolean;
   onClose: () => void;
@@ -170,8 +181,46 @@ function CreatePurchaseModal({
   suppliers: Array<{ _id: string; name: string; company?: string }>;
   supplies: Array<{ _id: string; name: string; sku?: string | null; referenceCost: number; unit: string }>;
   currency: string;
+  showToast: (opts: { variant: "success" | "error" | "warning" | "info"; message: string }) => void;
 }) {
   const [form, setForm] = useState<PurchaseFormState>({ ...emptyForm });
+  const [showScanner, setShowScanner] = useState(false);
+
+  const {
+    state: scannerState,
+    error: scannerError,
+    setVideoContainer,
+    stopCameraScanner,
+    toggleCameraScanner,
+  } = useBarcodeScanner({
+    onScan: (code: string) => {
+      const supply = supplies.find((s) => s.sku && s.sku.toUpperCase() === code.toUpperCase());
+      if (supply) {
+        setForm((prev) => {
+          const items = [...prev.items];
+          const emptyIdx = items.findIndex((it) => !it.supplyId);
+          const idx = emptyIdx >= 0 ? emptyIdx : items.length;
+          if (emptyIdx < 0) {
+            items.push({ supplyId: "", supplyName: "", quantity: "", unitCost: "" });
+          }
+          items[idx] = {
+            supplyId: supply._id,
+            supplyName: supply.name,
+            quantity: "1",
+            unitCost: String(supply.referenceCost || 0),
+          };
+          return { ...prev, items };
+        });
+        showToast({ variant: "success", message: `Insumo agregado: ${supply.name}` });
+        setShowScanner(false);
+      } else {
+        showToast({ variant: "warning", message: `No se encontró insumo con SKU: ${code}` });
+      }
+    },
+    onError: (err) => {
+      showToast({ variant: "error", message: err.message || "Error al escanear" });
+    },
+  });
 
   const updateField = <K extends keyof PurchaseFormState>(key: K, value: PurchaseFormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -293,14 +342,24 @@ function CreatePurchaseModal({
             <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
               <PackageCheck size={13} /> Items *
             </span>
-            <button
-              className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1.5 text-[11px] font-bold text-blue-500 hover:bg-blue-500/20 transition-colors"
-              type="button"
-              onClick={addLine}
-            >
-              <Plus size={13} />
-              Agregar línea
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3.5 py-1.5 text-[11px] font-bold text-amber-500 hover:bg-amber-500/20 transition-colors"
+                type="button"
+                onClick={() => setShowScanner(true)}
+              >
+                <ScanBarcode size={13} />
+                Escanear SKU
+              </button>
+              <button
+                className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1.5 text-[11px] font-bold text-blue-500 hover:bg-blue-500/20 transition-colors"
+                type="button"
+                onClick={addLine}
+              >
+                <Plus size={13} />
+                Agregar línea
+              </button>
+            </div>
           </div>
           <div className="space-y-3">
             {form.items.map((item, idx) => (
@@ -458,19 +517,39 @@ function CreatePurchaseModal({
   }
 
   return (
-    <Drawer
-      hideCloseButton
-      isOpen
-      backdrop="opaque"
-      placement="right"
-      scrollBehavior="inside"
-      size="xl"
-      onOpenChange={(open: boolean) => { if (!open) onClose(); }}
-    >
-      <DrawerContent className="h-screen w-full max-w-xl overflow-x-hidden rounded-none">
-        <DrawerBody className="p-0">{formLayout}</DrawerBody>
-      </DrawerContent>
-    </Drawer>
+    <>
+      {!isDesktop ? (
+        <div className="fixed inset-0 z-[120] flex flex-col bg-background/95 backdrop-blur-sm">
+          <div className="flex-1 overflow-hidden">{formLayout}</div>
+        </div>
+      ) : (
+        <Drawer
+          hideCloseButton
+          isOpen
+          backdrop="opaque"
+          placement="right"
+          scrollBehavior="inside"
+          size="xl"
+          onOpenChange={(open: boolean) => { if (!open) onClose(); }}
+        >
+          <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
+            <DrawerBody className="p-0">{formLayout}</DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      )}
+      <BarcodeScanner
+        error={scannerError}
+        isOpen={showScanner}
+        setVideoContainer={setVideoContainer}
+        state={scannerState}
+        onClose={() => {
+          stopCameraScanner();
+          setShowScanner(false);
+        }}
+        onScan={() => {}}
+        onToggle={toggleCameraScanner}
+      />
+    </>
   );
 }
 
@@ -636,7 +715,7 @@ export default function PurchasesPage() {
     const status = selectedPurchase?.status;
 
     return (
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-24 font-sans lg:max-w-4xl lg:pb-8">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-4xl lg:pb-8">
         <header
           className={`app-topbar sticky top-0 z-30 transition-all duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
@@ -659,7 +738,7 @@ export default function PurchasesPage() {
           </h1>
         </header>
 
-        <div className="flex-1 px-6 pb-6">
+        <div className="flex-1 px-6 pb-28">
           {detailLoading && !selectedPurchase ? (
             <div className="flex flex-col items-center justify-center py-20 text-default-400">
               <Loader2 className="mb-4 animate-spin" size={32} />
@@ -691,9 +770,21 @@ export default function PurchasesPage() {
                     <Building2 size={13} />
                     Proveedor
                   </div>
-                  <p className="mt-3 text-lg font-bold text-foreground">
-                    {getSupplierName(selectedPurchase.supplier)}
-                  </p>
+                  {(() => {
+                    const supplierId = getSupplierId(selectedPurchase.supplier);
+                    const supplierName = getSupplierName(selectedPurchase.supplier);
+                    return supplierId ? (
+                      <Link
+                        className="mt-3 block text-lg font-bold text-foreground hover:text-primary transition-colors"
+                        to={`/supplier-account/${supplierId}`}
+                      >
+                        {supplierName}
+                        <span className="ml-1.5 text-[10px] font-normal text-primary opacity-0 hover:opacity-100 transition-opacity">→ Ver cuenta</span>
+                      </Link>
+                    ) : (
+                      <p className="mt-3 text-lg font-bold text-foreground">{supplierName}</p>
+                    );
+                  })()}
                   <div className="mt-2 flex items-center gap-1.5 text-[11px] text-default-500">
                     <Calendar size={11} />
                     {formatDate(selectedPurchase.date)}
@@ -1152,7 +1243,7 @@ export default function PurchasesPage() {
       </div>
 
       {/* ── Mobile layout ──────────────────────────────────────── */}
-      <div className="flex h-full w-full flex-col overflow-y-auto pb-24 lg:hidden">
+      <div className="flex h-full w-full flex-col overflow-y-auto pb-28 lg:hidden">
         <header className="app-topbar px-6 pt-6 pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1212,7 +1303,7 @@ export default function PurchasesPage() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-3 px-6 pb-6">
+        <div className="flex-1 space-y-3 px-6 pb-28">
           {loading && purchases.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-divider/10 bg-content2/40 py-16 text-default-400">
               <Loader2 className="mb-3 animate-spin" size={32} />
@@ -1294,6 +1385,7 @@ export default function PurchasesPage() {
           submitting={isCreating}
           suppliers={suppliers}
           supplies={supplies}
+          showToast={showToast}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreate}
         />

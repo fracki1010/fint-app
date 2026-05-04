@@ -59,6 +59,15 @@ export function useClientAccount(clientId?: string) {
     },
   });
 
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (entryId: string) => {
+      await api.delete(`/clients/${clientId}/account/entries/${entryId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-account", clientId] });
+    },
+  });
+
   return {
     entries: data?.entries ?? [],
     balance: data?.balance ?? 0,
@@ -69,5 +78,7 @@ export function useClientAccount(clientId?: string) {
     isCreatingPayment: createPaymentMutation.isPending,
     createEntry: createEntryMutation.mutateAsync,
     isCreatingEntry: createEntryMutation.isPending,
+    deleteEntry: deleteEntryMutation.mutateAsync,
+    isDeletingEntry: deleteEntryMutation.isPending,
   };
 }

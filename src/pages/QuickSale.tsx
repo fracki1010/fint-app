@@ -111,14 +111,13 @@ export default function QuickSalePage() {
   const {
     state: scannerState,
     error: scannerError,
-    videoRef,
+    setVideoContainer,
     startCameraScanner,
     stopCameraScanner,
     toggleCameraScanner,
   } = useBarcodeScanner({
     onScan: handleScan,
     onError: (err) => showToast({ variant: "error", message: err.message }),
-    isMobile: !isDesktop,
   });
 
   useEffect(() => {
@@ -159,7 +158,7 @@ export default function QuickSalePage() {
 
   useEffect(() => {
     if (!isDesktop && showScanner) startCameraScanner();
-    return () => stopCameraScanner();
+    return () => { stopCameraScanner(); };
   }, [isDesktop, showScanner, startCameraScanner, stopCameraScanner]);
 
   const addProductToCart = (product: Product) => {
@@ -292,7 +291,7 @@ export default function QuickSalePage() {
                         : "hover:bg-content2/60"
                     }`}
                     disabled={outOfStock || cantAddMore}
-                    onMouseDown={(e) => {
+                    onMouseDown={() => {
                       if (!outOfStock && !cantAddMore) addProductToCart(p);
                     }}
                   >
@@ -540,7 +539,7 @@ export default function QuickSalePage() {
         isOpen={showScanner}
         onClose={() => { setShowScanner(false); stopCameraScanner(); }}
         onScan={() => {}}
-        videoRef={videoRef}
+        setVideoContainer={setVideoContainer}
         state={scannerState}
         error={scannerError}
         onToggle={toggleCameraScanner}

@@ -20,6 +20,8 @@ export function usePermissions() {
     manageTeam: isAdmin,
     manageSettings: isAdmin,
     manageWhatsapp: isAdmin,
+    manageAccounting: isAdmin || role === "contabilidad",
+    manageClients: isAdmin || role === "ventas" || role === "contabilidad",
 
     // Financial center
     viewFinancial: isAdmin || role === "contabilidad",

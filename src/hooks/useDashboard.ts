@@ -92,6 +92,25 @@ export interface DashboardSummary {
     reason?: string;
     createdAt: string;
   }>;
+  purchasing: {
+    lowStockSupplies: Array<{
+      _id: string;
+      name: string;
+      sku?: string | null;
+      currentStock: number;
+      minStock: number;
+      unit: string;
+    }>;
+    lowStockSuppliesCount: number;
+    totalPayables: number;
+    lastReceivedPurchase: {
+      _id: string;
+      supplierName: string;
+      total: number;
+      itemCount: number;
+      receivedAt: string;
+    } | null;
+  };
 }
 
 export interface DashboardOptionalKpis {
@@ -163,6 +182,33 @@ export function useDashboard() {
     loading: isLoading,
     error: error?.message || null,
     refetch,
+  };
+}
+
+export interface DailySale {
+  date: string;
+  revenue: number;
+  orders: number;
+  averageTicket: number;
+}
+
+export function useDailySales(days = 14) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["dashboard-daily-sales", days],
+    queryFn: async () => {
+      const response = await api.get("/dashboard/daily-sales", {
+        params: { days },
+      });
+      return response.data;
+    },
+    staleTime: 60_000,
+  });
+
+  return {
+    sales: (data?.sales as DailySale[]) || [],
+    days: data?.days || days,
+    loading: isLoading,
+    error: error?.message || null,
   };
 }
 
