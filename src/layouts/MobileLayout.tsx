@@ -197,7 +197,19 @@ export default function MobileLayout() {
 
       {/* ── Main content ─────────────────────────────────────────────── */}
       <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 lg:pb-0">
-        <div className="px-4 pt-3 lg:px-6 lg:pt-4">
+        {/* Mobile header with logo */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+              <img src={logo} alt="Logo" className="h-9 w-9 rounded-xl object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Fint Suite</p>
+              <p className="text-[10px] text-default-400">Panel Operativo</p>
+            </div>
+          </div>
+        </div>
+        <div className="px-4 pt-2 lg:px-6 lg:pt-4">
           <PlanLimitBanner />
         </div>
         <Outlet />

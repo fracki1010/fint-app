@@ -145,32 +145,32 @@ export default function TenantDetail() {
     <SuperAdminLayout>
       <div className="mx-auto max-w-5xl space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => navigate("/superadmin/tenants")}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-content1 text-gray-400 transition hover:text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-divider bg-content1 text-default-400 transition hover:text-foreground"
             >
               <ArrowLeft size={18} />
             </button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-white">{tenant.name}</h1>
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusColors[tenant.status]}`}>
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold text-foreground truncate max-w-[300px] lg:max-w-[500px]">{tenant.name}</h1>
+                <span className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${statusColors[tenant.status]}`}>
                   {tenant.status === "active" ? "Activo" : tenant.status === "suspended" ? "Suspendido" : "Cancelado"}
                 </span>
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-default-400">
                 Creado el {new Date(tenant.createdAt).toLocaleDateString("es-AR")}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             {editing ? (
               <>
                 <button
                   onClick={() => setEditing(false)}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
+                  className="flex items-center gap-2 rounded-xl border border-divider bg-content2 px-4 py-2.5 text-sm font-bold text-foreground transition hover:bg-content3"
                 >
                   <X size={16} />
                   Cancelar
@@ -178,7 +178,7 @@ export default function TenantDetail() {
                 <button
                   onClick={() => updateMutation.mutate(editForm)}
                   disabled={updateMutation.isPending}
-                  className="flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-600 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
                 >
                   {updateMutation.isPending ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -195,8 +195,8 @@ export default function TenantDetail() {
                   disabled={suspendMutation.isPending}
                   className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition disabled:opacity-50 ${
                     tenant.status === "active"
-                      ? "border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                      : "border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                      ? "border-danger/20 bg-danger/10 text-danger hover:bg-danger/20"
+                      : "border-success/20 bg-success/10 text-success hover:bg-success/20"
                   }`}
                 >
                   {suspendMutation.isPending ? (
@@ -210,7 +210,7 @@ export default function TenantDetail() {
                 </button>
                 <button
                   onClick={startEditing}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
+                  className="flex items-center gap-2 rounded-xl border border-divider bg-content2 px-4 py-2.5 text-sm font-bold text-foreground transition hover:bg-content3"
                 >
                   <Edit3 size={16} />
                   Editar
@@ -222,25 +222,25 @@ export default function TenantDetail() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-content1 p-5">
+          <div className="rounded-2xl border border-divider bg-content1 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Usuarios</p>
-                <p className="mt-2 text-2xl font-bold text-white">{stats.totalUsers}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-default-500">Usuarios</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalUsers}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <Users size={20} />
               </div>
             </div>
             {planConfig.maxUsers !== Infinity && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">{usagePercentages.users}% usado</span>
-                  <span className="text-gray-400">{stats.totalUsers} / {planConfig.maxUsers}</span>
+                  <span className="text-default-400">{usagePercentages.users}% usado</span>
+                  <span className="text-default-400">{stats.totalUsers} / {planConfig.maxUsers}</span>
                 </div>
-                <div className="mt-1 h-1.5 w-full rounded-full bg-white/5">
+                <div className="mt-1 h-1.5 w-full rounded-full bg-content2">
                   <div
-                    className={`h-1.5 rounded-full ${usagePercentages.users >= 90 ? "bg-red-500" : usagePercentages.users >= 70 ? "bg-orange-500" : "bg-blue-500"}`}
+                    className={`h-1.5 rounded-full ${usagePercentages.users >= 90 ? "bg-danger" : usagePercentages.users >= 70 ? "bg-warning" : "bg-primary"}`}
                     style={{ width: `${Math.min(100, usagePercentages.users)}%` }}
                   />
                 </div>
@@ -248,11 +248,11 @@ export default function TenantDetail() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-content1 p-5">
+          <div className="rounded-2xl border border-divider bg-content1 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Productos</p>
-                <p className="mt-2 text-2xl font-bold text-white">{stats.totalProducts}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-default-500">Productos</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalProducts}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
                 <Package size={20} />
@@ -261,12 +261,12 @@ export default function TenantDetail() {
             {planConfig.maxProducts !== Infinity && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">{usagePercentages.products}% usado</span>
-                  <span className="text-gray-400">{stats.totalProducts} / {planConfig.maxProducts}</span>
+                  <span className="text-default-400">{usagePercentages.products}% usado</span>
+                  <span className="text-default-400">{stats.totalProducts} / {planConfig.maxProducts}</span>
                 </div>
-                <div className="mt-1 h-1.5 w-full rounded-full bg-white/5">
+                <div className="mt-1 h-1.5 w-full rounded-full bg-content2">
                   <div
-                    className={`h-1.5 rounded-full ${usagePercentages.products >= 90 ? "bg-red-500" : usagePercentages.products >= 70 ? "bg-orange-500" : "bg-purple-500"}`}
+                    className={`h-1.5 rounded-full ${usagePercentages.products >= 90 ? "bg-danger" : usagePercentages.products >= 70 ? "bg-warning" : "bg-purple-500"}`}
                     style={{ width: `${Math.min(100, usagePercentages.products)}%` }}
                   />
                 </div>
@@ -274,13 +274,13 @@ export default function TenantDetail() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-content1 p-5">
+          <div className="rounded-2xl border border-divider bg-content1 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Órdenes Totales</p>
-                <p className="mt-2 text-2xl font-bold text-white">{stats.totalOrders}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-default-500">Órdenes Totales</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalOrders}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/15 text-green-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/15 text-success">
                 <ShoppingCart size={20} />
               </div>
             </div>

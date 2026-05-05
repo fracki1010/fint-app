@@ -8,8 +8,11 @@ import {
   LogOut,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useThemeStore } from "@/stores/themeStore";
 
 interface SuperAdminLayoutProps {
   children: React.ReactNode;
@@ -24,6 +27,7 @@ const navItems = [
 export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useThemeStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -49,23 +53,23 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-white/10 bg-[#1a2332] transition-transform duration-200 ease-in-out ${
+        className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-divider bg-content1 transition-transform duration-200 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-divider px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
               <Shield size={20} />
             </div>
             <div>
-              <p className="text-sm font-bold text-white">SuperAdmin</p>
-              <p className="text-[11px] text-blue-400">Management Portal</p>
+              <p className="text-sm font-bold text-foreground">SuperAdmin</p>
+              <p className="text-[11px] text-primary">Management Portal</p>
             </div>
           </div>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-white/5 hover:text-white lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-default-400 hover:bg-content2 hover:text-foreground lg:hidden"
             onClick={() => setSidebarOpen(false)}
           >
             <X size={18} />
@@ -83,8 +87,8 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
                 to={item.path}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
                   active
-                    ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
-                    : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                    ? "bg-primary/15 text-primary border border-primary/20"
+                    : "text-default-400 hover:bg-content2 hover:text-foreground"
                 }`}
               >
                 <Icon size={18} />
@@ -95,10 +99,17 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-white/10 px-3 py-4">
+        <div className="border-t border-divider px-3 py-4 space-y-1">
+          <button
+            onClick={() => toggleTheme()}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-all hover:bg-content2 hover:text-foreground"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+          </button>
           <button
             onClick={() => logout()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-400 transition-all hover:bg-red-500/10 hover:text-red-400"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-all hover:bg-danger/10 hover:text-danger"
           >
             <LogOut size={18} />
             Cerrar sesión
@@ -109,25 +120,25 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
       {/* Main Content */}
       <main className="min-h-screen flex-1 lg:pl-64">
         {/* Top Bar */}
-        <div className="sticky top-0 z-20 border-b border-white/10 bg-background/80 backdrop-blur-xl px-4 py-3 lg:px-6">
+        <div className="sticky top-0 z-20 border-b border-divider bg-background/80 backdrop-blur-xl px-4 py-3 lg:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white lg:hidden"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-default-400 hover:bg-content2 hover:text-foreground lg:hidden"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu size={20} />
               </button>
-              <span className="rounded-full bg-blue-500/15 px-3 py-1 text-xs font-bold text-blue-400">
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary">
                 SUPERADMIN MODE
               </span>
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
-                <p className="text-sm font-semibold text-white">{user?.fullName || "Admin"}</p>
-                <p className="text-[11px] text-gray-400">{user?.email}</p>
+                <p className="text-sm font-semibold text-foreground">{user?.fullName || "Admin"}</p>
+                <p className="text-[11px] text-default-400">{user?.email}</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/20 text-xs font-bold text-blue-400">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                 {user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) || "SA"}
               </div>
             </div>

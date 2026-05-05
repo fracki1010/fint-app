@@ -182,23 +182,23 @@ export default function TenantCreate() {
         <div className="mb-6 flex items-center gap-4">
           <button
             onClick={() => navigate("/superadmin/tenants")}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-content1 text-gray-400 transition hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider bg-content1 text-default-400 transition hover:text-foreground"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white">Nuevo Tenant</h1>
-            <p className="text-sm text-gray-400">Crea una nueva cuenta de cliente</p>
+            <h1 className="text-2xl font-bold text-foreground">Nuevo Tenant</h1>
+            <p className="text-sm text-default-400">Crea una nueva cuenta de cliente</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Business Info */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Información del Negocio</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Información del Negocio</h2>
             <div className="mt-4 grid gap-4">
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                   Nombre del Negocio *
                 </label>
                 <input
@@ -206,7 +206,7 @@ export default function TenantCreate() {
                   type="text"
                   value={formData.businessName}
                   onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                   placeholder="Ej: Kiosco El Barato"
                 />
               </div>
@@ -214,11 +214,11 @@ export default function TenantCreate() {
           </div>
 
           {/* Admin Info */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Administrador</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Administrador</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                   Nombre Completo *
                 </label>
                 <input
@@ -226,12 +226,12 @@ export default function TenantCreate() {
                   type="text"
                   value={formData.adminName}
                   onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                   placeholder="Juan Pérez"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                   Email *
                 </label>
                 <input
@@ -239,19 +239,19 @@ export default function TenantCreate() {
                   type="email"
                   value={formData.adminEmail}
                   onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                   placeholder="admin@negocio.com"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                   Teléfono
                 </label>
                 <input
                   type="tel"
                   value={formData.adminPhone}
                   onChange={(e) => setFormData({ ...formData, adminPhone: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                   placeholder="+5491123456789"
                 />
               </div>
@@ -259,8 +259,8 @@ export default function TenantCreate() {
           </div>
 
           {/* Plan Selection */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Plan</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Plan</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               {plans.map((plan) => (
                 <button
@@ -269,19 +269,19 @@ export default function TenantCreate() {
                   onClick={() => setFormData({ ...formData, plan: plan.id })}
                   className={`rounded-xl border p-4 text-left transition ${
                     formData.plan === plan.id
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 bg-white/5 hover:border-white/20"
+                      ? "border-primary bg-primary/10"
+                      : "border-divider bg-content2 hover:border-primary/30"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white">{plan.name}</span>
-                    <span className="text-lg font-bold text-blue-400">${plan.price}</span>
+                    <span className="font-bold text-foreground">{plan.name}</span>
+                    <span className="text-lg font-bold text-primary">${plan.price}</span>
                   </div>
-                  <p className="mt-1 text-xs text-gray-400">{plan.description}</p>
+                  <p className="mt-1 text-xs text-default-400">{plan.description}</p>
                   <ul className="mt-3 space-y-1">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-1.5 text-xs text-gray-300">
-                        <Check size={12} className="text-green-400" />
+                      <li key={i} className="flex items-center gap-1.5 text-xs text-default-300">
+                        <Check size={12} className="text-success" />
                         {feature}
                       </li>
                     ))}
@@ -292,33 +292,33 @@ export default function TenantCreate() {
           </div>
 
           {/* Password */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Contraseña</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Contraseña</h2>
             <div className="mt-4 space-y-3">
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, passwordType: "auto" })}
                   className={`flex-1 rounded-xl border p-3 text-center transition ${
                     formData.passwordType === "auto"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 bg-white/5"
+                      ? "border-primary bg-primary/10"
+                      : "border-divider bg-content2"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-white">Auto-generar</p>
-                  <p className="text-xs text-gray-400">Sistema crea contraseña segura</p>
+                  <p className="text-sm font-semibold text-foreground">Auto-generar</p>
+                  <p className="text-xs text-default-400">Sistema crea contraseña segura</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, passwordType: "custom" })}
                   className={`flex-1 rounded-xl border p-3 text-center transition ${
                     formData.passwordType === "custom"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 bg-white/5"
+                      ? "border-primary bg-primary/10"
+                      : "border-divider bg-content2"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-white">Personalizada</p>
-                  <p className="text-xs text-gray-400">Vos definís la contraseña</p>
+                  <p className="text-sm font-semibold text-foreground">Personalizada</p>
+                  <p className="text-xs text-default-400">Vos definís la contraseña</p>
                 </button>
               </div>
 
@@ -328,7 +328,7 @@ export default function TenantCreate() {
                     type="text"
                     value={formData.customPassword}
                     onChange={(e) => setFormData({ ...formData, customPassword: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                     placeholder="Ingresa la contraseña"
                   />
                 </div>
@@ -337,31 +337,31 @@ export default function TenantCreate() {
           </div>
 
           {/* Options */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Opciones</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Opciones</h2>
             <div className="mt-4 space-y-3">
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={formData.sendWelcomeEmail}
                   onChange={(e) => setFormData({ ...formData, sendWelcomeEmail: e.target.checked })}
-                  className="h-5 w-5 rounded border-white/20 bg-background text-blue-500 focus:ring-blue-500"
+                  className="h-5 w-5 rounded border-divider bg-background text-primary focus:ring-primary"
                 />
                 <div>
-                  <p className="text-sm font-semibold text-white">Enviar email de bienvenida</p>
-                  <p className="text-xs text-gray-400">El cliente recibirá un email con sus credenciales</p>
+                  <p className="text-sm font-semibold text-foreground">Enviar email de bienvenida</p>
+                  <p className="text-xs text-default-400">El cliente recibirá un email con sus credenciales</p>
                 </div>
               </label>
 
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                   Notas Internas
                 </label>
                 <textarea
                   rows={3}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
                   placeholder="Notas para referencia interna..."
                 />
               </div>
@@ -369,18 +369,18 @@ export default function TenantCreate() {
           </div>
 
           {/* Submit */}
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => navigate("/superadmin/tenants")}
-              className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+              className="rounded-xl border border-divider bg-content2 px-6 py-3 text-sm font-bold text-foreground transition hover:bg-content3"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={createTenantMutation.isPending}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-600 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
             >
               {createTenantMutation.isPending ? (
                 <>
