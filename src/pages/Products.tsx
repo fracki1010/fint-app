@@ -145,6 +145,10 @@ function ProductFormModal({
     startCameraScanner: startBarcodeScan,
     stopCameraScanner: stopBarcodeScan,
     toggleCameraScanner: toggleBarcodeScan,
+    zoomSupported,
+    zoomRange,
+    zoomValue,
+    applyZoom,
   } = useBarcodeScanner({
     onScan: (code) => {
       onChange("barcode", code);
@@ -370,6 +374,10 @@ function ProductFormModal({
         state={barcodeState}
         error={barcodeError}
         onToggle={toggleBarcodeScan}
+        zoomSupported={zoomSupported}
+        zoomRange={zoomRange}
+        zoomValue={zoomValue}
+        onZoomChange={applyZoom}
       />
 
       <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">

@@ -38,6 +38,11 @@ export function useBarcodeScanner({
   const lastScanRef = useRef<number>(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerIdRef = useRef(`qr-scanner-${Date.now()}`);
+  const zoomTrackRef = useRef<MediaStreamTrack | null>(null);
+
+  const [zoomSupported, setZoomSupported] = useState(false);
+  const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
+  const [zoomValue, setZoomValue] = useState(1);
 
   const triggerScan = useCallback(
     (code: string) => {
@@ -92,6 +97,32 @@ export function useBarcodeScanner({
         },
         () => {},
       );
+
+      // Leer capabilities de zoom del track de video
+      try {
+        const videoEl = document.querySelector(`#${containerId} video`) as HTMLVideoElement | null;
+        if (videoEl && videoEl.srcObject) {
+          const track = (videoEl.srcObject as MediaStream).getVideoTracks()[0];
+          if (track) {
+            zoomTrackRef.current = track;
+            const capabilities = track.getCapabilities() as Record<string, unknown>;
+            if (capabilities.zoom && typeof capabilities.zoom === "object") {
+              const z = capabilities.zoom as { min: number; max: number; step?: number };
+              setZoomSupported(true);
+              setZoomRange({
+                min: z.min,
+                max: z.max,
+                step: z.step ?? 0.1,
+              });
+              const settings = track.getSettings() as Record<string, unknown>;
+              const currentZoom = (settings.zoom as number) ?? z.min;
+              setZoomValue(currentZoom);
+            }
+          }
+        }
+      } catch {
+        // Ignorar si no se puede leer zoom
+      }
     } catch (err) {
       setState("error");
       const msg =
@@ -100,6 +131,18 @@ export function useBarcodeScanner({
       onError?.(err instanceof Error ? err : new Error(msg));
     }
   }, [triggerScan, onError]);
+
+  const applyZoom = useCallback((value: number) => {
+    if (!zoomTrackRef.current) return;
+    try {
+      zoomTrackRef.current.applyConstraints({
+        advanced: [{ zoom: value } as unknown as MediaTrackConstraintSet],
+      });
+      setZoomValue(value);
+    } catch (err) {
+      console.error("Error aplicando zoom:", err);
+    }
+  }, []);
 
   const stopCameraScanner = useCallback(async () => {
     if (scannerRef.current) {
@@ -111,6 +154,10 @@ export function useBarcodeScanner({
       }
       scannerRef.current = null;
     }
+    zoomTrackRef.current = null;
+    setZoomSupported(false);
+    setZoomRange(null);
+    setZoomValue(1);
     setState("idle");
   }, []);
 
@@ -163,5 +210,9 @@ export function useBarcodeScanner({
     stopCameraScanner,
     toggleCameraScanner,
     handleUSBInput,
+    zoomSupported,
+    zoomRange,
+    zoomValue,
+    applyZoom,
   };
 }

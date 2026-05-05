@@ -1,4 +1,4 @@
-import { Loader2, Camera, CameraOff, X } from "lucide-react";
+import { Loader2, Camera, CameraOff, X, ZoomIn } from "lucide-react";
 
 interface BarcodeScannerProps {
   isOpen: boolean;
@@ -8,6 +8,10 @@ interface BarcodeScannerProps {
   state: "idle" | "scanning" | "paused" | "error";
   error: string | null;
   onToggle: () => void;
+  zoomSupported?: boolean;
+  zoomRange?: { min: number; max: number; step: number } | null;
+  zoomValue?: number;
+  onZoomChange?: (value: number) => void;
 }
 
 export default function BarcodeScanner({
@@ -17,6 +21,10 @@ export default function BarcodeScanner({
   error,
   setVideoContainer,
   onToggle,
+  zoomSupported = false,
+  zoomRange = null,
+  zoomValue = 1,
+  onZoomChange,
 }: BarcodeScannerProps) {
   if (!isOpen) return null;
 
@@ -66,9 +74,28 @@ export default function BarcodeScanner({
 
       <div className="px-6 pb-10 text-center">
         {state === "scanning" && (
-          <div className="flex items-center justify-center gap-2 text-white/70">
-            <Loader2 className="animate-spin" size={16} />
-            <p className="text-sm">Esperando código...</p>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-2 text-white/70">
+              <Loader2 className="animate-spin" size={16} />
+              <p className="text-sm">Esperando código...</p>
+            </div>
+            {zoomSupported && zoomRange && (
+              <div className="flex w-full max-w-xs items-center gap-3 rounded-2xl bg-white/10 px-4 py-2">
+                <ZoomIn size={16} className="shrink-0 text-white/60" />
+                <input
+                  type="range"
+                  min={zoomRange.min}
+                  max={zoomRange.max}
+                  step={zoomRange.step}
+                  value={zoomValue}
+                  onChange={(e) => onZoomChange?.(parseFloat(e.target.value))}
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-white"
+                />
+                <span className="shrink-0 text-xs tabular-nums text-white/80">
+                  {zoomValue.toFixed(1)}x
+                </span>
+              </div>
+            )}
           </div>
         )}
         {state === "paused" && (
