@@ -192,6 +192,11 @@ function CreatePurchaseModal({
     setVideoContainer,
     stopCameraScanner,
     toggleCameraScanner,
+    zoomSupported,
+    zoomRange,
+    zoomValue,
+    applyZoom,
+    debugLog,
   } = useBarcodeScanner({
     onScan: (code: string) => {
       const supply = supplies.find((s) => s.sku && s.sku.toUpperCase() === code.toUpperCase());
@@ -548,6 +553,11 @@ function CreatePurchaseModal({
         }}
         onScan={() => {}}
         onToggle={toggleCameraScanner}
+        zoomSupported={zoomSupported}
+        zoomRange={zoomRange}
+        zoomValue={zoomValue}
+        onZoomChange={applyZoom}
+        debugLog={debugLog}
       />
     </>
   );

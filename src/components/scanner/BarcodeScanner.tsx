@@ -87,20 +87,39 @@ export default function BarcodeScanner({
               <p className="text-sm">Esperando código...</p>
             </div>
             {zoomSupported && zoomRange && (
-              <div className="flex w-full max-w-xs items-center gap-3 rounded-2xl bg-white/10 px-4 py-2">
-                <ZoomIn size={16} className="shrink-0 text-white/60" />
-                <input
-                  type="range"
-                  min={zoomRange.min}
-                  max={zoomRange.max}
-                  step={zoomRange.step}
-                  value={zoomValue}
-                  onChange={(e) => onZoomChange?.(parseFloat(e.target.value))}
-                  className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-white"
-                />
-                <span className="shrink-0 text-xs tabular-nums text-white/80">
-                  {zoomValue.toFixed(1)}x
-                </span>
+              <div className="flex w-full max-w-xs flex-col items-center gap-2 rounded-2xl bg-white/10 px-4 py-2">
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3]
+                    .filter((z) => z >= zoomRange.min && z <= zoomRange.max)
+                    .map((z) => (
+                      <button
+                        key={z}
+                        onClick={() => onZoomChange?.(z)}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                          Math.abs((zoomValue ?? 1) - z) < 0.05
+                            ? "bg-white text-black"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
+                      >
+                        {z}x
+                      </button>
+                    ))}
+                </div>
+                <div className="flex w-full items-center gap-2">
+                  <ZoomIn size={14} className="shrink-0 text-white/50" />
+                  <input
+                    type="range"
+                    min={zoomRange.min}
+                    max={zoomRange.max}
+                    step={zoomRange.step}
+                    value={zoomValue}
+                    onChange={(e) => onZoomChange?.(parseFloat(e.target.value))}
+                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white"
+                  />
+                  <span className="shrink-0 text-[10px] tabular-nums text-white/60">
+                    {zoomValue.toFixed(1)}x
+                  </span>
+                </div>
               </div>
             )}
           </div>

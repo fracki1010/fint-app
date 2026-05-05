@@ -63,6 +63,11 @@ export default function NewOperationPage() {
     startCameraScanner,
     stopCameraScanner,
     toggleCameraScanner,
+    zoomSupported,
+    zoomRange,
+    zoomValue,
+    applyZoom,
+    debugLog,
   } = useBarcodeScanner({
     onScan: (code) => scanHandlerRef.current(code),
     onError: (err) => showToast({ variant: "error", message: err.message }),
@@ -561,6 +566,11 @@ export default function NewOperationPage() {
         state={scannerState}
         error={scannerError}
         onToggle={toggleCameraScanner}
+        zoomSupported={zoomSupported}
+        zoomRange={zoomRange}
+        zoomValue={zoomValue}
+        onZoomChange={applyZoom}
+        debugLog={debugLog}
       />
     </div>
   );
