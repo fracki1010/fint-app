@@ -32,6 +32,7 @@ export function useBarcodeScanner({
 }: UseBarcodeScannerOptions) {
   const [state, setState] = useState<ScannerState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [debugLog, setDebugLog] = useState<string>("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -39,10 +40,26 @@ export function useBarcodeScanner({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerIdRef = useRef(`qr-scanner-${Date.now()}`);
   const zoomTrackRef = useRef<MediaStreamTrack | null>(null);
+  const onScanRef = useRef(onScan);
+  const onErrorRef = useRef(onError);
+  const isStartingRef = useRef(false);
 
   const [zoomSupported, setZoomSupported] = useState(false);
   const [zoomRange, setZoomRange] = useState<{ min: number; max: number; step: number } | null>(null);
   const [zoomValue, setZoomValue] = useState(1);
+
+  // Mantener refs actualizadas sin disparar re-renders
+  useEffect(() => {
+    onScanRef.current = onScan;
+    onErrorRef.current = onError;
+  });
+
+  const appendDebug = useCallback((msg: string) => {
+    setDebugLog((prev) => {
+      const next = `${prev}\n${msg}`.trim();
+      return next.split("\n").slice(-5).join("\n"); // ultimas 5 lineas
+    });
+  }, []);
 
   const triggerScan = useCallback(
     (code: string) => {
@@ -50,19 +67,29 @@ export function useBarcodeScanner({
       if (now - lastScanRef.current < SCAN_COOLDOWN) return;
       if (code.length < MIN_CODE_LENGTH) return;
       lastScanRef.current = now;
-      onScan(code);
+      onScanRef.current(code);
     },
-    [onScan],
+    [],
   );
 
   const startCameraScanner = useCallback(async () => {
+    if (isStartingRef.current) return; // evitar doble inicio
+    isStartingRef.current = true;
+
     try {
       setState("scanning");
       setError(null);
+      appendDebug("Iniciando camara...");
 
       if (scannerRef.current) {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
+        appendDebug("Deteniendo scanner anterior");
+        try {
+          await scannerRef.current.stop();
+          scannerRef.current.clear();
+        } catch {
+          // ignorar
+        }
+        scannerRef.current = null;
       }
 
       const container = videoContainerRef.current;
@@ -77,6 +104,7 @@ export function useBarcodeScanner({
       div.style.width = "100%";
       div.style.height = "100%";
       container.appendChild(div);
+      appendDebug(`Container creado: ${containerId}`);
 
       const scanner = new Html5Qrcode(containerId, {
         formatsToSupport: FORMATS_TO_SUPPORT,
@@ -98,15 +126,21 @@ export function useBarcodeScanner({
         () => {},
       );
 
+      appendDebug("Scanner iniciado OK");
+
       // Leer capabilities de zoom del track de video
       try {
+        await new Promise((r) => setTimeout(r, 300)); // dar tiempo a que html5-qrcode cree el video
         const videoEl = document.querySelector(`#${containerId} video`) as HTMLVideoElement | null;
+        appendDebug(`Video encontrado: ${!!videoEl}`);
         if (videoEl && videoEl.srcObject) {
           const track = (videoEl.srcObject as MediaStream).getVideoTracks()[0];
           if (track) {
             zoomTrackRef.current = track;
             const capabilities = track.getCapabilities() as Record<string, unknown>;
-            if (capabilities.zoom && typeof capabilities.zoom === "object") {
+            const hasZoom = capabilities.zoom && typeof capabilities.zoom === "object";
+            appendDebug(`Zoom soportado: ${hasZoom}`);
+            if (hasZoom) {
               const z = capabilities.zoom as { min: number; max: number; step?: number };
               setZoomSupported(true);
               setZoomRange({
@@ -117,20 +151,23 @@ export function useBarcodeScanner({
               const settings = track.getSettings() as Record<string, unknown>;
               const currentZoom = (settings.zoom as number) ?? z.min;
               setZoomValue(currentZoom);
+              appendDebug(`Zoom: ${currentZoom.toFixed(1)}x (${z.min}-${z.max})`);
             }
           }
         }
-      } catch {
-        // Ignorar si no se puede leer zoom
+      } catch (e) {
+        appendDebug(`Zoom error: ${e instanceof Error ? e.message : String(e)}`);
       }
     } catch (err) {
       setState("error");
-      const msg =
-        err instanceof Error ? err.message : "Error al acceder a la cámara";
+      const msg = err instanceof Error ? err.message : "Error al acceder a la camara";
       setError(msg);
-      onError?.(err instanceof Error ? err : new Error(msg));
+      appendDebug(`ERROR: ${msg}`);
+      onErrorRef.current?.(err instanceof Error ? err : new Error(msg));
+    } finally {
+      isStartingRef.current = false;
     }
-  }, [triggerScan, onError]);
+  }, [triggerScan, appendDebug]);
 
   const applyZoom = useCallback((value: number) => {
     if (!zoomTrackRef.current) return;
@@ -145,6 +182,7 @@ export function useBarcodeScanner({
   }, []);
 
   const stopCameraScanner = useCallback(async () => {
+    appendDebug("Deteniendo camara...");
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
@@ -159,7 +197,8 @@ export function useBarcodeScanner({
     setZoomRange(null);
     setZoomValue(1);
     setState("idle");
-  }, []);
+    isStartingRef.current = false;
+  }, [appendDebug]);
 
   const toggleCameraScanner = useCallback(() => {
     if (state === "scanning" || state === "paused") {
@@ -214,5 +253,6 @@ export function useBarcodeScanner({
     zoomRange,
     zoomValue,
     applyZoom,
+    debugLog,
   };
 }

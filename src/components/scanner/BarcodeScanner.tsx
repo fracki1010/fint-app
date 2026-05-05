@@ -12,6 +12,7 @@ interface BarcodeScannerProps {
   zoomRange?: { min: number; max: number; step: number } | null;
   zoomValue?: number;
   onZoomChange?: (value: number) => void;
+  debugLog?: string;
 }
 
 export default function BarcodeScanner({
@@ -25,11 +26,17 @@ export default function BarcodeScanner({
   zoomRange = null,
   zoomValue = 1,
   onZoomChange,
+  debugLog = "",
 }: BarcodeScannerProps) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-black">
+      {debugLog && (
+        <div className="absolute left-2 right-2 top-14 z-[110] max-h-[30vh] overflow-auto rounded-lg bg-black/80 p-2 text-[10px] leading-tight text-green-400">
+          <pre className="whitespace-pre-wrap font-mono">{debugLog}</pre>
+        </div>
+      )}
       <div className="flex items-center justify-between px-4 py-3">
         <button
           className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
