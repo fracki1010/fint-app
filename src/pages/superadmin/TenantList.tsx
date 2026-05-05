@@ -131,16 +131,16 @@ export default function TenantList() {
                       <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
                         Tenant
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
+                      <th className="hidden sm:table-cell px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
                         Plan
                       </th>
                       <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
                         Estado
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
+                      <th className="hidden sm:table-cell px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
                         Usuarios
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
+                      <th className="hidden sm:table-cell px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
                         Creado
                       </th>
                       <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-default-500">
@@ -167,7 +167,7 @@ export default function TenantList() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-4">
+                          <td className="hidden sm:table-cell px-5 py-4">
                           <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${planColors[tenant.plan]?.split(" ")[0] || "bg-default-200/50"} ${planColors[tenant.plan]?.split(" ")[1] || "text-default-500"}`}>
                             {planLabels[tenant.plan] || tenant.plan}
                           </span>
@@ -177,12 +177,12 @@ export default function TenantList() {
                             {tenant.status === "active" ? "Activo" : tenant.status === "suspended" ? "Suspendido" : "Cancelado"}
                           </span>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="hidden sm:table-cell px-5 py-4">
                           <div className="text-sm text-foreground">
                             {tenant.usage?.currentUsers || 0} / {tenant.limits?.maxUsers === Infinity || tenant.limits?.maxUsers === 0 ? "∞" : tenant.limits?.maxUsers}
                           </div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="hidden sm:table-cell px-5 py-4">
                           <span className="text-sm text-default-400">
                             {tenant.createdAt
                               ? new Date(tenant.createdAt).toLocaleDateString("es-AR")

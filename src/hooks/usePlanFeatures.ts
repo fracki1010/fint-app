@@ -54,9 +54,14 @@ export function usePlanFeatures() {
   const limitStatus = useMemo(() => {
     if (!limits || !usage) return null;
 
-    const checkLimit = (current: number, max: number) => {
-      if (max === Infinity || max === 0) return { percentage: 0, status: "ok" as const };
-      const percentage = Math.round((current / max) * 100);
+    const isUnlimited = (max: number | null | undefined) =>
+      max === null || max === undefined || max === -1 || max === Infinity || max === 0;
+
+    const checkLimit = (current: number, max: number | null | undefined) => {
+      if (isUnlimited(max)) return { percentage: 0, status: "ok" as const };
+      const safeMax = Number(max);
+      if (!Number.isFinite(safeMax) || safeMax <= 0) return { percentage: 0, status: "ok" as const };
+      const percentage = Math.round((current / safeMax) * 100);
       return {
         percentage,
         status: percentage >= 100 ? "exceeded" : percentage >= 90 ? "warning" : "ok",
@@ -64,9 +69,9 @@ export function usePlanFeatures() {
     };
 
     return {
-      users: checkLimit(usage.currentUsers, limits.maxUsers),
-      products: checkLimit(usage.currentProducts, limits.maxProducts),
-      orders: checkLimit(usage.ordersThisMonth, limits.maxOrdersPerMonth),
+      users: checkLimit(usage.currentUsers ?? 0, limits.maxUsers),
+      products: checkLimit(usage.currentProducts ?? 0, limits.maxProducts),
+      orders: checkLimit(usage.ordersThisMonth ?? 0, limits.maxOrdersPerMonth),
     };
   }, [limits, usage]);
 

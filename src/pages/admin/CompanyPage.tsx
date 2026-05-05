@@ -375,9 +375,14 @@ export default function CompanyPage() {
               )}
             </div>
             {isTrial && (
-              <span className="rounded-full bg-warning/15 px-3 py-1 text-xs font-bold text-warning">
-                Trial · {trialDaysLeft} días
-              </span>
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="rounded-full bg-warning/15 px-3 py-1 text-xs font-bold text-warning">
+                  Trial · {trialDaysLeft} {trialDaysLeft === 1 ? "día" : "días"}
+                </span>
+                <span className="text-[10px] text-default-400">
+                  Vence el {new Date(trialEndsAt!).toLocaleDateString("es-AR")}
+                </span>
+              </div>
             )}
           </div>
 
@@ -444,6 +449,15 @@ export default function CompanyPage() {
                     ))}
                   </div>
 
+                  {isTrial && (
+                    <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3">
+                      <p className="text-xs text-warning font-medium">
+                        Durante tu período de prueba podés cambiar de plan gratis cuantas veces quieras.
+                        Una vez que finalice el trial, los cambios de plan requerirán pago.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Billing info */}
                   {plan.billing && (
                     <div className="mt-4 rounded-2xl bg-default-100/50 p-4 space-y-2">
@@ -486,14 +500,17 @@ export default function CompanyPage() {
       <ChangePlanModal
         isOpen={!!selectedPlan}
         isLoading={changePlanMutation.isPending || createPreference.isPending}
-        isPayment={!isTrial && selectedPlan ? !selectedPlan.isCurrent : false}
+        isPayment={selectedPlan ? !selectedPlan.isCurrent && (!isTrial || selectedPlan.id === "enterprise") : false}
         plan={selectedPlan}
         onClose={() => setSelectedPlan(null)}
         onConfirm={() => {
           if (!selectedPlan) return;
 
-          // Durante trial, cambio gratuito e inmediato
-          if (isTrial) {
+          const targetHasTrial = selectedPlan.id !== "enterprise";
+          const requiresPayment = !isTrial || !targetHasTrial;
+
+          // Cambio gratuito: solo si tenés trial activo Y el plan destino tiene trial (Essential/Business)
+          if (!requiresPayment) {
             changePlanMutation.mutate(selectedPlan.id, {
               onSuccess: () => {
                 showToast({ variant: "success", message: `Plan actualizado a ${selectedPlan.name}` });
@@ -506,7 +523,7 @@ export default function CompanyPage() {
             return;
           }
 
-          // Fuera de trial, usar MercadoPago para cambios de plan
+          // Pago requerido: fuera de trial, o cambio a Enterprise (que nunca tiene trial)
           if (!selectedPlan.isCurrent) {
             createPreference.mutate(selectedPlan.id, {
               onSuccess: (data) => {

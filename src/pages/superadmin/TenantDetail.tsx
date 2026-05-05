@@ -29,15 +29,15 @@ const planLabels: Record<string, string> = {
 };
 
 const planColors: Record<string, string> = {
-  essential: "bg-gray-500/15 text-gray-400 border-gray-500/20",
-  business: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  essential: "bg-default-200/50 text-default-500 border-default-200/50",
+  business: "bg-primary/15 text-primary border-primary/20",
   enterprise: "bg-purple-500/15 text-purple-400 border-purple-500/20",
 };
 
 const statusColors: Record<string, string> = {
-  active: "bg-green-500/15 text-green-400",
-  suspended: "bg-red-500/15 text-red-400",
-  cancelled: "bg-gray-500/15 text-gray-400",
+  active: "bg-success/15 text-success",
+  suspended: "bg-danger/15 text-danger",
+  cancelled: "bg-default-200/50 text-default-500",
 };
 
 export default function TenantDetail() {
@@ -290,18 +290,18 @@ export default function TenantDetail() {
         {/* Plan & Billing */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Plan Info */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Plan y Límites</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Plan y Límites</h2>
             {editing ? (
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                     Plan
                   </label>
                   <select
                     value={editForm.plan}
                     onChange={(e) => setEditForm({ ...editForm, plan: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     <option value="essential">Essential ($2/mes)</option>
                     <option value="business">Business ($3/mes)</option>
@@ -309,13 +309,13 @@ export default function TenantDetail() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-gray-500">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
                     Estado
                   </label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     <option value="active">Activo</option>
                     <option value="suspended">Suspendido</option>
@@ -326,34 +326,34 @@ export default function TenantDetail() {
             ) : (
               <div className="mt-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Plan actual</span>
+                  <span className="text-sm text-default-400">Plan actual</span>
                   <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${planColors[tenant.plan]}`}>
                     {planLabels[tenant.plan]}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Usuarios máximos</span>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm text-default-400">Usuarios máximos</span>
+                  <span className="text-sm font-semibold text-foreground">
                     {planConfig.maxUsers === Infinity ? "∞ Ilimitado" : planConfig.maxUsers}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Productos máximos</span>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm text-default-400">Productos máximos</span>
+                  <span className="text-sm font-semibold text-foreground">
                     {planConfig.maxProducts === Infinity ? "∞ Ilimitado" : planConfig.maxProducts}
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Features habilitadas</span>
-                  <div className="flex gap-1">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm text-default-400 shrink-0">Features</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
                     {tenant.enabledFeatures?.length > 0 ? (
                       tenant.enabledFeatures.map((f: string) => (
-                        <span key={f} className="rounded bg-white/5 px-2 py-0.5 text-[10px] text-gray-300">
-                          {f}
+                        <span key={f} className="rounded bg-content2 px-2 py-0.5 text-[10px] text-default-300">
+                          {f.replace(/_/g, " ")}
                         </span>
                       ))
                     ) : (
-                      <span className="text-sm text-gray-500">Ninguno</span>
+                      <span className="text-sm text-default-500">Ninguno</span>
                     )}
                   </div>
                 </div>
@@ -362,49 +362,49 @@ export default function TenantDetail() {
           </div>
 
           {/* Admin Info */}
-          <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-            <h2 className="text-lg font-bold text-white">Administrador</h2>
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Administrador</h2>
             {adminUser ? (
               <div className="mt-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20 text-sm font-bold text-blue-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
                     {adminUser.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">{adminUser.fullName}</p>
-                    <p className="text-xs text-gray-400">Admin</p>
+                    <p className="text-sm font-semibold text-foreground">{adminUser.fullName}</p>
+                    <p className="text-xs text-default-400">Admin</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                  <Mail size={14} className="text-gray-500" />
+                <div className="flex items-center gap-2 text-sm text-default-300">
+                  <Mail size={14} className="text-default-500" />
                   {adminUser.email}
                 </div>
                 {adminUser.phone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-300">
-                    <Phone size={14} className="text-gray-500" />
+                  <div className="flex items-center gap-2 text-sm text-default-300">
+                    <Phone size={14} className="text-default-500" />
                     {adminUser.phone}
                   </div>
                 )}
               </div>
             ) : (
-              <p className="mt-4 text-sm text-gray-400">No se encontró usuario administrador</p>
+              <p className="mt-4 text-sm text-default-400">No se encontró usuario administrador</p>
             )}
           </div>
         </div>
 
         {/* Notes */}
-        <div className="rounded-2xl border border-white/10 bg-content1 p-6">
-          <h2 className="text-lg font-bold text-white">Notas Internas</h2>
+        <div className="rounded-2xl border border-divider bg-content1 p-6">
+          <h2 className="text-lg font-bold text-foreground">Notas Internas</h2>
           {editing ? (
             <textarea
               rows={4}
               value={editForm.notes}
               onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-              className="mt-4 w-full rounded-xl border border-white/10 bg-background px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+              className="mt-4 w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
               placeholder="Notas para referencia interna..."
             />
           ) : (
-            <p className="mt-4 text-sm text-gray-300 whitespace-pre-wrap">
+            <p className="mt-4 text-sm text-default-300 whitespace-pre-wrap">
               {tenant.metadata?.notes || "Sin notas"}
             </p>
           )}
@@ -412,11 +412,11 @@ export default function TenantDetail() {
 
         {/* Limits Alert */}
         {(usagePercentages.users >= 90 || usagePercentages.products >= 90) && (
-          <div className="flex items-center gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
-            <AlertTriangle size={20} className="text-orange-400" />
+          <div className="flex items-center gap-3 rounded-2xl border border-warning/20 bg-warning/5 p-4">
+            <AlertTriangle size={20} className="text-warning" />
             <div>
-              <p className="text-sm font-semibold text-white">Límite cercano</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-sm font-semibold text-foreground">Límite cercano</p>
+              <p className="text-xs text-default-400">
                 {usagePercentages.users >= 90 && `Usuarios al ${usagePercentages.users}% del límite. `}
                 {usagePercentages.products >= 90 && `Productos al ${usagePercentages.products}% del límite. `}
                 Considerar upgrade de plan.
