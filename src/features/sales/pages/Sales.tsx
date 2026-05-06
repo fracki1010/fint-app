@@ -11,9 +11,12 @@ import {
   TrendingUp,
   CheckCircle2,
   ScanBarcode,
+  Upload,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@heroui/button";
+
+import { BulkImportModal } from "@features/sales/components/BulkImportModal";
 
 import {
   SalesStatus,
@@ -56,6 +59,7 @@ export default function SalesPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | SalesStatus>("all");
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Date filters
   type DateFilter = "today" | "yesterday" | "7days" | "month" | "90days" | "custom";
@@ -196,7 +200,7 @@ export default function SalesPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
+    <div className={`flex flex-col ${isDesktop ? "min-h-screen" : "min-h-screen pb-28"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -205,6 +209,13 @@ export default function SalesPage() {
             {!isHeaderCompact && <p className="page-subtitle">Seguimiento de operaciones y estados</p>}
           </div>
           <div className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-1.5 rounded-xl border border-divider/30 px-4 py-2.5 text-sm font-bold text-default-600 hover:bg-content2/60 transition"
+              onClick={() => setIsImportModalOpen(true)}
+              title="Importar ventas desde CSV"
+            >
+              <Upload size={15} /> {isDesktop ? "Importar" : ""}
+            </button>
             <Link
               className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/20 transition"
               to="/quick-sale"
@@ -365,7 +376,7 @@ export default function SalesPage() {
       </div>
 
       {/* Order list */}
-      <div className="flex-1 overflow-y-auto px-4 lg:px-5">
+      <div className={`flex-1 px-4 lg:px-5 ${isDesktop ? '' : 'overflow-y-auto'}`}>
         {loading && safeOrders.length === 0 ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-default-400" size={28} /></div>
         ) : filteredOrders.length === 0 ? (
@@ -479,7 +490,7 @@ export default function SalesPage() {
   // ── Desktop slide-over layout ─────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div className="h-full">
+      <div className="min-h-screen overflow-y-auto">
         {ListPanel}
         <div
           className={`fixed inset-0 z-40 transition-all duration-300 ${orderId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
@@ -499,10 +510,23 @@ export default function SalesPage() {
             />
           )}
         </div>
+
+        <BulkImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+        />
       </div>
     );
   }
 
   // ── Mobile list layout ───────────────────────────────────────────────
-  return ListPanel;
+  return (
+    <>
+      {ListPanel}
+      <BulkImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+      />
+    </>
+  );
 }
