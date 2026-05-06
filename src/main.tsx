@@ -7,9 +7,9 @@ import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import { Provider } from "./provider.tsx";
 
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@features/auth/components/AuthProvider";
 import "@/styles/globals.css";
-import { initCapacitor } from "@/utils/capacitor";
+import { initCapacitor } from "@shared/utils/capacitor";
 
 registerSW({ immediate: true });
 initCapacitor();

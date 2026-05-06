@@ -1,54 +1,54 @@
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import PlanGuard from "@/components/PlanGuard";
+import PlanGuard from "@shared/components/PlanGuard";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@features/auth/hooks/useAuth";
 
-const MobileLayout = lazy(() => import("@/layouts/MobileLayout"));
-const FinancialLayout = lazy(() => import("@/layouts/FinancialLayout"));
-const DashboardPage = lazy(() => import("@/pages/Dashboard"));
-const ProductsPage = lazy(() => import("@/pages/Products"));
-const ClientsPage = lazy(() => import("@/pages/Clients"));
-const SalesPage = lazy(() => import("@/pages/Sales"));
-const MovementsPage = lazy(() => import("@/pages/Movements"));
-const MovementDetailPage = lazy(() => import("@/pages/MovementDetail"));
-const SettingsPage = lazy(() => import("@/pages/Settings"));
-const NewOperationPage = lazy(() => import("@/pages/NewOperation"));
-const LoginPage = lazy(() => import("@/pages/Login"));
-const SuppliesPage = lazy(() => import("@/pages/Supplies"));
-const PurchasesPage = lazy(() => import("@/pages/Purchases"));
-const SupplierAccountPage = lazy(() => import("@/pages/SupplierAccount"));
-const RecipesPage = lazy(() => import("@/pages/Recipes"));
-const SuppliersPage = lazy(() => import("@/pages/Suppliers"));
-const TeamPage = lazy(() => import("@/pages/Team"));
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const CompanyPage = lazy(() => import("@/pages/admin/CompanyPage"));
-const ClientAccountPage = lazy(() => import("@/pages/ClientAccount"));
-const ClientAccountDetailPage = lazy(() => import("@/pages/ClientAccountDetail"));
-const SupplierAccountDetailPage = lazy(() => import("@/pages/SupplierAccountDetail"));
-const QuickSalePage = lazy(() => import("@/pages/QuickSale"));
-const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const MobileLayout = lazy(() => import("@shared/layouts/MobileLayout"));
+const FinancialLayout = lazy(() => import("@features/financial/components/FinancialLayout"));
+const DashboardPage = lazy(() => import("@features/dashboard/pages/Dashboard"));
+const ProductsPage = lazy(() => import("@features/products/pages/Products"));
+const ClientsPage = lazy(() => import("@features/clients/pages/Clients"));
+const SalesPage = lazy(() => import("@features/sales/pages/Sales"));
+const MovementsPage = lazy(() => import("@features/products/pages/Movements"));
+const MovementDetailPage = lazy(() => import("@features/products/pages/MovementDetail"));
+const SettingsPage = lazy(() => import("@features/settings/pages/Settings"));
+const NewOperationPage = lazy(() => import("@features/sales/pages/NewOperation"));
+const LoginPage = lazy(() => import("@features/auth/pages/Login"));
+const SuppliesPage = lazy(() => import("@features/supplies/pages/Supplies"));
+const PurchasesPage = lazy(() => import("@features/purchases/pages/Purchases"));
+const SupplierAccountPage = lazy(() => import("@features/purchases/pages/SupplierAccount"));
+const RecipesPage = lazy(() => import("@features/recipes/pages/Recipes"));
+const SuppliersPage = lazy(() => import("@features/suppliers/pages/Suppliers"));
+const TeamPage = lazy(() => import("@features/team/pages/Team"));
+const AdminDashboard = lazy(() => import("@features/admin/pages/AdminDashboard"));
+const CompanyPage = lazy(() => import("@features/admin/pages/CompanyPage"));
+const ClientAccountPage = lazy(() => import("@features/clients/pages/ClientAccount"));
+const ClientAccountDetailPage = lazy(() => import("@features/clients/pages/ClientAccountDetail"));
+const SupplierAccountDetailPage = lazy(() => import("@features/purchases/pages/SupplierAccountDetail"));
+const QuickSalePage = lazy(() => import("@features/sales/pages/QuickSale"));
+const NotFoundPage = lazy(() => import("@features/shared/pages/NotFound"));
 const FinancialDashboardPage = lazy(
-  () => import("@/pages/financial/FinancialDashboard"),
+  () => import("@features/financial/pages/FinancialDashboard"),
 );
 const AccountingStatementsPage = lazy(
-  () => import("@/pages/financial/AccountingStatements"),
+  () => import("@features/financial/pages/AccountingStatements"),
 );
 const ProductAnalysisPage = lazy(
-  () => import("@/pages/financial/ProductAnalysis"),
+  () => import("@features/financial/pages/ProductAnalysis"),
 );
 const SpeculationsProjectionsPage = lazy(
-  () => import("@/pages/financial/SpeculationsProjections"),
+  () => import("@features/financial/pages/SpeculationsProjections"),
 );
 const PurchasesDashboardPage = lazy(
-  () => import("@/pages/financial/PurchasesDashboard"),
+  () => import("@features/financial/pages/PurchasesDashboard"),
 );
-const SuperAdminDashboardPage = lazy(() => import("@/pages/superadmin/SuperAdminDashboard"));
-const TenantListPage = lazy(() => import("@/pages/superadmin/TenantList"));
-const TenantCreatePage = lazy(() => import("@/pages/superadmin/TenantCreate"));
-const TenantDetailPage = lazy(() => import("@/pages/superadmin/TenantDetail"));
-const AuditLogPage = lazy(() => import("@/pages/superadmin/AuditLogPage"));
+const SuperAdminDashboardPage = lazy(() => import("@features/superadmin/pages/SuperAdminDashboard"));
+const TenantListPage = lazy(() => import("@features/superadmin/pages/TenantList"));
+const TenantCreatePage = lazy(() => import("@features/superadmin/pages/TenantCreate"));
+const TenantDetailPage = lazy(() => import("@features/superadmin/pages/TenantDetail"));
+const AuditLogPage = lazy(() => import("@features/superadmin/pages/AuditLogPage"));
 
 function FullScreenLoader() {
   return (

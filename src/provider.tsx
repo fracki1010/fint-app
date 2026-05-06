@@ -4,8 +4,8 @@ import type { NavigateOptions } from "react-router-dom";
 import { HeroUIProvider } from "@heroui/system";
 import { useHref, useNavigate } from "react-router-dom";
 
-import { useThemeStore } from "@/stores/themeStore";
-import { AppToastProvider } from "@/components/AppToast";
+import { useThemeStore } from "@shared/stores/themeStore";
+import { AppToastProvider } from "@features/notifications/components/AppToast";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
