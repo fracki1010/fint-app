@@ -261,3 +261,7 @@ export interface ProductionLog {
   producedBy?: string | null;
   createdAt?: string;
 }
+
+// ── Bulk Import Types ─────────────────────────────────────────────────
+
+export * from "./bulkImport";
