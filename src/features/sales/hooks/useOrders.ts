@@ -153,14 +153,30 @@ export function useOrders(options?: { enabled?: boolean }) {
     },
   });
 
+  const bulkCreateOrdersMutation = useMutation({
+    mutationFn: async (ordersData: Partial<Order>[]) => {
+      const response = await api.post<{ imported: number; failed: number; errors: Array<{ row: number; error: string }> }>("/orders/bulk", {
+        orders: ordersData,
+      });
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders-infinite"] });
+    },
+  });
+
   return {
     orders,
     loading,
     error: getErrorMessage(error, "No pudimos cargar las ventas."),
     createOrder: createOrderMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutateAsync,
+    bulkCreateOrders: bulkCreateOrdersMutation.mutateAsync,
     isCreating: createOrderMutation.isPending,
     isUpdating: updateOrderMutation.isPending,
+    isBulkCreating: bulkCreateOrdersMutation.isPending,
   };
 }
 
