@@ -25,8 +25,9 @@ import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
 import { formatCurrency } from "@/utils/currency";
 import { printTicket } from "@/utils/ticket";
+import { getAvailableStock } from "@/utils/stock";
 import BarcodeScanner from "@/components/scanner/BarcodeScanner";
-import { Client, PaymentMethod, Product } from "@/types";
+import { Client, PaymentMethod, Product, Presentation } from "@/types";
 
 export default function QuickSalePage() {
   const navigate = useNavigate();
@@ -90,16 +91,21 @@ export default function QuickSalePage() {
           p.sku?.toUpperCase() === code.toUpperCase(),
       ) || (findResults.length === 1 ? findResults[0] : null);
       if (product) {
-        const stock = product.stock ?? 0;
-        if (stock <= 0) {
-          showToast({ variant: "error", message: `${product.name} sin stock` });
+        const presentation = product.matchedPresentation;
+        const available = presentation
+          ? getAvailableStock(product, presentation)
+          : getAvailableStock(product);
+        if (available <= 0) {
+          showToast({ variant: "error", message: `${product.name}${presentation ? ` (${presentation.name})` : ""} sin stock` });
+          setShowScanner(false);
           return;
         }
-        const added = addItem(product);
+        const added = addItem(product, presentation);
         if (added) {
-          showToast({ variant: "success", message: `${product.name} agregado` });
+          showToast({ variant: "success", message: `${product.name}${presentation ? ` (${presentation.name})` : ""} agregado` });
+          setShowScanner(false);
         } else {
-          showToast({ variant: "warning", message: `Stock insuficiente para ${product.name}` });
+          showToast({ variant: "warning", message: `Stock insuficiente para ${product.name}${presentation ? ` (${presentation.name})` : ""}` });
         }
       } else {
         showToast({ variant: "warning", message: `Producto no encontrado: "${code}"` });
@@ -119,7 +125,6 @@ export default function QuickSalePage() {
     zoomRange,
     zoomValue,
     applyZoom,
-    debugLog,
   } = useBarcodeScanner({
     onScan: handleScan,
     onError: (err) => showToast({ variant: "error", message: err.message }),
@@ -166,24 +171,26 @@ export default function QuickSalePage() {
     return () => { stopCameraScanner(); };
   }, [isDesktop, showScanner, startCameraScanner, stopCameraScanner]);
 
-  const addProductToCart = (product: Product) => {
-    const stock = product.stock ?? 0;
-    if (stock <= 0) {
-      showToast({ variant: "error", message: `${product.name} sin stock` });
+  const addProductToCart = (product: Product, presentation?: Presentation) => {
+    const available = presentation
+      ? getAvailableStock(product, presentation)
+      : getAvailableStock(product);
+    if (available <= 0) {
+      showToast({ variant: "error", message: `${product.name}${presentation ? ` (${presentation.name})` : ""} sin stock` });
       return;
     }
-    const added = addItem(product);
+    const added = addItem(product, presentation);
     if (added) {
       setSearchQuery("");
       setSearchFocused(false);
-      showToast({ variant: "success", message: `${product.name} agregado` });
+      showToast({ variant: "success", message: `${product.name}${presentation ? ` (${presentation.name})` : ""} agregado` });
     } else {
       const currentQty = items
-        .filter((i) => i.product._id === product._id)
+        .filter((i) => i.product._id === product._id && i.presentation?._id === presentation?._id)
         .reduce((s, i) => s + i.quantity, 0);
       showToast({
         variant: "warning",
-        message: `Stock insuficiente para ${product.name}. Disponible: ${stock}, en carrito: ${currentQty}`,
+        message: `Stock insuficiente para ${product.name}${presentation ? ` (${presentation.name})` : ""}. Disponible: ${available}, en carrito: ${currentQty}`,
       });
     }
   };
@@ -280,42 +287,102 @@ export default function QuickSalePage() {
               </div>
             ) : (
               searchResults.map((p) => {
-                const available = p.stock ?? 0;
-                const inCart = items
-                  .filter((i) => i.product._id === p._id)
+                const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
+                const singlePresentation = activePresentations.length === 1 ? activePresentations[0] : null;
+                const hasMultiplePresentations = activePresentations.length > 1;
+
+                const baseAvailable = getAvailableStock(p);
+                const baseInCart = items
+                  .filter((i) => i.product._id === p._id && !i.presentation)
                   .reduce((s, i) => s + i.quantity, 0);
+
+                const available = singlePresentation ? getAvailableStock(p, singlePresentation) : baseAvailable;
+                const inCart = singlePresentation
+                  ? items.filter((i) => i.product._id === p._id && i.presentation?._id === singlePresentation._id).reduce((s, i) => s + i.quantity, 0)
+                  : baseInCart;
                 const outOfStock = available <= 0;
                 const lowStock = available > 0 && available <= (p.minStock || 5);
                 const cantAddMore = inCart >= available;
+                const displayPrice = singlePresentation ? singlePresentation.price : p.price;
+
                 return (
-                  <button
-                    key={p._id}
-                    className={`flex w-full items-center justify-between border-b border-divider/60 px-4 py-3 text-left transition last:border-0 ${
-                      outOfStock || cantAddMore
-                        ? "cursor-not-allowed opacity-50"
-                        : "hover:bg-content2/60"
-                    }`}
-                    disabled={outOfStock || cantAddMore}
-                    onMouseDown={() => {
-                      if (!outOfStock && !cantAddMore) addProductToCart(p);
-                    }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
-                      <p className="text-[11px] text-default-400">
-                        {p.barcode || p.sku || "Sin código"}
-                      </p>
-                      <p className={`mt-0.5 text-[11px] font-semibold ${
-                        outOfStock ? "text-danger" : lowStock ? "text-warning" : "text-success"
-                      }`}>
-                        {outOfStock ? "Sin stock" : `${available} en stock`}
-                        {inCart > 0 && ` · ${inCart} en carrito`}
-                      </p>
-                    </div>
-                    <div className="ml-3 shrink-0 text-right">
-                      <p className="text-sm font-bold text-primary">{formatCurrency(p.price, currency)}</p>
-                    </div>
-                  </button>
+                  <div key={p._id} className="border-b border-divider/60 last:border-0">
+                    <button
+                      className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
+                        hasMultiplePresentations
+                          ? ""
+                          : outOfStock || cantAddMore
+                            ? "cursor-not-allowed opacity-50"
+                            : "hover:bg-content2/60"
+                      }`}
+                      disabled={!hasMultiplePresentations && (outOfStock || cantAddMore)}
+                      onMouseDown={() => {
+                        if (hasMultiplePresentations) return;
+                        if (!outOfStock && !cantAddMore) {
+                          if (singlePresentation) addProductToCart(p, singlePresentation);
+                          else addProductToCart(p);
+                        }
+                      }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
+                        <p className="text-[11px] text-default-400">
+                          {p.barcode || p.sku || "Sin código"}
+                        </p>
+                        {!hasMultiplePresentations && (
+                          <p className={`mt-0.5 text-[11px] font-semibold ${
+                            outOfStock ? "text-danger" : lowStock ? "text-warning" : "text-success"
+                          }`}>
+                            {outOfStock ? "Sin stock" : `${available} en stock`}
+                            {inCart > 0 && ` · ${inCart} en carrito`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="ml-3 shrink-0 text-right">
+                        <p className="text-sm font-bold text-primary">{formatCurrency(displayPrice, currency)}</p>
+                      </div>
+                    </button>
+
+                    {hasMultiplePresentations && (
+                      <div className="space-y-1 px-4 pb-3">
+                        {activePresentations.map((pr) => {
+                          const prAvailable = getAvailableStock(p, pr);
+                          const prInCart = items
+                            .filter((i) => i.product._id === p._id && i.presentation?._id === pr._id)
+                            .reduce((s, i) => s + i.quantity, 0);
+                          const prCantAdd = prInCart >= prAvailable || prAvailable <= 0;
+                          const prLowStock = prAvailable > 0 && prAvailable <= (p.minStock || 5);
+
+                          return (
+                            <button
+                              key={pr._id}
+                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
+                                prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"
+                              }`}
+                              disabled={prCantAdd}
+                              onMouseDown={() => {
+                                if (!prCantAdd) addProductToCart(p, pr);
+                              }}
+                            >
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold text-foreground">{pr.name}</span>
+                                <span className="ml-2 text-default-400">
+                                  {pr.equivalentQty} {p.unitOfMeasure || "u."}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[11px] font-semibold ${prAvailable <= 0 ? "text-danger" : prLowStock ? "text-warning" : "text-success"}`}>
+                                  {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}
+                                  {prInCart > 0 && ` · ${prInCart} en carrito`}
+                                </span>
+                                <span className="text-sm font-bold text-primary">{formatCurrency(pr.price, currency)}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })
             )}
@@ -387,7 +454,7 @@ export default function QuickSalePage() {
       </div>
 
       {/* Items list */}
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 px-4 py-3">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-default-400">
             <ShoppingCart size={40} className="mb-3" />
@@ -410,13 +477,18 @@ export default function QuickSalePage() {
             )}
             <div className="space-y-2">
               {items.map((item) => {
-                const available = item.product.stock ?? 0;
-                const error = stockErrors.find((e) => e.productId === item.product._id);
+                const available = getAvailableStock(item.product, item.presentation);
+                const error = stockErrors.find(
+                  (e) =>
+                    e.productId === item.product._id &&
+                    (item.presentation ? e.productName.includes(item.presentation.name) : true),
+                );
                 const lowStock = available > 0 && available <= (item.product.minStock || 5);
                 const isWarning = error || (lowStock && item.quantity >= available * 0.8);
+                const itemPrice = item.presentation?.price ?? item.product.price;
                 return (
                   <div
-                    key={item.product._id}
+                    key={`${item.product._id}-${item.presentation?._id || "base"}`}
                     className={`flex items-center gap-3 rounded-2xl border p-3 ${
                       error
                         ? "border-danger/40 bg-danger/8"
@@ -426,8 +498,13 @@ export default function QuickSalePage() {
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{item.product.name}</p>
-                      <p className="text-xs text-default-400">{formatCurrency(item.product.price, currency)} c/u</p>
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {item.product.name}
+                        {item.presentation && (
+                          <span className="ml-1 text-xs font-normal text-default-400">({item.presentation.name})</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-default-400">{formatCurrency(itemPrice, currency)} c/u</p>
                       <p className={`mt-0.5 text-[11px] font-semibold ${
                         error ? "text-danger" : lowStock ? "text-warning" : "text-default-400"
                       }`}>
@@ -438,7 +515,7 @@ export default function QuickSalePage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-danger"
-                        onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.product._id, item.quantity - 1, item.presentation?._id)}
                       >
                         <Minus size={14} />
                       </button>
@@ -450,19 +527,19 @@ export default function QuickSalePage() {
                       <button
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-primary disabled:opacity-30"
                         disabled={item.quantity >= available}
-                        onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.product._id, item.quantity + 1, item.presentation?._id)}
                       >
                         <Plus size={14} />
                       </button>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-foreground">
-                        {formatCurrency(item.product.price * item.quantity, currency)}
+                        {formatCurrency(itemPrice * item.quantity, currency)}
                       </p>
                     </div>
                     <button
                       className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:text-danger"
-                      onClick={() => removeItem(item.product._id)}
+                      onClick={() => removeItem(item.product._id, item.presentation?._id)}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -552,7 +629,6 @@ export default function QuickSalePage() {
         zoomRange={zoomRange}
         zoomValue={zoomValue}
         onZoomChange={applyZoom}
-        debugLog={debugLog}
       />
     </div>
   );

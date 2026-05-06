@@ -474,7 +474,7 @@ export default function SalesPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col overflow-y-auto ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
+    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -689,10 +689,8 @@ export default function SalesPage() {
   // ── Desktop slide-over layout ─────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div className="h-screen overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          {ListPanel}
-        </div>
+      <div className="h-full">
+        {ListPanel}
         <div
           className={`fixed inset-0 z-40 transition-all duration-300 ${orderId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
           onClick={() => navigate("/sales")}

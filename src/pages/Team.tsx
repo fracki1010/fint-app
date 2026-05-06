@@ -480,7 +480,7 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-3xl lg:px-6">
+    <div className="h-full"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-3xl lg:px-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Equipo</h1>

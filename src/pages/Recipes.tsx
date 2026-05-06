@@ -18,20 +18,19 @@ import {
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 
 import { useRecipes, useProductionLogs, CreateRecipePayload, UpdateRecipePayload } from "@/hooks/useRecipes";
-import { useSupplies } from "@/hooks/useSupplies";
 import { useProducts } from "@/hooks/useProducts";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
 import { useSettings } from "@/hooks/useSettings";
-import { Recipe, Supply, Product, ProductionLog } from "@/types";
+import { Recipe, Product, ProductionLog } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import { getErrorMessage } from "@/utils/errors";
 import { formatCurrency, formatCompactCurrency } from "@/utils/currency";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-function getSupplyObj(s: Supply | string | undefined): Supply | null {
-  if (s && typeof s === "object") return s as Supply;
+function getSupplyObj(s: unknown): { _id: string; name: string; unit?: string; currentStock: number; minStock: number; referenceCost: number } | null {
+  if (s && typeof s === "object" && "_id" in (s as Record<string, unknown>)) return s as { _id: string; name: string; unit?: string; currentStock: number; minStock: number; referenceCost: number };
   return null;
 }
 
@@ -42,9 +41,17 @@ function getProductObj(p: Product | string | null | undefined): Product | null {
 
 function calcRecipeCost(recipe: Recipe) {
   const batchCost = recipe.ingredients.reduce((acc, ing) => {
+    // Try product first (new)
+    const p = getProductObj(ing.product);
+    if (p && p.costPrice) {
+      return acc + ing.quantity * p.costPrice;
+    }
+    // Legacy fallback
     const s = getSupplyObj(ing.supply);
-    if (!s || !s.referenceCost) return acc;
-    return acc + ing.quantity * s.referenceCost;
+    if (s && s.referenceCost) {
+      return acc + ing.quantity * s.referenceCost;
+    }
+    return acc;
   }, 0);
   const unitCost = recipe.yieldQuantity > 0 ? batchCost / recipe.yieldQuantity : 0;
   return { batchCost, unitCost };
@@ -58,9 +65,9 @@ function stockStatusColor(available: number, needed: number) {
 
 // ── Ingredient row in the form ────────────────────────────────────────
 
-type IngRow = { supplyId: string; quantity: string };
+type IngRow = { productId: string; quantity: string };
 
-const emptyRow = (): IngRow => ({ supplyId: "", quantity: "" });
+const emptyRow = (): IngRow => ({ productId: "", quantity: "" });
 
 // ── Recipe form ───────────────────────────────────────────────────────
 
@@ -88,8 +95,12 @@ function recipeToForm(r: Recipe): RecipeFormState {
     yieldQuantity: String(r.yieldQuantity),
     notes: r.notes || "",
     ingredients: r.ingredients.map((ing) => {
+      // Try product first (new)
+      const p = getProductObj(ing.product);
+      if (p) return { productId: p._id, quantity: String(ing.quantity) };
+      // Legacy fallback
       const s = getSupplyObj(ing.supply);
-      return { supplyId: s?._id || (ing.supply as string) || "", quantity: String(ing.quantity) };
+      return { productId: String(s?._id ?? (typeof ing.supply === "string" ? ing.supply : "")), quantity: String(ing.quantity) };
     }),
   };
 }
@@ -97,7 +108,6 @@ function recipeToForm(r: Recipe): RecipeFormState {
 function RecipeForm({
   mode,
   initial,
-  supplies,
   products,
   isDesktop,
   submitting,
@@ -106,7 +116,6 @@ function RecipeForm({
 }: {
   mode: "create" | "edit";
   initial?: RecipeFormState;
-  supplies: Supply[];
   products: Product[];
   isDesktop: boolean;
   submitting: boolean;
@@ -114,6 +123,8 @@ function RecipeForm({
   onSubmit: (f: RecipeFormState) => void;
 }) {
   const [form, setForm] = useState<RecipeFormState>(initial ?? emptyForm());
+
+  const rawMaterials = useMemo(() => products.filter((p) => p.type === "raw_material"), [products]);
 
   const set = <K extends keyof RecipeFormState>(k: K, v: RecipeFormState[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -141,7 +152,7 @@ function RecipeForm({
   const isValid =
     form.name.trim() &&
     form.ingredients.length > 0 &&
-    form.ingredients.every((r) => r.supplyId && parseFloat(r.quantity) > 0);
+    form.ingredients.every((r) => r.productId && parseFloat(r.quantity) > 0);
 
   return (
     <div className={`flex flex-col ${isDesktop ? "w-[520px]" : "h-full"} bg-content1`}>
@@ -226,13 +237,13 @@ function RecipeForm({
             <div key={i} className="flex items-center gap-2">
               <select
                 className={`${inputCls} flex-1`}
-                value={row.supplyId}
-                onChange={(e) => setIng(i, "supplyId", e.target.value)}
+                value={row.productId}
+                onChange={(e) => setIng(i, "productId", e.target.value)}
               >
                 <option value="">Seleccionar insumo...</option>
-                {supplies.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name} ({s.unit})
+                {rawMaterials.map((p) => (
+                  <option key={p._id} value={p._id}>
+                    {p.name} ({p.unitOfMeasure || "unidad"})
                   </option>
                 ))}
               </select>
@@ -307,6 +318,10 @@ function ProduceView({
     "w-full rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground placeholder:text-default-400 focus:outline-none focus:ring-2 focus:ring-primary/40";
 
   const hasShortage = recipe.ingredients.some((ing) => {
+    // Try product first (new)
+    const p = getProductObj(ing.product);
+    if (p) return p.stock < ing.quantity * qty;
+    // Legacy fallback
     const s = getSupplyObj(ing.supply);
     if (!s) return false;
     return s.currentStock < ing.quantity * qty;
@@ -363,10 +378,15 @@ function ProduceView({
           <p className="text-xs font-semibold text-default-500">VERIFICACIÓN DE STOCK</p>
           <div className="flex flex-col gap-1.5 rounded-xl border border-white/10 bg-content2 p-3">
             {recipe.ingredients.map((ing, i) => {
+              // Try product first (new)
+              const p = getProductObj(ing.product);
               const s = getSupplyObj(ing.supply);
-              if (!s) return null;
+              const name = p?.name || s?.name || "Insumo";
+              const stock = p?.stock ?? s?.currentStock ?? 0;
+              const unit = p?.unitOfMeasure || s?.unit || "unidad";
+              if (!p && !s) return null;
               const needed = ing.quantity * qty;
-              const ok = s.currentStock >= needed;
+              const ok = stock >= needed;
               return (
                 <div key={i} className="flex items-center justify-between gap-2 text-sm">
                   <div className="flex min-w-0 items-center gap-2">
@@ -375,10 +395,10 @@ function ProduceView({
                     ) : (
                       <AlertCircle className="shrink-0 text-danger" size={14} />
                     )}
-                    <span className="truncate text-foreground">{s.name}</span>
+                    <span className="truncate text-foreground">{name}</span>
                   </div>
-                  <span className={`shrink-0 text-xs font-semibold ${stockStatusColor(s.currentStock, needed)}`}>
-                    {s.currentStock.toLocaleString("es-AR")} / {needed.toLocaleString("es-AR")} {s.unit}
+                  <span className={`shrink-0 text-xs font-semibold ${stockStatusColor(stock, needed)}`}>
+                    {stock.toLocaleString("es-AR")} / {needed.toLocaleString("es-AR")} {unit}
                   </span>
                 </div>
               );
@@ -427,7 +447,6 @@ type DetailView = "detail" | "produce" | "edit";
 
 function RecipeDrawer({
   recipe,
-  supplies,
   products,
   isOpen,
   isDesktop,
@@ -437,7 +456,6 @@ function RecipeDrawer({
   onUpdated,
 }: {
   recipe: Recipe | null;
-  supplies: Supply[];
   products: Product[];
   isOpen: boolean;
   isDesktop: boolean;
@@ -479,8 +497,8 @@ function RecipeDrawer({
         yieldQuantity: parseFloat(form.yieldQuantity) || 1,
         notes: form.notes,
         ingredients: form.ingredients
-          .filter((r) => r.supplyId && parseFloat(r.quantity) > 0)
-          .map((r) => ({ supply: r.supplyId, quantity: parseFloat(r.quantity) })),
+          .filter((r) => r.productId && parseFloat(r.quantity) > 0)
+          .map((r) => ({ product: r.productId, quantity: parseFloat(r.quantity) })),
       };
       const updated = await updateRecipe({ id: recipe._id, data: payload });
       showToast({ variant: "success", message: "Receta actualizada" });
@@ -529,7 +547,6 @@ function RecipeDrawer({
           mode="edit"
           products={products}
           submitting={isUpdating}
-          supplies={supplies}
           onClose={() => setView("detail")}
           onSubmit={handleUpdate}
         />
@@ -597,8 +614,13 @@ function RecipeDrawer({
           </p>
           <div className="flex flex-col gap-2">
             {recipe.ingredients.map((ing, i) => {
+              const p = getProductObj(ing.product);
               const s = getSupplyObj(ing.supply);
-              const stockOk = s ? s.currentStock >= ing.quantity : false;
+              const name = p?.name || s?.name || "Insumo";
+              const stock = p?.stock ?? s?.currentStock ?? 0;
+              const unit = p?.unitOfMeasure || s?.unit || "";
+              const cost = p?.costPrice ?? s?.referenceCost ?? 0;
+              const stockOk = stock >= ing.quantity;
               return (
                 <div
                   key={i}
@@ -607,22 +629,22 @@ function RecipeDrawer({
                   <div className="flex min-w-0 items-center gap-2">
                     <Package size={14} className="shrink-0 text-default-400" />
                     <span className="truncate text-sm font-medium">
-                      {s?.name || "Insumo"}
+                      {name}
                     </span>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-0.5">
                     <span className="text-sm font-bold text-foreground">
-                      {ing.quantity} {s?.unit || ""}
+                      {ing.quantity} {unit}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {s?.referenceCost ? (
+                      {cost > 0 ? (
                         <span className="text-[11px] text-default-400">
-                          {formatCompactCurrency(ing.quantity * s.referenceCost, currency)}
+                          {formatCompactCurrency(ing.quantity * cost, currency)}
                         </span>
                       ) : null}
-                      {s && (
+                      {(p || s) && (
                         <span className={`text-[11px] font-semibold ${stockOk ? "text-success" : "text-danger"}`}>
-                          ({s.currentStock} disp.)
+                          ({stock} disp.)
                         </span>
                       )}
                     </div>
@@ -765,7 +787,6 @@ export default function RecipesPage() {
   const { showToast } = useAppToast();
   const { recipes, loading, createRecipe, isCreating } = useRecipes();
   const { logs, loading: logsLoading } = useProductionLogs();
-  const { supplies } = useSupplies();
   const { products } = useProducts();
 
   const filtered = useMemo(() => {
@@ -782,8 +803,8 @@ export default function RecipesPage() {
         yieldQuantity: parseFloat(form.yieldQuantity) || 1,
         notes: form.notes,
         ingredients: form.ingredients
-          .filter((r) => r.supplyId && parseFloat(r.quantity) > 0)
-          .map((r) => ({ supply: r.supplyId, quantity: parseFloat(r.quantity) })),
+          .filter((r) => r.productId && parseFloat(r.quantity) > 0)
+          .map((r) => ({ product: r.productId, quantity: parseFloat(r.quantity) })),
       };
       await createRecipe(payload);
       showToast({ variant: "success", message: "Receta creada" });
@@ -808,7 +829,6 @@ export default function RecipesPage() {
       mode="create"
       products={products}
       submitting={isCreating}
-      supplies={supplies}
       onClose={() => setCreateOpen(false)}
       onSubmit={handleCreate}
     />
@@ -925,6 +945,8 @@ export default function RecipesPage() {
             {filtered.map((recipe) => {
               const prod = getProductObj(recipe.product);
               const anyShortage = recipe.ingredients.some((ing) => {
+                const p = getProductObj(ing.product);
+                if (p) return p.stock < ing.quantity;
                 const s = getSupplyObj(ing.supply);
                 return s && s.currentStock < ing.quantity;
               });
@@ -990,7 +1012,6 @@ export default function RecipesPage() {
         isOpen={drawerOpen}
         products={products}
         recipe={selected}
-        supplies={supplies}
         onClose={() => setDrawerOpen(false)}
         onDeleted={handleDeleted}
         onUpdated={handleUpdated}

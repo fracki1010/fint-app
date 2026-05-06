@@ -488,7 +488,7 @@ export default function Suppliers() {
   };
 
   return (
-    <div className="h-full overflow-y-auto"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl lg:px-6">
+    <div className="h-full"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl lg:px-6">
       {/* Header */}
       <div
         className={`flex items-center justify-between transition-all lg:pt-0 ${

@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full">
       <div className="mx-auto max-w-2xl space-y-5 px-4 py-4 lg:max-w-3xl lg:px-6">
         <header>
           <p className="section-kicker">Panel de control</p>

@@ -15,6 +15,7 @@ export interface StockMovement {
   stockAfter: number;
   reason?: string;
   order?: any;
+  purchase?: string;
   source: "WhatsApp" | "Dashboard" | "Sistema";
   createdAt: string;
   updatedAt: string;

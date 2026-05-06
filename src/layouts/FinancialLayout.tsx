@@ -54,7 +54,7 @@ export default function FinancialLayout() {
   const location = useLocation();
 
   return (
-    <div className="h-full overflow-x-hidden overflow-y-auto bg-background text-foreground">
+    <div className="h-full overflow-x-hidden bg-background text-foreground">
         <header className="financial-header lg:hidden">
           <div className="flex items-center justify-between gap-4">
             <div>

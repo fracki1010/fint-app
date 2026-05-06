@@ -6,10 +6,39 @@ import { Purchase } from "@/types";
 // ── Payloads ────────────────────────────────────────────────────────
 
 export interface CreatePurchaseItemPayload {
-  supplyItemId: string;
+  supplyItemId?: string;
+  productItemId?: string;
   quantity: number;
   unitCost: number;
   lineTotal: number;
+}
+
+// ── Pure helpers ─────────────────────────────────────────────────────
+
+export type LineItemInput = {
+  itemKind: "supply" | "product";
+  supplyId: string;
+  productId: string;
+  quantity: string;
+  unitCost: string;
+};
+
+export function buildPurchaseItemsPayload(items: LineItemInput[]): CreatePurchaseItemPayload[] {
+  return items
+    .filter((it) => {
+      const qty = Number(it.quantity || 0);
+      const cost = Number(it.unitCost || 0);
+      if (it.itemKind === "supply") return it.supplyId && qty > 0 && cost >= 0;
+      return it.productId && qty > 0 && cost >= 0;
+    })
+    .map((it) => ({
+      ...(it.itemKind === "product"
+        ? { productItemId: it.productId }
+        : { supplyItemId: it.supplyId }),
+      quantity: Number(it.quantity),
+      unitCost: Number(it.unitCost),
+      lineTotal: Number(it.quantity) * Number(it.unitCost),
+    }));
 }
 
 export interface CreatePurchasePayload {

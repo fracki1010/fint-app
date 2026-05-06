@@ -307,6 +307,13 @@ function RelatedPurchases({ supplyId, currency }: { supplyId: string; currency: 
   const related = useMemo(() => {
     return purchases.filter((p) =>
       p.items.some((item) => {
+        // Check product ref (new)
+        const product = item.product;
+        if (typeof product === "object" && product) {
+          return product._id === supplyId;
+        }
+        if (product === supplyId) return true;
+        // Check supply ref (legacy)
         const supply = item.supply;
         if (typeof supply === "object" && supply) {
           return supply._id === supplyId;
@@ -956,10 +963,8 @@ export default function SuppliesPage() {
   // Desktop: slide-over layout
   if (isDesktop) {
     return (
-      <div className="h-screen overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          {listPanel}
-        </div>
+      <div className="h-full">
+        {listPanel}
         <div
           className={`fixed inset-0 z-40 transition-all duration-300 ${supplyId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
           onClick={() => navigate("/supplies")}
@@ -988,7 +993,7 @@ export default function SuppliesPage() {
 
   // Mobile: full-screen list
   return (
-    <div className="flex min-h-full flex-col overflow-y-auto bg-background pb-28">
+    <div className="flex min-h-full flex-col bg-background pb-28">
       {listPanel}
       {modals}
     </div>

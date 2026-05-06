@@ -32,7 +32,6 @@ export function useBarcodeScanner({
 }: UseBarcodeScannerOptions) {
   const [state, setState] = useState<ScannerState>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [debugLog, setDebugLog] = useState<string>("");
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -54,13 +53,6 @@ export function useBarcodeScanner({
     onErrorRef.current = onError;
   });
 
-  const appendDebug = useCallback((msg: string) => {
-    setDebugLog((prev) => {
-      const next = `${prev}\n${msg}`.trim();
-      return next.split("\n").slice(-5).join("\n"); // ultimas 5 lineas
-    });
-  }, []);
-
   const triggerScan = useCallback(
     (code: string) => {
       const now = Date.now();
@@ -79,10 +71,8 @@ export function useBarcodeScanner({
     try {
       setState("scanning");
       setError(null);
-      appendDebug("Iniciando camara...");
 
       if (scannerRef.current) {
-        appendDebug("Deteniendo scanner anterior");
         try {
           await scannerRef.current.stop();
           scannerRef.current.clear();
@@ -104,7 +94,6 @@ export function useBarcodeScanner({
       div.style.width = "100%";
       div.style.height = "100%";
       container.appendChild(div);
-      appendDebug(`Container creado: ${containerId}`);
 
       const scanner = new Html5Qrcode(containerId, {
         formatsToSupport: FORMATS_TO_SUPPORT,
@@ -126,20 +115,16 @@ export function useBarcodeScanner({
         () => {},
       );
 
-      appendDebug("Scanner iniciado OK");
-
       // Leer capabilities de zoom del track de video
       try {
         await new Promise((r) => setTimeout(r, 300)); // dar tiempo a que html5-qrcode cree el video
         const videoEl = document.querySelector(`#${containerId} video`) as HTMLVideoElement | null;
-        appendDebug(`Video encontrado: ${!!videoEl}`);
         if (videoEl && videoEl.srcObject) {
           const track = (videoEl.srcObject as MediaStream).getVideoTracks()[0];
           if (track) {
             zoomTrackRef.current = track;
             const capabilities = track.getCapabilities() as Record<string, unknown>;
             const hasZoom = capabilities.zoom && typeof capabilities.zoom === "object";
-            appendDebug(`Zoom soportado: ${hasZoom}`);
             if (hasZoom) {
               const z = capabilities.zoom as { min: number; max: number; step?: number };
               setZoomSupported(true);
@@ -151,23 +136,21 @@ export function useBarcodeScanner({
               const settings = track.getSettings() as Record<string, unknown>;
               const currentZoom = (settings.zoom as number) ?? z.min;
               setZoomValue(currentZoom);
-              appendDebug(`Zoom: ${currentZoom.toFixed(1)}x (${z.min}-${z.max})`);
             }
           }
         }
-      } catch (e) {
-        appendDebug(`Zoom error: ${e instanceof Error ? e.message : String(e)}`);
+      } catch {
+        // Ignorar si no se puede leer zoom
       }
     } catch (err) {
       setState("error");
       const msg = err instanceof Error ? err.message : "Error al acceder a la camara";
       setError(msg);
-      appendDebug(`ERROR: ${msg}`);
       onErrorRef.current?.(err instanceof Error ? err : new Error(msg));
     } finally {
       isStartingRef.current = false;
     }
-  }, [triggerScan, appendDebug]);
+  }, [triggerScan]);
 
   const applyZoom = useCallback((value: number) => {
     if (!zoomTrackRef.current) return;
@@ -182,7 +165,6 @@ export function useBarcodeScanner({
   }, []);
 
   const stopCameraScanner = useCallback(async () => {
-    appendDebug("Deteniendo camara...");
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
@@ -198,7 +180,7 @@ export function useBarcodeScanner({
     setZoomValue(1);
     setState("idle");
     isStartingRef.current = false;
-  }, [appendDebug]);
+  }, []);
 
   const toggleCameraScanner = useCallback(() => {
     if (state === "scanning" || state === "paused") {
@@ -253,6 +235,5 @@ export function useBarcodeScanner({
     zoomRange,
     zoomValue,
     applyZoom,
-    debugLog,
   };
 }

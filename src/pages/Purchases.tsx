@@ -33,9 +33,10 @@ import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 import {
   usePurchases,
   usePurchaseDetail,
-  CreatePurchaseItemPayload,
+  buildPurchaseItemsPayload,
 } from "@/hooks/usePurchases";
 import { useSupplies } from "@/hooks/useSupplies";
+import { useProducts } from "@/hooks/useProducts";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@/hooks/useMobileHeaderCompact";
@@ -126,6 +127,18 @@ function getSupplyName(supply: string | { _id: string; name?: string; sku?: stri
   return "Insumo";
 }
 
+function getProductName(product: string | { _id: string; name?: string; sku?: string | null }) {
+  if (typeof product === "object" && product) {
+    return product.name || "Producto";
+  }
+  return "Producto";
+}
+
+function getItemName(item: { supply?: any; product?: any }) {
+  if (item.product) return getProductName(item.product);
+  return getSupplyName(item.supply as any);
+}
+
 function formatId(id: string) {
   return `#${id.slice(-6).toUpperCase()}`;
 }
@@ -136,8 +149,13 @@ function formatDate(dateStr: string) {
 }
 
 type LineItem = {
+  itemKind: "supply" | "product";
   supplyId: string;
   supplyName: string;
+  productId: string;
+  productName: string;
+  purchaseUnit: string;
+  purchaseEquivalentQty: string;
   quantity: string;
   unitCost: string;
 };
@@ -161,8 +179,22 @@ const emptyForm: PurchaseFormState = {
   paymentCondition: "CASH",
   tax: "0",
   notes: "",
-  items: [{ supplyId: "", supplyName: "", quantity: "", unitCost: "" }],
+  items: [emptyLineItem()],
 };
+
+function emptyLineItem(): LineItem {
+  return {
+    itemKind: "supply",
+    supplyId: "",
+    supplyName: "",
+    productId: "",
+    productName: "",
+    purchaseUnit: "",
+    purchaseEquivalentQty: "1",
+    quantity: "",
+    unitCost: "",
+  };
+}
 
 function CreatePurchaseModal({
   isDesktop,
@@ -171,6 +203,7 @@ function CreatePurchaseModal({
   submitting,
   suppliers,
   supplies,
+  products,
   currency,
   showToast,
 }: {
@@ -180,6 +213,7 @@ function CreatePurchaseModal({
   submitting: boolean;
   suppliers: Array<{ _id: string; name: string; company?: string }>;
   supplies: Array<{ _id: string; name: string; sku?: string | null; referenceCost: number; unit: string }>;
+  products: Array<{ _id: string; name: string; sku?: string; barcode?: string; type?: string; purchaseUnit?: string; purchaseEquivalentQty?: number; unitOfMeasure?: string }>;
   currency: string;
   showToast: (opts: { variant: "success" | "error" | "warning" | "info"; message: string }) => void;
 }) {
@@ -196,19 +230,21 @@ function CreatePurchaseModal({
     zoomRange,
     zoomValue,
     applyZoom,
-    debugLog,
   } = useBarcodeScanner({
     onScan: (code: string) => {
-      const supply = supplies.find((s) => s.sku && s.sku.toUpperCase() === code.toUpperCase());
+      const upper = code.toUpperCase();
+      const supply = supplies.find((s) => s.sku && s.sku.toUpperCase() === upper);
       if (supply) {
         setForm((prev) => {
           const items = [...prev.items];
-          const emptyIdx = items.findIndex((it) => !it.supplyId);
+          const emptyIdx = items.findIndex((it) => it.itemKind === "supply" && !it.supplyId);
           const idx = emptyIdx >= 0 ? emptyIdx : items.length;
           if (emptyIdx < 0) {
-            items.push({ supplyId: "", supplyName: "", quantity: "", unitCost: "" });
+            items.push(emptyLineItem());
           }
           items[idx] = {
+            ...items[idx],
+            itemKind: "supply",
             supplyId: supply._id,
             supplyName: supply.name,
             quantity: "1",
@@ -218,8 +254,33 @@ function CreatePurchaseModal({
         });
         showToast({ variant: "success", message: `Insumo agregado: ${supply.name}` });
         setShowScanner(false);
+        return;
+      }
+      const product = products.find((p) => (p.sku && p.sku.toUpperCase() === upper) || (p.barcode && p.barcode.toUpperCase() === upper));
+      if (product) {
+        setForm((prev) => {
+          const items = [...prev.items];
+          const emptyIdx = items.findIndex((it) => it.itemKind === "product" && !it.productId);
+          const idx = emptyIdx >= 0 ? emptyIdx : items.length;
+          if (emptyIdx < 0) {
+            items.push(emptyLineItem());
+          }
+          items[idx] = {
+            ...items[idx],
+            itemKind: "product",
+            productId: product._id,
+            productName: product.name,
+            purchaseUnit: product.purchaseUnit || "",
+            purchaseEquivalentQty: String(product.purchaseEquivalentQty ?? 1),
+            quantity: "1",
+            unitCost: "",
+          };
+          return { ...prev, items };
+        });
+        showToast({ variant: "success", message: `Producto agregado: ${product.name}` });
+        setShowScanner(false);
       } else {
-        showToast({ variant: "warning", message: `No se encontró insumo con SKU: ${code}` });
+        showToast({ variant: "warning", message: `No se encontró insumo o producto con SKU: ${code}` });
       }
     },
     onError: (err) => {
@@ -238,10 +299,27 @@ function CreatePurchaseModal({
     });
   };
 
+  const setItemKind = (idx: number, kind: "supply" | "product") => {
+    setForm((prev) => {
+      const items = [...prev.items];
+      items[idx] = {
+        ...items[idx],
+        itemKind: kind,
+        supplyId: kind === "product" ? "" : items[idx].supplyId,
+        supplyName: kind === "product" ? "" : items[idx].supplyName,
+        productId: kind === "supply" ? "" : items[idx].productId,
+        productName: kind === "supply" ? "" : items[idx].productName,
+        purchaseUnit: kind === "supply" ? "" : items[idx].purchaseUnit,
+        purchaseEquivalentQty: kind === "supply" ? "1" : items[idx].purchaseEquivalentQty,
+      };
+      return { ...prev, items };
+    });
+  };
+
   const addLine = () =>
     setForm((prev) => ({
       ...prev,
-      items: [...prev.items, { supplyId: "", supplyName: "", quantity: "", unitCost: "" }],
+      items: [...prev.items, emptyLineItem()],
     }));
 
   const removeLine = (idx: number) =>
@@ -372,38 +450,101 @@ function CreatePurchaseModal({
                 key={idx}
                 className="rounded-2xl border border-divider/15 bg-content2/30 p-4 transition-all hover:border-divider/25"
               >
+                {/* Tipo selector */}
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Tipo</span>
+                  <div className="flex rounded-xl bg-content3/50 p-0.5">
+                    <button
+                      className={`rounded-lg px-3 py-1 text-[11px] font-bold transition-all ${
+                        item.itemKind === "supply"
+                          ? "bg-blue-500 text-white shadow-sm"
+                          : "text-default-500 hover:text-foreground"
+                      }`}
+                      type="button"
+                      onClick={() => setItemKind(idx, "supply")}
+                    >
+                      Insumo
+                    </button>
+                    <button
+                      className={`rounded-lg px-3 py-1 text-[11px] font-bold transition-all ${
+                        item.itemKind === "product"
+                          ? "bg-blue-500 text-white shadow-sm"
+                          : "text-default-500 hover:text-foreground"
+                      }`}
+                      type="button"
+                      onClick={() => setItemKind(idx, "product")}
+                    >
+                      Producto
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
-                    <Autocomplete
-                      aria-label="Insumo"
-                      classNames={{
-                        base: "w-full",
-                        listboxWrapper: "bg-content1",
-                      }}
-                      defaultItems={supplies}
-                      inputValue={item.supplyName}
-                      placeholder="Buscar insumo..."
-                      size="sm"
-                      variant="bordered"
-                      onInputChange={(v) => updateItem(idx, "supplyName", v)}
-                      onSelectionChange={(key) => {
-                        if (!key) return;
-                        const s = supplies.find((sp) => sp._id === String(key));
-                        if (s) {
-                          updateItem(idx, "supplyId", s._id);
-                          updateItem(idx, "supplyName", s.name);
-                          if (!item.unitCost && s.referenceCost) {
-                            updateItem(idx, "unitCost", String(s.referenceCost));
+                    {item.itemKind === "supply" ? (
+                      <Autocomplete
+                        aria-label="Insumo"
+                        classNames={{
+                          base: "w-full",
+                          listboxWrapper: "bg-content1",
+                        }}
+                        defaultItems={supplies}
+                        inputValue={item.supplyName}
+                        placeholder="Buscar insumo..."
+                        size="sm"
+                        variant="bordered"
+                        onInputChange={(v) => updateItem(idx, "supplyName", v)}
+                        onSelectionChange={(key) => {
+                          if (!key) return;
+                          const s = supplies.find((sp) => sp._id === String(key));
+                          if (s) {
+                            updateItem(idx, "supplyId", s._id);
+                            updateItem(idx, "supplyName", s.name);
+                            if (!item.unitCost && s.referenceCost) {
+                              updateItem(idx, "unitCost", String(s.referenceCost));
+                            }
                           }
-                        }
-                      }}
-                    >
-                      {(s) => (
-                        <AutocompleteItem key={s._id}>
-                          {s.name}{s.sku ? ` (${s.sku})` : ""}
-                        </AutocompleteItem>
-                      )}
-                    </Autocomplete>
+                        }}
+                      >
+                        {(s) => (
+                          <AutocompleteItem key={s._id}>
+                            {s.name}{s.sku ? ` (${s.sku})` : ""}
+                          </AutocompleteItem>
+                        )}
+                      </Autocomplete>
+                    ) : (
+                      <Autocomplete
+                        aria-label="Producto"
+                        classNames={{
+                          base: "w-full",
+                          listboxWrapper: "bg-content1",
+                        }}
+                        defaultItems={products.filter(
+                          (p) => !p.type || p.type === "raw_material" || p.type === "both",
+                        )}
+                        inputValue={item.productName}
+                        placeholder="Buscar producto..."
+                        size="sm"
+                        variant="bordered"
+                        onInputChange={(v) => updateItem(idx, "productName", v)}
+                        onSelectionChange={(key) => {
+                          if (!key) return;
+                          const p = products.find((pr) => pr._id === String(key));
+                          if (p) {
+                            updateItem(idx, "productId", p._id);
+                            updateItem(idx, "productName", p.name);
+                            updateItem(idx, "purchaseUnit", p.purchaseUnit || "");
+                            updateItem(idx, "purchaseEquivalentQty", String(p.purchaseEquivalentQty ?? 1));
+                          }
+                        }}
+                      >
+                        {(p) => (
+                          <AutocompleteItem key={p._id}>
+                            {p.name}{p.sku ? ` (${p.sku})` : ""}{p.barcode ? ` · ${p.barcode}` : ""}
+                          </AutocompleteItem>
+                        )}
+                      </Autocomplete>
+                    )}
                   </div>
                   {form.items.length > 1 && (
                     <button
@@ -415,9 +556,33 @@ function CreatePurchaseModal({
                     </button>
                   )}
                 </div>
+
+                {/* Product info (when product selected) */}
+                {item.itemKind === "product" && item.productId && (
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 rounded-xl bg-blue-500/5 px-3 py-2 text-[11px] text-default-500">
+                    <span>
+                      <strong>Unidad de compra:</strong> {item.purchaseUnit || "unidad"}
+                    </span>
+                    <span>
+                      <strong>Equivalencia:</strong> 1 {item.purchaseUnit || "unidad"} ={" "}
+                      {item.purchaseEquivalentQty || "1"} ud. base
+                    </span>
+                    {Number(item.unitCost) > 0 && Number(item.purchaseEquivalentQty) > 0 && (
+                      <span>
+                        <strong>Costo x ud. base:</strong>{" "}
+                        {formatCurrency(Number(item.unitCost) / Number(item.purchaseEquivalentQty), currency)}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Cant.</span>
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">
+                      {item.itemKind === "product" && item.purchaseUnit
+                        ? `Cant. (${item.purchaseUnit})`
+                        : "Cant."}
+                    </span>
                     <input
                       className="corp-input w-full rounded-xl px-3 py-2 text-sm font-mono"
                       min="0.01"
@@ -428,7 +593,11 @@ function CreatePurchaseModal({
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">Costo Unit.</span>
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">
+                      {item.itemKind === "product" && item.purchaseUnit
+                        ? `Costo x ${item.purchaseUnit}`
+                        : "Costo Unit."}
+                    </span>
                     <input
                       className="corp-input w-full rounded-xl px-3 py-2 text-sm font-mono"
                       min="0"
@@ -557,7 +726,6 @@ function CreatePurchaseModal({
         zoomRange={zoomRange}
         zoomValue={zoomValue}
         onZoomChange={applyZoom}
-        debugLog={debugLog}
       />
     </>
   );
@@ -587,6 +755,7 @@ export default function PurchasesPage() {
 
   const { purchase: detailPurchase, loading: detailLoading } = usePurchaseDetail(purchaseId);
   const { supplies } = useSupplies();
+  const { products } = useProducts();
   const { suppliers } = useSuppliers();
 
   const DESKTOP_PAGE_SIZE = 15;
@@ -654,19 +823,13 @@ export default function PurchasesPage() {
       showToast({ variant: "warning", message: "Selecciona un proveedor." });
       return;
     }
-    const validItems = form.items.filter((it) => it.supplyId && Number(it.quantity) > 0 && Number(it.unitCost) >= 0);
-    if (validItems.length === 0) {
-      showToast({ variant: "warning", message: "Agrega al menos un item con insumo, cantidad y costo." });
+    const items = buildPurchaseItemsPayload(form.items);
+    if (items.length === 0) {
+      showToast({ variant: "warning", message: "Agrega al menos un item con insumo/producto, cantidad y costo." });
       return;
     }
-    const subtotal = validItems.reduce((sum, it) => sum + Number(it.quantity) * Number(it.unitCost), 0);
+    const subtotal = items.reduce((sum, it) => sum + it.quantity * it.unitCost, 0);
     const taxAmount = subtotal * (Number(form.tax || 0) / 100);
-    const items: CreatePurchaseItemPayload[] = validItems.map((it) => ({
-      supplyItemId: it.supplyId,
-      quantity: Number(it.quantity),
-      unitCost: Number(it.unitCost),
-      lineTotal: Number(it.quantity) * Number(it.unitCost),
-    }));
     try {
       await createPurchase({
         supplierId: form.supplierId,
@@ -697,7 +860,7 @@ export default function PurchasesPage() {
 
   const handleReceive = async () => {
     if (!purchaseId) return;
-    const confirmed = window.confirm("Al recibir la compra se actualizará el stock de los insumos. ¿Continuar?");
+    const confirmed = window.confirm("Al recibir la compra se actualizará el stock de insumos y productos. ¿Continuar?");
     if (!confirmed) return;
     try {
       await receivePurchase(purchaseId);
@@ -829,7 +992,7 @@ export default function PurchasesPage() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-foreground truncate">
-                          {getSupplyName(item.supply)}
+                          {getItemName(item)}
                         </p>
                         <p className="mt-0.5 text-xs text-default-500 font-mono">
                           {item.quantity} × {formatCurrency(item.unitCost, currency)}
@@ -1044,7 +1207,7 @@ export default function PurchasesPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div className="flex-1 p-6 space-y-5">
           {/* KPI Cards */}
           <div className="grid grid-cols-4 gap-4">
             <div className="stat-card relative overflow-hidden">
@@ -1253,7 +1416,7 @@ export default function PurchasesPage() {
       </div>
 
       {/* ── Mobile layout ──────────────────────────────────────── */}
-      <div className="flex h-full w-full flex-col overflow-y-auto pb-28 lg:hidden">
+      <div className="flex h-full w-full flex-col pb-28 lg:hidden">
         <header className="app-topbar px-6 pt-6 pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1392,6 +1555,7 @@ export default function PurchasesPage() {
         <CreatePurchaseModal
           currency={currency}
           isDesktop={isDesktop}
+          products={products}
           submitting={isCreating}
           suppliers={suppliers}
           supplies={supplies}

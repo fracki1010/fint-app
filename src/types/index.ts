@@ -36,6 +36,17 @@ export interface Supplier {
   updatedAt?: string;
 }
 
+export interface Presentation {
+  _id: string;
+  sku?: string;
+  barcode?: string;
+  name: string;
+  unitOfMeasure: string;
+  price: number;
+  equivalentQty: number;
+  isActive?: boolean;
+}
+
 export interface Product {
   _id: string;
   sku?: string;
@@ -49,6 +60,12 @@ export interface Product {
   category?: string;
   categories?: string[];
   unitOfMeasure?: string;
+  type?: "raw_material" | "finished" | "both";
+  purchaseUnit?: string;
+  purchaseEquivalentQty?: number;
+  costLocked?: boolean;
+  presentations?: Presentation[];
+  matchedPresentation?: Presentation;
   isActive?: boolean;
   deletedAt?: string | null;
   createdAt?: string;
@@ -67,6 +84,7 @@ export type SupplyUnit =
   | "caja"
   | "paquete";
 
+/** @deprecated Use `Product` with `type: "raw_material"` instead */
 export interface Supply {
   _id: string;
   sku?: string | null;
@@ -83,6 +101,7 @@ export interface Supply {
 
 export type SupplyMovementType = "IN" | "OUT" | "ADJUST";
 
+/** @deprecated Use `StockMovement` instead */
 export interface SupplyMovement {
   _id: string;
   supply: Supply | string;
@@ -103,7 +122,8 @@ export type PurchaseStatus = "DRAFT" | "CONFIRMED" | "RECEIVED" | "CANCELLED";
 export type PaymentCondition = "CASH" | "CREDIT";
 
 export interface PurchaseItem {
-  supply: Supply | string;
+  supply?: Supply | string;
+  product?: Product | string;
   quantity: number;
   unitCost: number;
   lineTotal: number;
@@ -197,7 +217,9 @@ export interface TeamMember {
 // ── Recetas ───────────────────────────────────────────────────────────
 
 export interface RecipeIngredient {
-  supply: Supply | string;
+    /** @deprecated Use `product` instead */
+  supply?: Supply | string;
+  product?: Product | string;
   quantity: number;
 }
 
@@ -218,6 +240,7 @@ export type PaymentMethod = "cash" | "card" | "transfer";
 
 export interface QuickSaleItem {
   product: Product;
+  presentation?: Presentation;
   quantity: number;
 }
 

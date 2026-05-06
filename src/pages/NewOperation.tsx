@@ -22,7 +22,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useProductLookupManual } from "@/hooks/useProductLookup";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { Client, Product } from "@/types";
+import { Client, Product, Presentation } from "@/types";
 import { useAppToast } from "@/components/AppToast";
 import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 import { formatCompactCurrency } from "@/utils/currency";
@@ -35,6 +35,7 @@ import {
 
 interface CartItem {
   product: Product;
+  presentation?: Presentation;
   quantity: number;
 }
 
@@ -67,7 +68,6 @@ export default function NewOperationPage() {
     zoomRange,
     zoomValue,
     applyZoom,
-    debugLog,
   } = useBarcodeScanner({
     onScan: (code) => scanHandlerRef.current(code),
     onError: (err) => showToast({ variant: "error", message: err.message }),
@@ -107,46 +107,51 @@ export default function NewOperationPage() {
   const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
-  const addToCart = (product: Product) => {
-    if (!canAddProductToCart(cart, product)) {
+  const addToCart = (product: Product, presentation?: Presentation) => {
+    if (!canAddProductToCart(cart, product, presentation)) {
       showToast({
         variant: "warning",
-        message: `Stock insuficiente para ${product.name}.`,
+        message: `Stock insuficiente para ${product.name}${presentation ? ` (${presentation.name})` : ""}.`,
       });
 
       return;
     }
 
     setCart((prev) => {
-      const existing = prev.find((item) => item.product._id === product._id);
+      const existing = prev.find(
+        (item) =>
+          item.product._id === product._id &&
+          item.presentation?._id === presentation?._id,
+      );
 
       if (existing) {
         return prev.map((item) =>
-          item.product._id === product._id
+          item.product._id === product._id &&
+          item.presentation?._id === presentation?._id
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
       }
 
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, presentation, quantity: 1 }];
     });
     setProductSearch("");
   };
 
-  const updateQuantity = (productId: string, delta: number) => {
+  const updateQuantity = (productId: string, delta: number, presentationId?: string) => {
     setCart((prev) => {
       const next = prev
         .map((item) => {
-          if (item.product._id !== productId) return item;
+          if (item.product._id !== productId || item.presentation?._id !== presentationId) return item;
 
-          const available = getAvailableStock(item.product);
+          const available = getAvailableStock(item.product, item.presentation);
           const proposed = item.quantity + delta;
           const quantity = Math.max(0, Math.min(proposed, available));
 
           if (delta > 0 && proposed > available) {
             showToast({
               variant: "warning",
-              message: `No puedes superar el stock disponible de ${item.product.name}.`,
+              message: `No puedes superar el stock disponible de ${item.product.name}${item.presentation ? ` (${item.presentation.name})` : ""}.`,
             });
           }
 
@@ -197,7 +202,8 @@ export default function NewOperationPage() {
           product: item.product.name,
           productId: item.product._id,
           quantity: item.quantity,
-          price: item.product.price,
+          price: item.presentation?.price ?? item.product.price,
+          ...(item.presentation ? { presentationId: item.presentation._id } : {}),
         })),
         totalAmount: total,
         status: settings?.defaultSalesStatus || "Pendiente",
@@ -229,15 +235,17 @@ export default function NewOperationPage() {
     );
     const product = exact || results[0];
     if (product) {
-      addToCart(product);
-      showToast({ variant: "success", message: `${product.name} agregado` });
+      const presentation = product.matchedPresentation;
+      addToCart(product, presentation);
+      showToast({ variant: "success", message: `${product.name}${presentation ? ` (${presentation.name})` : ""} agregado` });
+      setShowScanner(false);
     } else {
       showToast({ variant: "warning", message: `Producto no encontrado: "${code}"` });
     }
   };
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -382,29 +390,83 @@ export default function NewOperationPage() {
 
             {filteredProducts.length > 0 && (
               <div className="absolute z-[70] mt-2 max-h-48 w-full overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
-                {filteredProducts.map((p) => (
-                  <button
-                    key={p._id}
-                    className="flex w-full items-center justify-between border-b border-divider/60 px-4 py-3 text-left transition hover:bg-content2/60 last:border-0 disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={getAvailableStock(p) <= 0}
-                    onClick={() => addToCart(p)}
-                  >
-                    <div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {p.name}
-                      </span>
-                      <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                        SKU {p.sku || "No definido"}
-                      </p>
-                      <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                        Stock {getAvailableStock(p)}
-                      </p>
+                {filteredProducts.map((p) => {
+                  const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
+                  const singlePresentation = activePresentations.length === 1 ? activePresentations[0] : null;
+                  const hasMultiplePresentations = activePresentations.length > 1;
+
+                  return (
+                    <div key={p._id} className="border-b border-divider/60 last:border-0">
+                      <button
+                        className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
+                          hasMultiplePresentations
+                            ? ""
+                            : getAvailableStock(p, singlePresentation ?? undefined) <= 0
+                              ? "cursor-not-allowed opacity-60"
+                              : "hover:bg-content2/60"
+                        }`}
+                        disabled={!hasMultiplePresentations && getAvailableStock(p, singlePresentation ?? undefined) <= 0}
+                        onClick={() => {
+                          if (hasMultiplePresentations) return;
+                          if (singlePresentation) addToCart(p, singlePresentation);
+                          else addToCart(p);
+                        }}
+                      >
+                        <div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {p.name}
+                          </span>
+                          <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
+                            SKU {p.sku || "No definido"}
+                          </p>
+                          {!hasMultiplePresentations && (
+                            <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
+                              Stock {getAvailableStock(p, singlePresentation ?? undefined)}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold text-primary">
+                          {formatCompactCurrency(singlePresentation ? singlePresentation.price : (p.price ?? 0), currency)}
+                        </span>
+                      </button>
+
+                      {hasMultiplePresentations && (
+                        <div className="space-y-1 px-4 pb-3">
+                          {activePresentations.map((pr) => {
+                            const prAvailable = getAvailableStock(p, pr);
+                            const prCantAdd = prAvailable <= 0;
+
+                            return (
+                              <button
+                                key={pr._id}
+                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
+                                  prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"
+                                }`}
+                                disabled={prCantAdd}
+                                onClick={() => {
+                                  if (!prCantAdd) addToCart(p, pr);
+                                }}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-semibold text-foreground">{pr.name}</span>
+                                  <span className="ml-2 text-default-400">
+                                    {pr.equivalentQty} {p.unitOfMeasure || "u."}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[11px] font-semibold ${prAvailable <= 0 ? "text-danger" : "text-success"}`}>
+                                    {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}
+                                  </span>
+                                  <span className="text-sm font-bold text-primary">{formatCompactCurrency(pr.price, currency)}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-sm font-semibold text-primary">
-                      {formatCompactCurrency(p.price ?? 0, currency)}
-                    </span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -418,47 +480,53 @@ export default function NewOperationPage() {
 
             <div className="divide-y divide-divider/70">
               {cart.length > 0 ? (
-                cart.map((item) => (
-                  <div
-                    key={item.product._id}
-                    className="grid grid-cols-[3fr_1.4fr_1.5fr] items-center gap-2 p-3"
-                  >
-                    <div>
-                      <h4 className="text-[13px] font-semibold text-foreground">
-                        {item.product.name}
-                      </h4>
-                      <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                        SKU {item.product.sku || "N/A"}
-                      </p>
-                      <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                        Disponible {getAvailableStock(item.product)}
-                      </p>
+                cart.map((item) => {
+                  const itemPrice = item.presentation?.price ?? item.product.price;
+                  return (
+                    <div
+                      key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                      className="grid grid-cols-[3fr_1.4fr_1.5fr] items-center gap-2 p-3"
+                    >
+                      <div>
+                        <h4 className="text-[13px] font-semibold text-foreground">
+                          {item.product.name}
+                          {item.presentation && (
+                            <span className="ml-1 text-[10px] font-normal text-default-400">({item.presentation.name})</span>
+                          )}
+                        </h4>
+                        <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
+                          SKU {item.product.sku || "N/A"}
+                        </p>
+                        <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
+                          Disponible {getAvailableStock(item.product, item.presentation)}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-center gap-1 rounded-xl bg-content2/70 py-1 border border-divider/60">
+                        <button
+                          className="text-default-400 hover:text-danger"
+                          onClick={() => updateQuantity(item.product._id, -1, item.presentation?._id)}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="w-6 text-center text-[13px] font-semibold">
+                          {item.quantity}
+                        </span>
+                        <button
+                          className="text-default-400 hover:text-primary"
+                          onClick={() => updateQuantity(item.product._id, 1, item.presentation?._id)}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      <div className="text-right text-[14px] font-semibold text-foreground">
+                        {formatCompactCurrency(
+                          itemPrice * item.quantity,
+                          currency,
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-center gap-1 rounded-xl bg-content2/70 py-1 border border-divider/60">
-                      <button
-                        className="text-default-400 hover:text-danger"
-                        onClick={() => updateQuantity(item.product._id, -1)}
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="w-6 text-center text-[13px] font-semibold">
-                        {item.quantity}
-                      </span>
-                      <button
-                        className="text-default-400 hover:text-primary"
-                        onClick={() => updateQuantity(item.product._id, 1)}
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <div className="text-right text-[14px] font-semibold text-foreground">
-                      {formatCompactCurrency(
-                        (item.product.price ?? 0) * item.quantity,
-                        currency,
-                      )}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="p-8 text-center text-sm italic text-default-400">
                   No hay productos agregados
@@ -570,7 +638,6 @@ export default function NewOperationPage() {
         zoomRange={zoomRange}
         zoomValue={zoomValue}
         onZoomChange={applyZoom}
-        debugLog={debugLog}
       />
     </div>
   );

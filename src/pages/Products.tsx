@@ -35,6 +35,17 @@ import { PaginationBar } from "@/components/PaginationBar";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import BarcodeScanner from "@/components/scanner/BarcodeScanner";
 
+type PresentationFormState = {
+  _id?: string;
+  sku: string;
+  barcode: string;
+  name: string;
+  unitOfMeasure: string;
+  price: string;
+  equivalentQty: string;
+  isActive: boolean;
+};
+
 type ProductFormState = {
   sku: string;
   barcode: string;
@@ -47,7 +58,20 @@ type ProductFormState = {
   categories: string[];
   categoryInput: string;
   unitOfMeasure: string;
+  presentations: PresentationFormState[];
 };
+
+function emptyPresentation(): PresentationFormState {
+  return {
+    sku: "",
+    barcode: "",
+    name: "",
+    unitOfMeasure: "unidad",
+    price: "",
+    equivalentQty: "1",
+    isActive: true,
+  };
+}
 
 const UNIT_OPTIONS = [
   { value: "unidad", label: "Unidad" },
@@ -75,6 +99,7 @@ const emptyForm: ProductFormState = {
   categories: [],
   categoryInput: "",
   unitOfMeasure: "unidad",
+  presentations: [],
 };
 
 function slugifyText(value: string) {
@@ -112,12 +137,14 @@ function ProductFormModal({
   onAddCategory,
   onRemoveCategory,
   existingCategories,
-  
   suggestedPrices,
   onApplySuggestedPrice,
   onClose,
   onSubmit,
   submitting,
+  onAddPresentation,
+  onUpdatePresentation,
+  onRemovePresentation,
 }: {
   mode: "create" | "edit";
   isDesktop: boolean;
@@ -133,6 +160,9 @@ function ProductFormModal({
   onClose: () => void;
   onSubmit: () => void;
   submitting: boolean;
+  onAddPresentation: () => void;
+  onUpdatePresentation: (index: number, field: keyof PresentationFormState, value: string | boolean) => void;
+  onRemovePresentation: (index: number) => void;
 }) {
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -149,7 +179,6 @@ function ProductFormModal({
     zoomRange,
     zoomValue,
     applyZoom,
-    debugLog,
   } = useBarcodeScanner({
     onScan: (code) => {
       onChange("barcode", code);
@@ -362,6 +391,103 @@ function ProductFormModal({
             </Select>
           </label>
         </div>
+
+        {/* Presentations */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-default-500">Presentaciones</span>
+            <button
+              className="rounded-xl bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
+              type="button"
+              onClick={onAddPresentation}
+            >
+              + Agregar
+            </button>
+          </div>
+
+          {formData.presentations.length === 0 && (
+            <p className="text-xs text-default-400">Sin presentaciones. Agregá una para vender el producto en formatos diferentes.</p>
+          )}
+
+          {formData.presentations.map((pres, idx) => (
+            <div key={idx} className="rounded-2xl border border-divider/60 bg-content2/20 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground">Presentación {idx + 1}</span>
+                <button
+                  className="text-xs font-semibold text-danger transition hover:text-danger/80"
+                  type="button"
+                  onClick={() => onRemovePresentation(idx)}
+                >
+                  Eliminar
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  placeholder="Nombre"
+                  value={pres.name}
+                  onChange={(e) => onUpdatePresentation(idx, "name", e.target.value)}
+                />
+                <input
+                  className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  placeholder="SKU"
+                  value={pres.sku}
+                  onChange={(e) => onUpdatePresentation(idx, "sku", e.target.value.toUpperCase())}
+                />
+                <input
+                  className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  placeholder="Código de barras"
+                  value={pres.barcode}
+                  onChange={(e) => onUpdatePresentation(idx, "barcode", e.target.value.toUpperCase())}
+                />
+                <input
+                  className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  min="0"
+                  step="0.01"
+                  placeholder="Precio"
+                  type="number"
+                  value={pres.price}
+                  onChange={(e) => onUpdatePresentation(idx, "price", e.target.value)}
+                />
+                <input
+                  className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  min="0.001"
+                  step="0.001"
+                  placeholder="Cant. equivalente"
+                  type="number"
+                  value={pres.equivalentQty}
+                  onChange={(e) => onUpdatePresentation(idx, "equivalentQty", e.target.value)}
+                />
+                <Select
+                  aria-label="Unidad de medida de la presentación"
+                  classNames={{
+                    base: "w-full",
+                    trigger: "corp-input min-h-[40px] rounded-xl px-3 text-sm text-foreground",
+                    value: "text-foreground",
+                    popoverContent: "bg-content1 text-foreground",
+                    listbox: "bg-content1 text-foreground",
+                  }}
+                  selectedKeys={[pres.unitOfMeasure]}
+                  variant="bordered"
+                  onSelectionChange={(keys) => onUpdatePresentation(idx, "unitOfMeasure", Array.from(keys)[0] as string)}
+                >
+                  {UNIT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-default-500">
+                <input
+                  className="h-4 w-4 rounded border-divider"
+                  type="checkbox"
+                  checked={pres.isActive}
+                  onChange={(e) => onUpdatePresentation(idx, "isActive", e.target.checked)}
+                />
+                Activa
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <BarcodeScanner
@@ -379,7 +505,6 @@ function ProductFormModal({
         zoomRange={zoomRange}
         zoomValue={zoomValue}
         onZoomChange={applyZoom}
-        debugLog={debugLog}
       />
 
       <div className="mt-6 flex shrink-0 gap-3 border-t border-divider/70 pt-4">
@@ -539,10 +664,25 @@ function ProductDetailPanel({
                 <p className="stat-card-value mt-2">{formatCompactCurrency(product.price, currency)}</p>
               </div>
               <div className="stat-card text-center">
-                <p className="stat-card-label">Costo</p>
-                <p className="stat-card-value mt-2">
+                <p className="stat-card-label flex items-center justify-center gap-1.5">
+                  Costo
+                  {product.costLocked && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-blue-500 cursor-help"
+                      title="Calculado automáticamente de las compras"
+                    >
+                      Auto
+                    </span>
+                  )}
+                </p>
+                <p className={`stat-card-value mt-2 ${product.costLocked ? "text-blue-600 dark:text-blue-400" : ""}`}>
                   {product.costPrice != null ? formatCompactCurrency(product.costPrice, currency) : "—"}
                 </p>
+                {product.costLocked && (
+                  <p className="mt-1 text-[10px] text-blue-500/70">
+                    Calculado de compras
+                  </p>
+                )}
               </div>
               <div className={`stat-card text-center ${isOutOfStock ? "border-danger/30 bg-danger/5" : isLowStock ? "border-warning/30 bg-warning/5" : ""}`}>
                 <p className="stat-card-label">Stock</p>
@@ -593,6 +733,29 @@ function ProductDetailPanel({
                 )}
               </div>
             </div>
+
+            {/* Presentations */}
+            {product.presentations && product.presentations.length > 0 && (
+              <div className="stat-card space-y-3">
+                <p className="text-sm font-bold text-foreground">Presentaciones</p>
+                <div className="space-y-2">
+                  {product.presentations.map((pres) => (
+                    <div key={pres._id} className="flex items-center justify-between rounded-xl border border-divider/60 bg-content2/20 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">{pres.name}</p>
+                        <p className="text-[11px] text-default-400">
+                          SKU {pres.sku || "—"} · {pres.equivalentQty} {product.unitOfMeasure || "u."}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-primary">{formatCompactCurrency(pres.price, currency)}</p>
+                        {pres.barcode && <p className="text-[10px] text-default-400">{pres.barcode}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Margin info if cost available */}
             {product.costPrice != null && product.costPrice > 0 && product.price > 0 && (
@@ -745,6 +908,16 @@ export default function ProductsPage() {
               : [],
         categoryInput: "",
         unitOfMeasure: selectedProduct.unitOfMeasure || "unidad",
+        presentations: (selectedProduct.presentations || []).map((p) => ({
+          _id: p._id,
+          sku: p.sku || "",
+          barcode: p.barcode || "",
+          name: p.name,
+          unitOfMeasure: p.unitOfMeasure || "unidad",
+          price: p.price?.toString() || "",
+          equivalentQty: p.equivalentQty?.toString() || "1",
+          isActive: p.isActive !== false,
+        })),
       });
     }
   }, [showEditModal, selectedProduct]);
@@ -854,6 +1027,16 @@ export default function ProductsPage() {
     category: formData.categories[0] || undefined,
     categories: formData.categories,
     unitOfMeasure: formData.unitOfMeasure || "unidad",
+    presentations: formData.presentations.map((p) => ({
+      ...(p._id ? { _id: p._id } : {}),
+      sku: p.sku || undefined,
+      barcode: p.barcode || undefined,
+      name: p.name.trim(),
+      unitOfMeasure: p.unitOfMeasure || "unidad",
+      price: Number(p.price || 0),
+      equivalentQty: Number(p.equivalentQty || 1),
+      isActive: p.isActive,
+    })) as Product["presentations"],
   });
 
   const handleCreateProduct = async () => {
@@ -908,6 +1091,18 @@ export default function ProductsPage() {
   const handleRemoveCategory = (category: string) =>
     setFormData((prev) => ({ ...prev, categories: prev.categories.filter((item) => item !== category) }));
 
+  const handleAddPresentation = () =>
+    setFormData((prev) => ({ ...prev, presentations: [...prev.presentations, emptyPresentation()] }));
+
+  const handleUpdatePresentation = (index: number, field: keyof PresentationFormState, value: string | boolean) =>
+    setFormData((prev) => ({
+      ...prev,
+      presentations: prev.presentations.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    }));
+
+  const handleRemovePresentation = (index: number) =>
+    setFormData((prev) => ({ ...prev, presentations: prev.presentations.filter((_, i) => i !== index) }));
+
   // Mobile: full-screen detail
   if (!isDesktop && productId) {
     return (
@@ -930,11 +1125,14 @@ export default function ProductsPage() {
             suggestedPrices={suggestedPrices}
             suggestedSku={suggestedSku}
             onAddCategory={handleAddCategory}
+            onAddPresentation={handleAddPresentation}
             onApplySuggestedPrice={(value) => handleFormChange("price", value)}
             onChange={handleFormChange}
             onClose={() => setShowEditModal(false)}
             onRemoveCategory={handleRemoveCategory}
+            onRemovePresentation={handleRemovePresentation}
             onSubmit={handleUpdateProduct}
+            onUpdatePresentation={handleUpdatePresentation}
             onUseSuggestedSku={() => handleFormChange("sku", suggestedSku)}
           />
         )}
@@ -1173,11 +1371,14 @@ export default function ProductsPage() {
           suggestedPrices={suggestedPrices}
           suggestedSku={suggestedSku}
           onAddCategory={handleAddCategory}
+          onAddPresentation={handleAddPresentation}
           onApplySuggestedPrice={(value) => handleFormChange("price", value)}
           onChange={handleFormChange}
           onClose={() => { setShowCreateModal(false); resetForm(); }}
           onRemoveCategory={handleRemoveCategory}
+          onRemovePresentation={handleRemovePresentation}
           onSubmit={handleCreateProduct}
+          onUpdatePresentation={handleUpdatePresentation}
           onUseSuggestedSku={() => handleFormChange("sku", suggestedSku)}
         />
       )}
@@ -1191,11 +1392,14 @@ export default function ProductsPage() {
           suggestedPrices={suggestedPrices}
           suggestedSku={suggestedSku}
           onAddCategory={handleAddCategory}
+          onAddPresentation={handleAddPresentation}
           onApplySuggestedPrice={(value) => handleFormChange("price", value)}
           onChange={handleFormChange}
           onClose={() => setShowEditModal(false)}
           onRemoveCategory={handleRemoveCategory}
+          onRemovePresentation={handleRemovePresentation}
           onSubmit={handleUpdateProduct}
+          onUpdatePresentation={handleUpdatePresentation}
           onUseSuggestedSku={() => handleFormChange("sku", suggestedSku)}
         />
       )}
@@ -1205,10 +1409,8 @@ export default function ProductsPage() {
   // Desktop: full-width list + slide-over panel
   if (isDesktop) {
     return (
-      <div className="h-screen overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          {listPanel}
-        </div>
+      <div className="h-full">
+        {listPanel}
 
         {/* Backdrop */}
         <div
@@ -1241,7 +1443,7 @@ export default function ProductsPage() {
 
   // Mobile: full-screen list
   return (
-    <div className="flex min-h-screen flex-col overflow-y-auto bg-background pb-28">
+    <div className="flex min-h-screen flex-col bg-background pb-28">
       {listPanel}
       {modals}
     </div>

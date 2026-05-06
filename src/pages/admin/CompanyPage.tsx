@@ -264,7 +264,7 @@ export default function CompanyPage() {
   const trialDaysLeft = isTrial ? Math.ceil((new Date(trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full">
       <div className="mx-auto max-w-2xl space-y-5 px-4 py-4 lg:max-w-3xl lg:px-6">
         {/* Back + Header */}
         <div className="flex items-center gap-3">

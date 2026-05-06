@@ -1,12 +1,49 @@
 import { useState, useCallback, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Product, PaymentMethod, QuickSaleItem } from "@/types";
+import { Product, Presentation, PaymentMethod, QuickSaleItem } from "@/types";
 import api from "@/api/axios";
 import { useSettings } from "./useSettings";
 import { canAddProductToCart, getAvailableStock, validateCartStock } from "@/utils/stock";
 
 interface UseQuickSaleOptions {
   clientId: string;
+}
+
+interface BuildQuickSalePayloadOptions {
+  clientId: string;
+  items: QuickSaleItem[];
+  total: number;
+  paymentMethod: PaymentMethod;
+  cashReceived: number;
+}
+
+export function buildQuickSalePayload({
+  clientId,
+  items,
+  total,
+  paymentMethod,
+  cashReceived,
+}: BuildQuickSalePayloadOptions) {
+  return {
+    client: clientId,
+    items: items.map((item) => ({
+      product: item.product.name,
+      productId: item.product._id,
+      quantity: item.quantity,
+      price: item.presentation?.price ?? item.product.price,
+      ...(item.presentation ? { presentationId: item.presentation._id } : {}),
+    })),
+    totalAmount: total,
+    status: "Confirmada",
+    salesStatus: "Confirmada",
+    paymentStatus: "Pagado",
+    deliveryStatus: "Entregada",
+    source: "Dashboard",
+    notes:
+      paymentMethod === "cash" && cashReceived > 0
+        ? `Pago rápido - Efectivo recibido: $${cashReceived}`
+        : `Pago rápido - ${paymentMethod}`,
+  };
 }
 
 export function useQuickSale({ clientId }: UseQuickSaleOptions) {
@@ -19,47 +56,60 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
   const currency = settings?.currency || "USD";
   const taxRate = (settings?.taxRate || 0) / 100;
 
-  const addItem = useCallback((product: Product): boolean => {
+  const addItem = useCallback((product: Product, presentation?: Presentation): boolean => {
     let added = true;
     setItems((current) => {
-      if (!canAddProductToCart(current, product)) {
+      if (!canAddProductToCart(current, product, presentation)) {
         added = false;
         return current;
       }
       const existing = current.find(
-        (item) => item.product._id === product._id,
+        (item) =>
+          item.product._id === product._id &&
+          item.presentation?._id === presentation?._id,
       );
       if (existing) {
         return current.map((item) =>
-          item.product._id === product._id
+          item.product._id === product._id &&
+          item.presentation?._id === presentation?._id
             ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
       }
-      return [...current, { product, quantity: 1 }];
+      return [...current, { product, presentation, quantity: 1 }];
     });
     return added;
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number, presentationId?: string) => {
     if (quantity <= 0) {
       setItems((current) =>
-        current.filter((item) => item.product._id !== productId),
+        current.filter(
+          (item) =>
+            !(item.product._id === productId && item.presentation?._id === presentationId),
+        ),
       );
     } else {
       setItems((current) =>
         current.map((item) => {
-          if (item.product._id !== productId) return item;
-          const available = getAvailableStock(item.product);
+          if (
+            item.product._id !== productId ||
+            item.presentation?._id !== presentationId
+          )
+            return item;
+          const available = getAvailableStock(item.product, item.presentation);
           return { ...item, quantity: Math.min(quantity, available) };
         }),
       );
     }
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
+  const removeItem = useCallback((productId: string, presentationId?: string) => {
     setItems((current) =>
-      current.filter((item) => item.product._id !== productId),
+      current.filter(
+        (item) =>
+          !(item.product._id === productId && item.presentation?._id === presentationId),
+      ),
     );
   }, []);
 
@@ -72,7 +122,8 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
   const subtotal = useMemo(
     () =>
       items.reduce(
-        (sum, item) => sum + (item.product.price * item.quantity),
+        (sum, item) =>
+          sum + ((item.presentation?.price ?? item.product.price) * item.quantity),
         0,
       ),
     [items],
@@ -92,25 +143,13 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
-      const orderData = {
-        client: clientId,
-        items: items.map((item) => ({
-          product: item.product.name,
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price,
-        })),
-        totalAmount: total,
-        status: "Confirmada",
-        salesStatus: "Confirmada",
-        paymentStatus: "Pagado",
-        deliveryStatus: "Entregada",
-        source: "Dashboard",
-        notes:
-          paymentMethod === "cash" && cashReceived > 0
-            ? `Pago rápido - Efectivo recibido: $${cashReceived}`
-            : `Pago rápido - ${paymentMethod}`,
-      };
+      const orderData = buildQuickSalePayload({
+        clientId,
+        items,
+        total,
+        paymentMethod,
+        cashReceived,
+      });
       const response = await api.post("/orders", orderData);
       return response.data;
     },

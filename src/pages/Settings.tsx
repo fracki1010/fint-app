@@ -896,7 +896,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="relative mx-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex h-full w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start">

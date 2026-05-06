@@ -4,7 +4,7 @@ import api from "@/api/axios";
 import { Recipe, ProduceResult, ProductionLog } from "@/types";
 
 export interface RecipeIngredientPayload {
-  supply: string;
+  product: string;
   quantity: number;
 }
 

@@ -76,7 +76,7 @@ export default function SupplierAccountPage() {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
+      <div className="flex-1 px-4 py-4 lg:px-6">
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-default-400" size={28} />
