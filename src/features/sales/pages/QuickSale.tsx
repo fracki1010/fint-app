@@ -2,17 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Plus,
-  Minus,
-  Trash2,
   ShoppingCart,
   Loader2,
   User,
-  CheckCircle2,
-  Printer,
   ScanBarcode,
   Search as SearchIcon,
-  DollarSign,
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
 import { useProductSearch, useProductLookupManual } from "@features/products/hooks/useProductLookup";
@@ -26,9 +20,12 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { formatCurrency } from "@shared/utils/currency";
 import { printTicket } from "@features/sales/utils/ticket";
 import { getAvailableStock } from "@features/products/utils/stock";
-import { getPaymentLabel, getPaymentEmoji } from "@features/sales/utils/payment";
+
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
-import { Client, PaymentMethod, Product, Presentation } from "@shared/types";
+import { Client, Product, Presentation } from "@shared/types";
+import SaleSuccessScreen from "@features/sales/components/SaleSuccessScreen";
+import CartItem from "@features/sales/components/CartItem";
+import PaymentSummary from "@features/sales/components/PaymentSummary";
 
 export default function QuickSalePage() {
   const navigate = useNavigate();
@@ -212,42 +209,15 @@ export default function QuickSalePage() {
   const showDropdown = searchFocused && searchQuery.length >= 2;
 
   if (showSuccess) {
-    const successCount = orderResult?.items?.length || itemCount;
-    const successTotal = orderResult?.totalAmount || total;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
-          <CheckCircle2 size={44} className="text-success" />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground">Venta registrada</h1>
-        <p className="mt-2 text-sm text-default-500">
-          {successCount} producto(s) - {formatCurrency(successTotal, currency)}
-        </p>
-        {orderResult?.items && orderResult.items.length > 0 && (
-          <div className="mt-4 max-w-sm w-full space-y-1.5">
-            {orderResult.items.map((item: any, i: number) => (
-              <div key={i} className="flex items-center justify-between text-xs text-default-500 bg-content2/30 rounded-xl px-4 py-2">
-                <span className="truncate font-medium text-foreground">{item.productName || item.product}</span>
-                <span className="tabular-nums">{item.quantity} × {formatCurrency(item.price || 0, currency)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="mt-6 flex gap-3">
-          <button
-            className="rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25"
-            onClick={newSale}
-          >
-            Nueva venta
-          </button>
-          <button
-            className="rounded-2xl border border-divider px-6 py-3 text-sm font-semibold text-default-600"
-            onClick={() => navigate("/")}
-          >
-            Volver al inicio
-          </button>
-        </div>
-      </div>
+      <SaleSuccessScreen
+        orderResult={orderResult}
+        itemCount={itemCount}
+        total={total}
+        currency={currency}
+        onNewSale={newSale}
+        onGoHome={() => navigate("/")}
+      />
     );
   }
 
@@ -551,75 +521,20 @@ export default function QuickSalePage() {
                     e.productId === item.product._id &&
                     (item.presentation ? e.productName.includes(item.presentation.name) : true),
                 );
-                const lowStock = available > 0 && available <= (item.product.minStock || 5);
-                const isWarning = error || (lowStock && item.quantity >= available * 0.8);
+                const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
                 const itemPrice = item.presentation?.price ?? item.product.price;
                 return (
-                  <div
+                  <CartItem
                     key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                    className={`flex items-center gap-3 rounded-2xl border p-3 ${
-                      error
-                        ? "border-danger/40 bg-danger/8"
-                        : isWarning
-                          ? "border-warning/30 bg-warning/8"
-                          : "border-divider/60 bg-content2/40"
-                    }`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">
-                        {item.product.name}
-                        {item.presentation && (
-                          <span className="ml-1 text-xs font-normal text-default-400">({item.presentation.name})</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-default-400">{formatCurrency(itemPrice, currency)} c/u</p>
-                      <p className={`mt-0.5 text-[11px] font-semibold ${
-                        error ? "text-danger" : lowStock ? "text-warning" : "text-default-400"
-                      }`}>
-                        Stock: {available}
-                        {error && ` — ¡solo hay ${error.available}!`}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-danger"
-                        onClick={() => updateQuantity(item.product._id, +(item.quantity - (item.presentation ? 1 : 0.5)).toFixed(1), item.presentation?._id)}
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <input
-                        className={`flex h-7 w-14 items-center justify-center rounded-lg border border-divider/30 bg-transparent px-1 text-center text-sm font-bold outline-none focus:border-primary ${
-                          error ? "text-danger" : "text-foreground"
-                        }`}
-                        type="number"
-                        min="0"
-                        step={item.presentation ? "1" : "0.5"}
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val)) updateQuantity(item.product._id, val, item.presentation?._id);
-                        }}
-                      />
-                      <button
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-primary disabled:opacity-30"
-                        disabled={item.quantity >= available}
-                        onClick={() => updateQuantity(item.product._id, +(item.quantity + (item.presentation ? 1 : 0.5)).toFixed(1), item.presentation?._id)}
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-foreground">
-                        {formatCurrency(itemPrice * item.quantity, currency)}
-                      </p>
-                    </div>
-                    <button
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:text-danger"
-                      onClick={() => removeItem(item.product._id, item.presentation?._id)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                    item={item}
+                    currency={currency}
+                    available={available}
+                    error={error}
+                    isWarning={isWarning}
+                    itemPrice={itemPrice}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={removeItem}
+                  />
                 );
               })}
             </div>
@@ -628,68 +543,22 @@ export default function QuickSalePage() {
       </div>
 
       {/* Payment + total */}
-      <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg">
-        <div className="mb-3 flex gap-2">
-          {(["cash", "card", "transfer"] as PaymentMethod[]).map((method) => (
-            <button
-              key={method}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition ${
-                paymentMethod === method
-                  ? "bg-primary text-white shadow-md shadow-primary/25"
-                  : "bg-content2/70 text-default-500"
-              }`}
-              onClick={() => setPaymentMethod(method)}
-            >
-              {method === "cash" && <DollarSign size={14} />}
-              {getPaymentEmoji(method)}
-              {getPaymentLabel(method)}
-            </button>
-          ))}
-        </div>
-
-        {paymentMethod === "cash" && (
-          <div className="mb-3 flex items-center gap-3">
-            <input
-              className="corp-input flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold"
-              placeholder="Efectivo recibido..."
-              type="number"
-              min="0"
-              step="0.01"
-              value={cashReceived || ""}
-              onChange={(e) => setCashReceived(Number(e.target.value))}
-            />
-            {change > 0 && (
-              <div className="shrink-0 text-right">
-                <p className="text-[11px] text-default-400">Cambio</p>
-                <p className="text-sm font-bold text-success">{formatCurrency(change, currency)}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="mb-3 space-y-1 text-sm">
-          <div className="flex items-center justify-between text-default-500">
-            <span>Subtotal</span>
-            <span>{formatCurrency(subtotal, currency)}</span>
-          </div>
-          <div className="flex items-center justify-between text-default-500">
-            <span>IVA {settings?.taxRate || 0}%</span>
-            <span>{formatCurrency(tax, currency)}</span>
-          </div>
-          <div className="flex items-center justify-between border-t border-divider/60 pt-2 text-base font-bold text-foreground">
-            <span>TOTAL</span>
-            <span className="text-primary">{formatCurrency(total, currency)}</span>
-          </div>
-        </div>
-
-        <button
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:opacity-90 disabled:opacity-40"
-          disabled={!canFinalize || isCreating}
-          onClick={handleFinalize}
-        >
-          {isCreating ? <Loader2 className="animate-spin" size={18} /> : <Printer size={18} />}
-          {isCreating ? "Registrando..." : `Cobrar ${formatCurrency(total, currency)}`}
-        </button>
+      <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg space-y-3">
+        <PaymentSummary
+          paymentMethod={paymentMethod}
+          onChangeMethod={setPaymentMethod}
+          cashReceived={cashReceived}
+          onCashChange={setCashReceived}
+          change={change}
+          subtotal={subtotal}
+          tax={tax}
+          total={total}
+          currency={currency}
+          settings={settings}
+          onCheckout={handleFinalize}
+          isCreating={isCreating}
+          canFinalize={canFinalize}
+        />
       </div>
 
       </div>
@@ -907,47 +776,20 @@ export default function QuickSalePage() {
                     {items.map((item) => {
                       const available = getAvailableStock(item.product, item.presentation);
                       const error = stockErrors.find((e) => e.productId === item.product._id && (item.presentation ? e.productName.includes(item.presentation.name) : true));
-                      const lowStock = available > 0 && available <= (item.product.minStock || 5);
-                      const isWarning = error || (lowStock && item.quantity >= available * 0.8);
+                      const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
                       const itemPrice = item.presentation?.price ?? item.product.price;
                       return (
-                        <div key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                          className={`flex items-center gap-3 rounded-2xl border p-3 ${error ? "border-danger/40 bg-danger/8" : isWarning ? "border-warning/30 bg-warning/8" : "border-divider/60 bg-content2/40"}`}>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-foreground">
-                              {item.product.name}{item.presentation && <span className="ml-1 text-xs font-normal text-default-400">({item.presentation.name})</span>}
-                            </p>
-                            <p className="text-xs text-default-400">{formatCurrency(itemPrice, currency)} c/u</p>
-                            <p className={`mt-0.5 text-[11px] font-semibold ${error ? "text-danger" : lowStock ? "text-warning" : "text-default-400"}`}>
-                              Stock: {available}{error && ` — ¡solo hay ${error.available}!`}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-danger" onClick={() => updateQuantity(item.product._id, +(item.quantity - (item.presentation ? 1 : 0.5)).toFixed(1), item.presentation?._id)}>
-                              <Minus size={14} />
-                            </button>
-                            <input
-                              className={`flex h-7 w-12 items-center justify-center rounded-lg border border-divider/30 bg-transparent px-1 text-center text-sm font-bold outline-none focus:border-primary ${error ? "text-danger" : "text-foreground"}`}
-                              type="number"
-                              min="0"
-                              step={item.presentation ? "1" : "0.5"}
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const val = parseFloat(e.target.value);
-                                if (!isNaN(val)) updateQuantity(item.product._id, val, item.presentation?._id);
-                              }}
-                            />
-                            <button className="flex h-7 w-7 items-center justify-center rounded-lg bg-content2 text-default-500 hover:text-primary disabled:opacity-30" disabled={item.quantity >= available} onClick={() => updateQuantity(item.product._id, +(item.quantity + (item.presentation ? 1 : 0.5)).toFixed(1), item.presentation?._id)}>
-                              <Plus size={14} />
-                            </button>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold text-foreground">{formatCurrency(itemPrice * item.quantity, currency)}</p>
-                          </div>
-                          <button className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:text-danger" onClick={() => removeItem(item.product._id, item.presentation?._id)}>
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        <CartItem
+                          key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                          item={item}
+                          currency={currency}
+                          available={available}
+                          error={error}
+                          isWarning={isWarning}
+                          itemPrice={itemPrice}
+                          onUpdateQuantity={updateQuantity}
+                          onRemove={removeItem}
+                        />
                       );
                     })}
                   </div>
@@ -986,54 +828,21 @@ export default function QuickSalePage() {
 
             {/* Payment + total */}
             <div className="border-t border-divider/60 px-6 py-5 space-y-4 bg-background/80">
-              <div className="space-y-1.5 text-sm">
-                <div className="flex items-center justify-between text-default-500">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(subtotal, currency)}</span>
-                </div>
-                <div className="flex items-center justify-between text-default-500">
-                  <span>IVA {settings?.taxRate || 0}%</span>
-                  <span>{formatCurrency(tax, currency)}</span>
-                </div>
-                <div className="flex items-center justify-between border-t border-divider/40 pt-2 text-base font-bold text-foreground">
-                  <span>TOTAL</span>
-                  <span className="text-primary">{formatCurrency(total, currency)}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {(["cash", "card", "transfer"] as PaymentMethod[]).map((method) => (
-                  <button key={method}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition ${paymentMethod === method ? "bg-primary text-white shadow-md shadow-primary/25" : "bg-content2/70 text-default-500"}`}
-                    onClick={() => setPaymentMethod(method)}
-                  >
-                    {method === "cash" && <DollarSign size={14} />}
-                    {getPaymentEmoji(method)}
-                    {getPaymentLabel(method, true)}
-                  </button>
-                ))}
-              </div>
-
-              {paymentMethod === "cash" && (
-                <div className="flex items-center gap-3">
-                  <input className="corp-input flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold" placeholder="Efectivo recibido..." type="number" min="0" step="0.01" value={cashReceived || ""} onChange={(e) => setCashReceived(Number(e.target.value))} />
-                  {change > 0 && (
-                    <div className="shrink-0 text-right">
-                      <p className="text-[11px] text-default-400">Cambio</p>
-                      <p className="text-sm font-bold text-success">{formatCurrency(change, currency)}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <button
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:opacity-90 disabled:opacity-40"
-                disabled={!canFinalize || isCreating}
-                onClick={handleFinalize}
-              >
-                {isCreating ? <Loader2 className="animate-spin" size={18} /> : <Printer size={18} />}
-                {isCreating ? "Registrando..." : `Cobrar ${formatCurrency(total, currency)}`}
-              </button>
+              <PaymentSummary
+                paymentMethod={paymentMethod}
+                onChangeMethod={setPaymentMethod}
+                cashReceived={cashReceived}
+                onCashChange={setCashReceived}
+                change={change}
+                subtotal={subtotal}
+                tax={tax}
+                total={total}
+                currency={currency}
+                settings={settings}
+                onCheckout={handleFinalize}
+                isCreating={isCreating}
+                canFinalize={canFinalize}
+              />
             </div>
           </div>
         </div>

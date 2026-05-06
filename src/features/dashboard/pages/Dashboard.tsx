@@ -4,14 +4,9 @@ import {
   UserPlus,
   PackagePlus,
   TrendingUp,
-  AlertTriangle,
-  FileText,
   Loader2,
   ArrowUpRight,
-  Wallet,
   Boxes,
-  Users,
-  Activity,
   ReceiptText,
   PackageCheck,
   ChartNoAxesCombined,
@@ -26,36 +21,13 @@ import {
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 
-
-
 import { useDashboard, useDashboardOptionalKpis, useDailySales } from "@features/dashboard/hooks/useDashboard";
 import { useSettings } from "@features/settings/hooks/useSettings";
 import { formatCompactCurrency } from "@shared/utils/currency";
-import { BarChart, HorizontalBar } from "@shared/components/Charts";
-
-function relativeTime(date: string): string {
-  const now = Date.now();
-  const then = new Date(date).getTime();
-  const diffMin = Math.floor((now - then) / 60000);
-  if (diffMin < 1) return "ahora";
-  if (diffMin < 60) return `hace ${diffMin}m`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `hace ${diffH}h`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return `hace ${diffD}d`;
-  return new Date(date).toLocaleDateString();
-}
-
-type Tone = "primary" | "success" | "danger" | "default";
-
-function iconBg(tone: Tone): string {
-  switch (tone) {
-    case "primary": return "bg-primary/12 text-primary";
-    case "success": return "bg-success/12 text-success";
-    case "danger": return "bg-danger/12 text-danger";
-    default: return "bg-content2 text-default-600";
-  }
-}
+import { BarChart } from "@shared/components/Charts";
+import SummaryCards from "@features/dashboard/components/SummaryCards";
+import ChartsSection from "@features/dashboard/components/ChartsSection";
+import RecentActivity from "@features/dashboard/components/RecentActivity";
 
 export default function DashboardPage() {
   const [optionalRangeDays, setOptionalRangeDays] = useState(90);
@@ -404,62 +376,13 @@ export default function DashboardPage() {
         </section>
 
         {/* ── Indicadores: detailed KPI cards ──────────────────────────── */}
-        <section className="lg:col-span-12">
-          <h2 className="mb-3 section-kicker">Indicadores</h2>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="stat-card">
-              <div className="flex items-center justify-between">
-                <span className="stat-card-label">Cobrado</span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Wallet size={14} />
-                </div>
-              </div>
-              <div className="mt-3 stat-card-value">
-                {formatCompactCurrency(dashboard.sales.collectedMonth, currency)}
-              </div>
-              <p className="stat-card-sub">Ingreso efectivo del mes actual.</p>
-            </div>
-
-            <div className="stat-card">
-              <div className="flex items-center justify-between">
-                <span className="stat-card-label">Stock Bajo</span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-danger/10 text-danger">
-                  <AlertTriangle size={14} />
-                </div>
-              </div>
-              <div className="mt-3 stat-card-value text-danger">
-                {dashboard.inventory.lowStockCount.toString().padStart(2, "0")}
-              </div>
-              <p className="stat-card-sub">Productos bajo el minimo operativo.</p>
-            </div>
-
-            <div className="stat-card">
-              <div className="flex items-center justify-between">
-                <span className="stat-card-label">Pendientes</span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
-                  <FileText size={14} />
-                </div>
-              </div>
-              <div className="mt-3 stat-card-value">
-                {dashboard.operations.pendingOrders.toString().padStart(2, "0")}
-              </div>
-              <p className="stat-card-sub">Ordenes abiertas en el circuito.</p>
-            </div>
-
-            <div className="stat-card">
-              <div className="flex items-center justify-between">
-                <span className="stat-card-label">Con Deuda</span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-warning/10 text-warning">
-                  <Users size={14} />
-                </div>
-              </div>
-              <div className="mt-3 stat-card-value">
-                {dashboard.customers.customersWithDebt.toString().padStart(2, "0")}
-              </div>
-              <p className="stat-card-sub">Clientes con saldo pendiente.</p>
-            </div>
-          </div>
-        </section>
+        <SummaryCards
+          collectedMonth={dashboard.sales.collectedMonth}
+          lowStockCount={dashboard.inventory.lowStockCount}
+          pendingOrders={dashboard.operations.pendingOrders}
+          customersWithDebt={dashboard.customers.customersWithDebt}
+          currency={currency}
+        />
 
         {/* ── Operacion + Top Products + Alertas ───────────────────────── */}
         <section className="grid gap-4 lg:col-span-12 lg:grid-cols-2">
@@ -832,108 +755,16 @@ export default function DashboardPage() {
 
         {/* ── Charts: Weekday + Hour + Category ──────────────────────────── */}
         {optionalKpis && (
-          <section className="lg:col-span-12">
-            <h2 className="mb-3 section-kicker">Visualizaciones</h2>
-            <div className="grid gap-4 lg:grid-cols-3">
-              {/* Weekday */}
-              <div className="app-panel rounded-[28px] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">Ventas por Día</h3>
-                </div>
-                <BarChart
-                  data={optionalKpis.salesByWeekday.map((d) => ({
-                    label: d.weekday.slice(0, 3),
-                    value: d.revenue,
-                  }))}
-                  height={120}
-                  color="#8b5cf6"
-                  formatValue={(v) => formatCompactCurrency(v, currency)}
-                />
-              </div>
-
-              {/* Hour */}
-              <div className="app-panel rounded-[28px] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">Ventas por Hora</h3>
-                </div>
-                <BarChart
-                  data={optionalKpis.salesByHour.map((d) => ({
-                    label: `${d.hour}h`,
-                    value: d.revenue,
-                  }))}
-                  height={120}
-                  color="#f59e0b"
-                  formatValue={(v) => formatCompactCurrency(v, currency)}
-                />
-              </div>
-
-              {/* Category */}
-              <div className="app-panel rounded-[28px] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-default-500">Categorías</h3>
-                </div>
-                <div className="space-y-2">
-                  {optionalKpis.salesByCategory.slice(0, 5).map((cat) => (
-                    <HorizontalBar
-                      key={cat.category}
-                      label={cat.category}
-                      value={cat.revenue}
-                      max={optionalKpis.salesByCategory[0]?.revenue || 1}
-                      color="#10b981"
-                      formatValue={(v) => formatCompactCurrency(v, currency)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
+          <ChartsSection
+            salesByWeekday={optionalKpis.salesByWeekday}
+            salesByHour={optionalKpis.salesByHour}
+            salesByCategory={optionalKpis.salesByCategory}
+            currency={currency}
+          />
         )}
 
         {/* ── Activity Feed + Universal KPIs ──────────────────────────── */}
-        <section className="lg:col-span-7">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="section-kicker">Actividad Reciente</h2>
-            <Activity className="text-primary" size={18} />
-          </div>
-
-          <div className="space-y-2">
-            {activityFeed.length > 0 ? (
-              activityFeed.map((entry) => {
-                const Icon = entry.icon;
-                return (
-                  <div
-                    key={entry.id}
-                    className="app-panel rounded-2xl p-3.5 transition-colors hover:bg-content2/70"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg(entry.tone)}`}>
-                        <Icon size={16} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">{entry.title}</p>
-                        <p className="truncate text-xs text-default-500">{entry.subtitle}</p>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-sm font-semibold text-foreground">{entry.amount}</p>
-                        <p className="text-[10px] text-default-400">{relativeTime(entry.createdAt)}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="app-panel rounded-2xl p-6 text-center">
-                <p className="text-sm font-medium text-foreground">
-                  Todavia no hay actividad operativa registrada
-                </p>
-                <p className="mt-2 text-xs text-default-500">
-                  Cuando empieces a vender y mover stock, el tablero se completa
-                  solo.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+        <RecentActivity entries={activityFeed} />
 
         <section className="app-panel rounded-[28px] p-5 lg:col-span-5 lg:self-start">
           <div className="flex items-start justify-between gap-4">
