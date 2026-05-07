@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Barcode,
   Box,
+  DollarSign,
   Filter,
   Hash,
   Layers3,
@@ -22,6 +23,8 @@ import { useProductDetail } from "@features/products/hooks/useProducts";
 import { useStockMovements } from "@features/products/hooks/useStockMovements";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getAvailableStock } from "@features/products/utils/stock";
+import { PriceTier } from "@shared/types";
+import { calculateMargin, getTierDisplayName } from "../utils/priceResolver";
 
 const MOVEMENTS_PREVIEW_LIMIT = 8;
 
@@ -199,6 +202,61 @@ export function ProductDetailPanel({
                     <p className="stat-card-sub">{product.unitOfMeasure || "unidades"}</p>
                   </div>
                 </div>
+
+            {/* Tier Prices */}
+            {product.priceTiers && (
+              <div className="stat-card space-y-3">
+                <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <DollarSign size={16} className="text-primary" />
+                  Precios por lista
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {(['retail', 'wholesale', 'distributor'] as PriceTier[]).map((tier) => {
+                    const price = product.priceTiers?.[tier];
+                    const hasPrice = price !== undefined && price > 0;
+                    const margin = product.costPrice ? calculateMargin(price || 0, product.costPrice) : 0;
+                    const isProfitable = margin > 0;
+
+                    return (
+                      <div
+                        key={tier}
+                        className={`rounded-xl border p-3 text-center ${
+                          hasPrice
+                            ? 'border-divider/40 bg-content2/30'
+                            : 'border-dashed border-divider/30 bg-content2/20'
+                        }`}
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-wider text-default-500 mb-1">
+                          {getTierDisplayName(tier)}
+                        </p>
+                        {hasPrice ? (
+                          <>
+                            <p className="text-lg font-bold text-foreground">
+                              {formatCompactCurrency(price, currency)}
+                            </p>
+                            {product.costPrice && product.costPrice > 0 && (
+                              <p className={`text-xs font-medium mt-1 ${isProfitable ? 'text-success' : 'text-danger'}`}>
+                                {isProfitable ? '+' : ''}{margin.toFixed(1)}% margen
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-default-400 italic">No configurado</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Fallback to base price indicator */}
+                {(!product.priceTiers?.retail && product.price > 0) && (
+                  <div className="rounded-lg bg-content2/50 px-3 py-2 text-xs text-default-500">
+                    <span className="font-medium text-foreground">Precio base: </span>
+                    {formatCompactCurrency(product.price, currency)}
+                    <span className="ml-1">(usado como respaldo)</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Stock alert */}
             {(isOutOfStock || isLowStock) && (
