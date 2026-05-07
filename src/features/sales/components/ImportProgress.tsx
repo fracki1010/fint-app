@@ -7,7 +7,6 @@ import {
   Loader2,
   Clock,
   Package,
-  TrendingUp,
   AlertCircle,
 } from "lucide-react";
 
@@ -115,11 +114,6 @@ export function ImportProgress({ progress, rows }: ImportProgressProps) {
           {validRows.map((row, index) => {
             const isProcessed = index < progress.processed;
             const isCurrent = index === progress.processed;
-            const isSuccess = isProcessed && index < progress.succeeded + (progress.processed - progress.succeeded - progress.failed + progress.succeeded);
-            const isFailed =
-              isProcessed &&
-              progress.failed > 0 &&
-              index >= progress.processed - progress.failed;
 
             // Determine status based on progress counts
             let status: "pending" | "processing" | "success" | "failed" =
@@ -128,12 +122,11 @@ export function ImportProgress({ progress, rows }: ImportProgressProps) {
               status = "processing";
             } else if (isProcessed) {
               // Approximate which rows succeeded vs failed based on counts
-              const processedSoFar = index + 1;
               const successRate =
                 progress.processed > 0
                   ? progress.succeeded / progress.processed
                   : 1;
-              const expectedSuccesses = Math.round(processedSoFar * successRate);
+              const expectedSuccesses = Math.round((index + 1) * successRate);
               status = index < expectedSuccesses ? "success" : "failed";
             }
 
@@ -177,7 +170,7 @@ export function ImportProgress({ progress, rows }: ImportProgressProps) {
 // Sub-components
 
 interface StatCardProps {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number | string; className?: string }>;
   label: string;
   value: number;
   color: "primary" | "success" | "danger" | "warning";

@@ -204,12 +204,16 @@ export default function PurchaseFormItem({
       {/* Presentation selector (when product has presentations) */}
       {item.itemKind === "product" && item.productId && activePresentations.length > 0 && (
         <div className="mt-2">
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">
+            Presentación
+          </label>
           <Select
             aria-label="Presentación"
+            placeholder="Seleccionar presentación..."
             classNames={{
               base: "w-full",
               trigger: "min-h-[40px] rounded-xl border-divider/25 bg-content2/40 px-3 text-sm text-foreground data-[focus=true]:border-blue-500/50",
-              value: "text-foreground",
+              value: "text-foreground font-medium",
               popoverContent: "bg-content1 text-foreground",
             }}
             selectedKeys={item.presentationId ? [item.presentationId] : []}
@@ -233,13 +237,26 @@ export default function PurchaseFormItem({
               }
             }}
           >
-            <>
-              <SelectItem key="">Sin presentación (base)</SelectItem>
-              {activePresentations.map((pr) => (
-                <SelectItem key={pr._id}>{pr.name} ({pr.equivalentQty} {pr.unitOfMeasure})</SelectItem>
-              ))}
-            </>
+            <SelectItem key="" textValue="Sin presentación (base)">
+              <div className="flex flex-col">
+                <span>Sin presentación (base)</span>
+                <span className="text-xs text-default-400">Usar unidad base del producto</span>
+              </div>
+            </SelectItem>
+            {activePresentations.map((pr) => (
+              <SelectItem key={pr._id} textValue={`${pr.name} (${pr.equivalentQty} ${pr.unitOfMeasure})`}>
+                <div className="flex flex-col">
+                  <span className="font-medium">{pr.name}</span>
+                  <span className="text-xs text-default-400">{pr.equivalentQty} {pr.unitOfMeasure}</span>
+                </div>
+              </SelectItem>
+            ))}
           </Select>
+          {item.presentationName && (
+            <p className="mt-1 text-xs text-default-500">
+              Seleccionado: <span className="font-medium text-foreground">{item.presentationName}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -252,10 +269,10 @@ export default function PurchaseFormItem({
             </span>
           )}
           <span>
-            <strong>Unidad de compra:</strong> {item.purchaseUnit || "unidad"}
+            <strong>Unidad de compra:</strong> {item.presentationName || item.purchaseUnit || "unidad"}
           </span>
           <span>
-            <strong>Equivalencia:</strong> 1 {item.purchaseUnit || "unidad"} ={" "}
+            <strong>Equivalencia:</strong> 1 {item.presentationName || item.purchaseUnit || "unidad"} ={" "}
             {item.purchaseEquivalentQty || "1"} ud. base
           </span>
           {Number(item.unitCost) > 0 && Number(item.purchaseEquivalentQty) > 0 && (
@@ -270,8 +287,8 @@ export default function PurchaseFormItem({
       <div className="mt-3 grid grid-cols-3 gap-3">
         <label className="block">
           <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.1em] text-default-400">
-            {item.itemKind === "product" && item.purchaseUnit
-              ? `Cant. (${item.purchaseUnit})`
+            {item.itemKind === "product" && (item.presentationName || item.purchaseUnit)
+              ? `Cant. (${item.presentationName || item.purchaseUnit})`
               : "Cant."}
           </span>
           <input

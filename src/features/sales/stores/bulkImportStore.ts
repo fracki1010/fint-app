@@ -54,6 +54,8 @@ export interface BulkImportActions {
   setParsedRows: (result: CsvParseResult) => void;
   /** Set validated rows after async validation */
   setValidatedRows: (rows: ValidatedRow[]) => void;
+  /** Set current status */
+  setStatus: (status: ImportStatus) => void;
   /** Update import progress */
   updateProgress: (progress: Partial<ImportProgress>) => void;
   /** Start the import phase */
@@ -160,6 +162,10 @@ export const useBulkImportStore = create<BulkImportState & BulkImportActions>(
       });
     },
 
+    setStatus: (status: ImportStatus) => {
+      set({ status });
+    },
+
     updateProgress: (progress: Partial<ImportProgress>) => {
       set((state) => ({
         progress: { ...state.progress, ...progress },
@@ -182,7 +188,7 @@ export const useBulkImportStore = create<BulkImportState & BulkImportActions>(
       });
     },
 
-    markRowSuccess: (rowNumber: number) => {
+    markRowSuccess: (_rowNumber: number) => {
       set((state) => ({
         progress: {
           ...state.progress,

@@ -45,6 +45,8 @@ export interface ValidatedRow {
   productId?: string;
   /** Matched product name (if found) */
   productName?: string;
+  /** Matched product price (if found) */
+  productPrice?: number;
   /** Matched client ID (if found) */
   clientId?: string;
   /** Whether this is a new client that will be created */

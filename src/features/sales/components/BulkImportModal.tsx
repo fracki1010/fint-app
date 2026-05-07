@@ -16,6 +16,9 @@ import {
   ArrowRight,
   RotateCcw,
   Loader2,
+  Download,
+  FileDown,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useBulkSalesImport } from "@features/sales/hooks/useBulkSalesImport";
@@ -23,6 +26,12 @@ import { ImportStatus } from "@features/sales/stores/bulkImportStore";
 import { ImportPreviewTable } from "./ImportPreviewTable";
 import { ImportProgress } from "./ImportProgress";
 import { useAppToast } from "@features/notifications/components/AppToast";
+import {
+  exportFailedRows,
+  downloadImportTemplate,
+  validateImportFile,
+  readFileAsText,
+} from "@features/sales/utils/importExport";
 
 interface BulkImportModalProps {
   isOpen: boolean;
@@ -43,6 +52,7 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
     parse,
     validate,
     importRows,
+    retryFailed,
     reset,
     status,
     progress,
@@ -50,11 +60,13 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
     invalidRowCount,
     validatedRows,
     errorMessage,
-    isProcessing,
+    failedRows,
   } = useBulkSalesImport();
 
   const { showToast } = useAppToast();
   const [parseError, setParseError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const currentStepIndex = getStepIndex(status);
 
@@ -76,20 +88,86 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
   }, [parse, validate]);
 
   const handleImport = useCallback(async () => {
-    const result = await importRows();
+    const result = await importRows({
+      useBulkAPI: true,
+      batchSize: 100,
+    });
 
     if (result.success) {
       showToast({
         variant: "success",
         message: `Se importaron ${result.imported} ventas correctamente.`,
       });
-    } else {
+    } else if (result.imported > 0) {
       showToast({
         variant: "warning",
         message: `Importación parcial: ${result.imported} importadas, ${result.failed} fallidas.`,
       });
+    } else {
+      showToast({
+        variant: "error",
+        message: `La importación falló. No se pudo importar ninguna venta.`,
+      });
     }
   }, [importRows, showToast]);
+
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      const result = await retryFailed();
+
+      if (result.success) {
+        showToast({
+          variant: "success",
+          message: `Se reintentaron ${result.imported} ventas exitosamente.`,
+        });
+      } else {
+        showToast({
+          variant: "warning",
+          message: `${result.imported} exitosas, ${result.failed} siguen fallando.`,
+        });
+      }
+    } catch (error) {
+      showToast({
+        variant: "error",
+        message: "Error al reintentar las ventas fallidas.",
+      });
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [retryFailed, showToast]);
+
+  const handleExportFailed = useCallback(() => {
+    try {
+      exportFailedRows(failedRows.length > 0 ? failedRows : validatedRows.filter(
+        (r) => r.status === "valid" && progress.failed > 0
+      ));
+      showToast({
+        variant: "success",
+        message: "Archivo de filas fallidas descargado.",
+      });
+    } catch {
+      showToast({
+        variant: "error",
+        message: "Error al exportar las filas fallidas.",
+      });
+    }
+  }, [failedRows, validatedRows, progress.failed, showToast]);
+
+  const handleDownloadTemplate = useCallback(() => {
+    try {
+      downloadImportTemplate();
+      showToast({
+        variant: "success",
+        message: "Plantilla descargada. Completá los datos y volvé a subirla.",
+      });
+    } catch {
+      showToast({
+        variant: "error",
+        message: "Error al descargar la plantilla.",
+      });
+    }
+  }, [showToast]);
 
   const handleClose = useCallback(() => {
     if (status === "importing") {
@@ -106,6 +184,44 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
     setParseError(null);
   }, [reset]);
 
+  // File drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+
+    const file = files[0];
+    const validation = validateImportFile(file);
+
+    if (!validation.valid) {
+      setParseError(validation.error || "Archivo inválido");
+      return;
+    }
+
+    try {
+      const content = await readFileAsText(file);
+      setRawText(content);
+      showToast({
+        variant: "success",
+        message: `Archivo "${file.name}" cargado. Presioná Continuar para validar.`,
+      });
+    } catch {
+      setParseError("Error al leer el archivo");
+    }
+  }, [setRawText, showToast]);
+
   const getStepContent = () => {
     switch (status) {
       case "idle":
@@ -116,8 +232,13 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
             rawText={rawText}
             onChange={setRawText}
             onParse={handleParse}
+            onDownloadTemplate={handleDownloadTemplate}
             isLoading={status === "parsing"}
             error={parseError || errorMessage}
+            isDragging={isDragging}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           />
         );
       case "validating":
@@ -138,8 +259,10 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
         return (
           <CompleteStep
             progress={progress}
-            onClose={handleClose}
             onReset={handleReset}
+            onRetry={progress.failed > 0 ? handleRetry : undefined}
+            onExportFailed={progress.failed > 0 ? handleExportFailed : undefined}
+            isRetrying={isRetrying}
           />
         );
       default:
@@ -176,6 +299,7 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
               <button
                 onClick={handleClose}
                 className="flex h-8 w-8 items-center justify-center rounded-xl text-default-400 transition-colors hover:bg-content2 hover:text-foreground"
+                aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
@@ -232,7 +356,6 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
               <HeroButton
                 color="primary"
                 onPress={handleParse}
-                isLoading={status === "parsing"}
                 isDisabled={!rawText.trim()}
               >
                 Continuar
@@ -258,9 +381,21 @@ export function BulkImportModal({ isOpen, onClose }: BulkImportModalProps) {
               </HeroButton>
             </>
           ) : status === "complete" ? (
-            <HeroButton color="primary" onPress={handleClose}>
-              Cerrar
-            </HeroButton>
+            <>
+              {progress.failed > 0 && (
+                <HeroButton
+                  variant="flat"
+                  onPress={handleExportFailed}
+                  className="gap-2"
+                >
+                  <Download size={16} />
+                  Descargar fallidas
+                </HeroButton>
+              )}
+              <HeroButton color="primary" onPress={handleClose}>
+                Cerrar
+              </HeroButton>
+            </>
           ) : null}
         </ModalFooter>
       </ModalContent>
@@ -293,17 +428,50 @@ interface InputStepProps {
   rawText: string;
   onChange: (text: string) => void;
   onParse: () => void;
+  onDownloadTemplate: () => void;
   isLoading: boolean;
   error: string | null;
+  isDragging: boolean;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
 }
 
-function InputStep({ rawText, onChange, isLoading, error }: InputStepProps) {
+function InputStep({
+  rawText,
+  onChange,
+  isLoading,
+  error,
+  onDownloadTemplate,
+  isDragging,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: InputStepProps) {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-dashed border-divider bg-content2/30 p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm text-default-600">
-          <Upload size={16} />
-          <span className="font-medium">Pegá tu CSV o TSV aquí</span>
+      <div
+        className={`rounded-2xl border-2 border-dashed p-4 transition-colors ${
+          isDragging
+            ? "border-primary bg-primary/5"
+            : "border-divider bg-content2/30"
+        }`}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-default-600">
+            <Upload size={16} />
+            <span className="font-medium">Pegá tu CSV o arrastrá un archivo</span>
+          </div>
+          <button
+            onClick={onDownloadTemplate}
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            <FileDown size={14} />
+            Descargar plantilla
+          </button>
         </div>
 
         <textarea
@@ -314,7 +482,14 @@ function InputStep({ rawText, onChange, isLoading, error }: InputStepProps) {
           value={rawText}
           onChange={(e) => onChange(e.target.value)}
           disabled={isLoading}
+          aria-label="Contenido CSV"
         />
+
+        {isDragging && (
+          <div className="mt-3 flex items-center justify-center rounded-xl bg-primary/10 py-4 text-sm text-primary">
+            Soltá el archivo aquí
+          </div>
+        )}
 
         {error && (
           <div className="mt-3 flex items-start gap-2 rounded-xl bg-danger/10 p-3 text-sm text-danger">
@@ -338,7 +513,7 @@ function InputStep({ rawText, onChange, isLoading, error }: InputStepProps) {
           <li className="flex gap-2">
             <span className="text-primary">•</span>
             <span>
-              <strong>cliente:</strong> Nombre o "Nombre,Teléfono"
+              <strong>cliente:</strong> Nombre o &quot;Nombre,Teléfono&quot;
             </span>
           </li>
           <li className="flex gap-2">
@@ -423,11 +598,19 @@ function PreviewStep({
 
 interface CompleteStepProps {
   progress: { total: number; succeeded: number; failed: number };
-  onClose: () => void;
   onReset: () => void;
+  onRetry?: () => void;
+  onExportFailed?: () => void;
+  isRetrying: boolean;
 }
 
-function CompleteStep({ progress, onClose, onReset }: CompleteStepProps) {
+function CompleteStep({
+  progress,
+  onReset,
+  onRetry,
+  onExportFailed,
+  isRetrying,
+}: CompleteStepProps) {
   const allSuccess = progress.failed === 0;
   const hasFailures = progress.failed > 0;
 
@@ -441,7 +624,7 @@ function CompleteStep({ progress, onClose, onReset }: CompleteStepProps) {
         {allSuccess ? (
           <CheckCircle2 size={32} className="text-success" />
         ) : (
-          <AlertCircle size={32} className="text-warning" />
+          <AlertTriangle size={32} className="text-warning" />
         )}
       </div>
 
@@ -468,17 +651,42 @@ function CompleteStep({ progress, onClose, onReset }: CompleteStepProps) {
         )}
       </div>
 
-      <div className="mt-6 flex gap-3">
-        {hasFailures && (
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        {hasFailures && onExportFailed && (
+          <button
+            onClick={onExportFailed}
+            className="flex items-center gap-2 rounded-xl bg-content2 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-content3"
+          >
+            <Download size={16} />
+            Exportar fallidas
+          </button>
+        )}
+        {hasFailures && onRetry && (
+          <button
+            onClick={onRetry}
+            disabled={isRetrying}
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
+          >
+            {isRetrying ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <RotateCcw size={16} />
+            )}
+            Reintentar fallidas
+          </button>
+        )}
+        {!hasFailures && (
           <button
             onClick={onReset}
             className="flex items-center gap-2 rounded-xl bg-content2 px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-content3"
           >
             <RotateCcw size={16} />
-            Intentar de nuevo
+            Importar más
           </button>
         )}
       </div>
     </div>
   );
 }
+
+export default BulkImportModal;

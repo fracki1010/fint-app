@@ -110,6 +110,7 @@ export async function validateRowAsync(
   } else {
     validated.productId = productResult.productId;
     validated.productName = productResult.productName;
+    validated.productPrice = productResult.price;
 
     // Check if we should use product price as fallback
     if (row.precioUnitario === undefined && productResult.price !== undefined) {
