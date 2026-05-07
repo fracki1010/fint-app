@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
-import { Purchase } from "@shared/types";
+import { Purchase, PaymentMethod } from "@shared/types";
+
+export interface PayPurchaseData {
+  amount: number;
+  paymentMethod: PaymentMethod;
+  reference?: string;
+  notes?: string;
+}
 
 // ── Payloads ────────────────────────────────────────────────────────
 
@@ -146,6 +153,26 @@ export function usePurchases(options?: { enabled?: boolean }) {
     isReceiving: receivePurchaseMutation.isPending,
     isCancelling: cancelPurchaseMutation.isPending,
   };
+}
+
+// ── usePayPurchase ─────────────────────────────────────────────────
+
+export function usePayPurchase() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: PayPurchaseData }) => {
+      const response = await api.post(`/purchases/${id}/pay`, data);
+      return response.data;
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["purchases"] });
+      if (result?.data?._id) {
+        queryClient.invalidateQueries({ queryKey: ["purchase", result.data._id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["supplier-account"] });
+    },
+  });
 }
 
 // ── usePurchaseDetail ───────────────────────────────────────────────

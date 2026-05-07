@@ -27,15 +27,17 @@ import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import {
   usePurchases,
   usePurchaseDetail,
+  usePayPurchase,
   buildPurchaseItemsPayload,
 } from "@features/purchases/hooks/usePurchases";
+import type { PayPurchaseData } from "@features/purchases/hooks/usePurchases";
 import { useSupplies } from "@features/supplies/hooks/useSupplies";
 import { useProducts } from "@features/products/hooks/useProducts";
 import { useSuppliers } from "@features/suppliers/hooks/useSuppliers";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@shared/hooks/useMobileHeaderCompact";
 import { useSettings } from "@features/settings/hooks/useSettings";
-import { PurchaseStatus, PaymentCondition } from "@shared/types";
+import { PurchaseStatus, PaymentCondition, PaymentStatus } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCompactCurrency, formatCurrency } from "@shared/utils/currency";
 import { formatDateShort } from "@shared/utils/date";
@@ -68,6 +70,18 @@ const STATUS_DOTS: Record<PurchaseStatus, string> = {
 const PAYMENT_LABELS: Record<PaymentCondition, string> = {
   CASH: "Contado",
   CREDIT: "Crédito 30d",
+};
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: "Pendiente",
+  PAID: "Pagado",
+  PARTIAL: "Parcial",
+};
+
+const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
+  PENDING: "bg-gray-500/15 text-gray-500 dark:text-gray-400",
+  PAID: "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400",
+  PARTIAL: "bg-amber-500/15 text-amber-500 dark:text-amber-400",
 };
 
 const AVATAR_COLORS = [
@@ -556,6 +570,7 @@ export default function PurchasesPage() {
   } = usePurchases();
 
   const { purchase: detailPurchase, loading: detailLoading } = usePurchaseDetail(purchaseId);
+  const payPurchaseMutation = usePayPurchase();
   const { supplies } = useSupplies();
   const { products } = useProducts();
   const { suppliers } = useSuppliers();
@@ -684,6 +699,16 @@ export default function PurchasesPage() {
     }
   };
 
+  const handlePay = async (data: PayPurchaseData) => {
+    if (!purchaseId) return;
+    try {
+      await payPurchaseMutation.mutateAsync({ id: purchaseId, data });
+      showToast({ variant: "success", message: "Pago registrado correctamente." });
+    } catch (error) {
+      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo registrar el pago.") });
+    }
+  };
+
   // ── Detail view ───────────────────────────────────────────────────
 
   if (purchaseId) {
@@ -696,10 +721,12 @@ export default function PurchasesPage() {
         isConfirming={isConfirming}
         isReceiving={isReceiving}
         isCancelling={isCancelling}
+        isPaying={payPurchaseMutation.isPending}
         onBack={() => navigate("/purchases")}
         onConfirm={handleConfirm}
         onReceive={handleReceive}
         onCancel={handleCancel}
+        onPay={handlePay}
       />
     );
   }
@@ -917,9 +944,16 @@ export default function PurchasesPage() {
                             </span>
                           </td>
                           <td className="px-4 py-4">
-                            <span className="text-sm text-default-500">
-                              {PAYMENT_LABELS[purchase.paymentCondition]}
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs text-default-500">
+                                {PAYMENT_LABELS[purchase.paymentCondition]}
+                              </span>
+                              {purchase.paymentStatus && (
+                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.06em] w-fit ${PAYMENT_STATUS_COLORS[purchase.paymentStatus as PaymentStatus] || ""}`}>
+                                  {PAYMENT_STATUS_LABELS[purchase.paymentStatus as PaymentStatus]}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-4 text-right">
                             <span className="text-sm font-bold font-mono text-foreground">
@@ -1052,6 +1086,11 @@ export default function PurchasesPage() {
                         <CreditCard size={10} />
                         {PAYMENT_LABELS[purchase.paymentCondition]}
                       </span>
+                      {purchase.paymentStatus && (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.06em] ${PAYMENT_STATUS_COLORS[purchase.paymentStatus as PaymentStatus] || ""}`}>
+                          {PAYMENT_STATUS_LABELS[purchase.paymentStatus as PaymentStatus]}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

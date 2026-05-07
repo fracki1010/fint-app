@@ -141,12 +141,18 @@ export interface PurchaseItem {
   lineTotal: number;
 }
 
+export type PaymentStatus = "PENDING" | "PAID" | "PARTIAL";
+
 export interface Purchase {
   _id: string;
   supplier: Client | string;
   date: string;
   status: PurchaseStatus;
   paymentCondition: PaymentCondition;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
+  paidAt?: string | null;
+  paidAmount?: number;
   subtotal: number;
   tax: number;
   total: number;
@@ -406,7 +412,7 @@ export interface Recipe {
   updatedAt?: string;
 }
 
-export type PaymentMethod = "cash" | "card" | "transfer";
+export type PaymentMethod = "cash" | "card" | "transfer" | "mercadopago" | "check" | "other";
 
 export interface QuickSaleItem {
   product: Product;
@@ -443,3 +449,32 @@ export interface PriceTierConfig {
 // ── Bulk Import Types ─────────────────────────────────────────────────
 
 export * from "./bulkImport";
+
+// ── Voucher Types ──────────────────────────────────────────────────────
+
+export type VoucherType = 'invoice' | 'delivery_note' | 'receipt';
+export type VoucherStatus = 'active' | 'voided';
+
+export interface Voucher {
+  _id: string;
+  order: string;
+  type: VoucherType;
+  number: string;
+  sequentialNumber: number;
+  filePath: string;
+  fileUrl?: string;
+  status: VoucherStatus;
+  voidReason?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VoucherCounter {
+  _id: string;
+  tenant: string;
+  type: VoucherType;
+  prefix: string;
+  lastNumber: number;
+  year: number;
+}
