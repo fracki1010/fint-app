@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import("@features/dashboard/pages/Dashboard"));
 const ProductsPage = lazy(() => import("@features/products/pages/Products"));
 const ClientsPage = lazy(() => import("@features/clients/pages/Clients"));
 const SalesPage = lazy(() => import("@features/sales/pages/Sales"));
+const CashClosingPage = lazy(() => import("@features/cash-closing/pages/CashClosing"));
 const MovementsPage = lazy(() => import("@features/products/pages/Movements"));
 const MovementDetailPage = lazy(() => import("@features/products/pages/MovementDetail"));
 const SettingsPage = lazy(() => import("@features/settings/pages/Settings"));
@@ -49,6 +50,9 @@ const TenantListPage = lazy(() => import("@features/superadmin/pages/TenantList"
 const TenantCreatePage = lazy(() => import("@features/superadmin/pages/TenantCreate"));
 const TenantDetailPage = lazy(() => import("@features/superadmin/pages/TenantDetail"));
 const AuditLogPage = lazy(() => import("@features/superadmin/pages/AuditLogPage"));
+const BankAccountsPage = lazy(() => import("@features/banking/pages/BankAccounts"));
+const BankTransactionsPage = lazy(() => import("@features/banking/pages/BankTransactions"));
+const ReconciliationPage = lazy(() => import("@features/banking/pages/Reconciliation"));
 
 function FullScreenLoader() {
   return (
@@ -137,6 +141,7 @@ function App() {
           <Route element={<ClientsPage />} path="/clients/:clientId" />
           <Route element={<SalesPage />} path="/sales" />
           <Route element={<SalesPage />} path="/sales/:orderId" />
+          <Route element={<CashClosingPage />} path="/cash-closing" />
           <Route element={<MovementsPage />} path="/movements" />
           <Route
             element={<MovementDetailPage />}
@@ -185,6 +190,9 @@ function App() {
               path="/financial/purchases"
             />
           </Route>
+          <Route element={<PlanGuard feature="banking"><BankAccountsPage /></PlanGuard>} path="/banking" />
+          <Route element={<PlanGuard feature="banking"><BankTransactionsPage /></PlanGuard>} path="/banking/:id/transactions" />
+          <Route element={<PlanGuard feature="banking"><ReconciliationPage /></PlanGuard>} path="/banking/:id/reconciliation" />
           <Route element={<NotFoundPage />} path="*" />
         </Route>
       </Routes>
