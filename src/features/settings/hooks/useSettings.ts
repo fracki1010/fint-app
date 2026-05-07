@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
 import { useThemeStore } from "@shared/stores/themeStore";
+import { PriceTierConfig } from "@shared/types";
 
 export interface Setting {
   _id: string;
@@ -24,6 +25,7 @@ export interface Setting {
   address: string;
   phone: string;
   email: string;
+  supportEmail?: string;
   invoiceTerms?: string;
   taxRate: number;
   currency: string;
@@ -41,6 +43,7 @@ export interface Setting {
   defaultSalesStatus: "Pendiente" | "Confirmada" | "Cancelada";
   defaultPaymentStatus: "Pendiente" | "Parcial" | "Pagado";
   defaultDeliveryStatus: "Pendiente" | "Preparando" | "Entregada";
+  priceTierConfig?: PriceTierConfig;
   createdAt: string;
   updatedAt: string;
 }

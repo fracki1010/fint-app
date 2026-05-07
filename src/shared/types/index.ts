@@ -15,6 +15,7 @@ export interface Client {
   fiscalAddress?: string;
   company?: string;
   notes?: string;
+  priceList?: PriceTier;
   isActive?: boolean;
   deletedAt?: string | null;
   createdAt?: string;
@@ -47,6 +48,14 @@ export interface Presentation {
   isActive?: boolean;
 }
 
+export type PriceTier = "retail" | "wholesale" | "distributor";
+
+export interface PriceTiers {
+  retail?: number;
+  wholesale?: number;
+  distributor?: number;
+}
+
 export interface Product {
   _id: string;
   sku?: string;
@@ -66,6 +75,7 @@ export interface Product {
   costLocked?: boolean;
   presentations?: Presentation[];
   matchedPresentation?: Presentation;
+  priceTiers?: PriceTiers;
   isActive?: boolean;
   deletedAt?: string | null;
   createdAt?: string;
@@ -260,6 +270,14 @@ export interface ProductionLog {
   notes?: string;
   producedBy?: string | null;
   createdAt?: string;
+}
+
+// ── Settings ──────────────────────────────────────────────────────────
+
+export interface PriceTierConfig {
+  retail: { name: string; enabled: boolean };
+  wholesale: { name: string; enabled: boolean };
+  distributor: { name: string; enabled: boolean };
 }
 
 // ── Bulk Import Types ─────────────────────────────────────────────────
