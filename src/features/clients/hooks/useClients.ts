@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
-import { Client } from "@shared/types";
+import { Client, PriceTier } from "@shared/types";
 import { Order } from "@features/sales/hooks/useOrders";
 
 export interface PaginatedClientsResponse {

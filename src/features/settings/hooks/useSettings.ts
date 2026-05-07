@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
 import { useThemeStore } from "@shared/stores/themeStore";
-import { PriceTierConfig } from "@shared/types";
+import type { PriceTierConfig } from "@shared/types";
 
 export interface Setting {
   _id: string;

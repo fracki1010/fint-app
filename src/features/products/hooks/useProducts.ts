@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
-import { Product } from "@shared/types";
+import { Product, PriceTiers } from "@shared/types";
 
 export interface ProductDetailResponse {
   product: Product;
@@ -14,6 +14,7 @@ export interface ProductDetailResponse {
 
 export interface ProductPayload extends Partial<Product> {
   categories?: string[];
+  priceTiers?: PriceTiers;
 }
 
 export interface PaginatedProductsResponse {
