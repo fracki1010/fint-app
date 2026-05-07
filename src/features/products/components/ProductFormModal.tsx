@@ -14,7 +14,9 @@ import {
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
 import { formatCompactCurrency } from "@shared/utils/currency";
+import { PriceTier, PriceTiers } from "@shared/types";
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
+import { ProductTierPriceInput } from "./ProductTierPriceInput";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,7 @@ export type ProductFormState = {
   categoryInput: string;
   unitOfMeasure: string;
   presentations: PresentationFormState[];
+  priceTiers: PriceTiers;
 };
 
 // ── Constants / Helpers ────────────────────────────────────────────────────────
@@ -84,6 +87,11 @@ export const emptyForm: ProductFormState = {
   categoryInput: "",
   unitOfMeasure: "unidad",
   presentations: [],
+  priceTiers: {
+    retail: undefined,
+    wholesale: undefined,
+    distributor: undefined,
+  },
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -124,6 +132,7 @@ export function ProductFormModal({
   onAddPresentation: () => void;
   onUpdatePresentation: (index: number, field: keyof PresentationFormState, value: string | boolean) => void;
   onRemovePresentation: (index: number) => void;
+  tierConfig?: Record<PriceTier, { name: string; enabled: boolean }>;
 }) {
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -354,6 +363,25 @@ export function ProductFormModal({
                 <p className="mt-1 text-[11px] text-default-500">Para calcular margen de ganancia</p>
               </label>
             </div>
+
+            {/* Tier Prices */}
+            <ProductTierPriceInput
+              priceTiers={formData.priceTiers || {}}
+              costPrice={parseFloat(formData.costPrice) || 0}
+              currency={currency}
+              tierConfig={tierConfig}
+              onChange={(tier, value) => {
+                // Handle price tier changes through a custom field update
+                const newPriceTiers = { ...(formData.priceTiers || {}) };
+                if (value === "" || value === undefined) {
+                  delete newPriceTiers[tier];
+                } else {
+                  newPriceTiers[tier] = parseFloat(value) || undefined;
+                }
+                // Use a special field key that parent component will handle
+                onChange(`priceTier_${tier}` as keyof ProductFormState, value);
+              }}
+            />
           </div>
         </div>
 

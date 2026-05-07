@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Building2, Hash, Loader2, Mail, MapPin, Phone, Users, X } from "lucide-react";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
+import { PriceTier } from "@shared/types";
 import { Button } from "./Button";
 import { Input } from "./Input";
+import { ClientPriceListSelector } from "./ClientPriceListSelector";
 
 // ── Types & Constants ────────────────────────────────────────────────────
 
@@ -16,6 +18,7 @@ export type ClientFormState = {
   company: string;
   notes: string;
   debt: string;
+  priceList: PriceTier;
 };
 
 export const emptyForm: ClientFormState = {
@@ -28,6 +31,7 @@ export const emptyForm: ClientFormState = {
   company: "",
   notes: "",
   debt: "0",
+  priceList: "retail",
 };
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -40,6 +44,7 @@ export function ClientFormModal({
   onClose,
   onSubmit,
   submitting,
+  tierConfig,
 }: {
   mode: "create" | "edit";
   isDesktop: boolean;
@@ -48,6 +53,7 @@ export function ClientFormModal({
   onClose: () => void;
   onSubmit: () => void;
   submitting: boolean;
+  tierConfig?: Record<PriceTier, { name: string; enabled: boolean }>;
 }) {
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
@@ -204,6 +210,12 @@ export function ClientFormModal({
           value={formData.debt}
           onChange={(v) => onChange("debt", v)}
           type="number"
+        />
+
+        <ClientPriceListSelector
+          value={formData.priceList}
+          tierConfig={tierConfig}
+          onChange={(tier) => onChange("priceList", tier)}
         />
 
         <label className="block">
