@@ -413,7 +413,7 @@ describe("importExport", () => {
         onload: ((e: { target: { result: string } }) => void) | null = null;
         onerror: (() => void) | null = null;
         
-        readAsText(file: File) {
+        readAsText(_file: File) {
           // Simulate async reading
           setTimeout(() => {
             if (this.onload) {

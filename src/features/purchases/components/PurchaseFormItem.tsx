@@ -237,20 +237,22 @@ export default function PurchaseFormItem({
               }
             }}
           >
-            <SelectItem key="" textValue="Sin presentación (base)">
-              <div className="flex flex-col">
-                <span>Sin presentación (base)</span>
-                <span className="text-xs text-default-400">Usar unidad base del producto</span>
-              </div>
-            </SelectItem>
-            {activePresentations.map((pr) => (
-              <SelectItem key={pr._id} textValue={`${pr.name} (${pr.equivalentQty} ${pr.unitOfMeasure})`}>
+            {[
+              <SelectItem key="" textValue="Sin presentación (base)">
                 <div className="flex flex-col">
-                  <span className="font-medium">{pr.name}</span>
-                  <span className="text-xs text-default-400">{pr.equivalentQty} {pr.unitOfMeasure}</span>
+                  <span>Sin presentación (base)</span>
+                  <span className="text-xs text-default-400">Usar unidad base del producto</span>
                 </div>
-              </SelectItem>
-            ))}
+              </SelectItem>,
+              ...activePresentations.map((pr) => (
+                <SelectItem key={pr._id} textValue={`${pr.name} (${pr.equivalentQty} ${pr.unitOfMeasure})`}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{pr.name}</span>
+                    <span className="text-xs text-default-400">{pr.equivalentQty} {pr.unitOfMeasure}</span>
+                  </div>
+                </SelectItem>
+              ))
+            ]}
           </Select>
           {item.presentationName && (
             <p className="mt-1 text-xs text-default-500">
