@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, CreditCard, ArrowUpRight, ArrowDownLeft, FileText, AlertCircle, Filter, X, Search, Plus, FileDown } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Loader2, CreditCard, ArrowUpRight, ArrowDownLeft, FileText, AlertCircle, Filter, X, Search, Plus, FileDown, CalendarDays } from "lucide-react";
 
-import { useClientAccount, CreateClientPaymentPayload } from "@features/clients/hooks/useClientAccount";
+import { useClientAccount, CreateClientPaymentPayload, useClientAging, useClientCreditStatus } from "@features/clients/hooks/useClientAccount";
 import { useClientDetail } from "@features/clients/hooks/useClients";
 import { useSettings } from "@features/settings/hooks/useSettings";
 import { usePermissions } from "@features/auth/hooks/usePermissions";
@@ -11,6 +11,8 @@ import { formatCurrency, formatCompactCurrency } from "@shared/utils/currency";
 import { formatDate, formatDateTime } from "@shared/utils/date";
 import { getErrorMessage } from "@shared/utils/errors";
 import { ClientAccountEntry, ClientEntryType } from "@shared/types";
+import { CreditLimitAlert } from "@features/clients/components/CreditLimitAlert";
+import { AgingChart } from "@features/clients/components/AgingChart";
 
 // Export utilities (inline to avoid import issues)
 const ENTRY_TYPE_LABELS_EXPORT: Record<ClientEntryType, string> = {
@@ -70,6 +72,8 @@ export default function ClientAccountDetailPage() {
 
   const { client } = useClientDetail(clientId);
   const { entries, balance, loading, createPayment, isCreatingPayment } = useClientAccount(clientId);
+  const { aging } = useClientAging(clientId);
+  const { creditStatus } = useClientCreditStatus(clientId);
   
   const [selectedEntry, setSelectedEntry] = useState<ClientAccountEntry | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -355,13 +359,78 @@ export default function ClientAccountDetailPage() {
       {/* Content */}
       <div className="flex-1 px-4 py-4 lg:px-6 lg:py-6">
         <div className="mx-auto max-w-4xl">
-          {/* Balance Card */}
+          {/* Credit Limit Alert */}
+          {creditStatus && (creditStatus.isNearLimit || creditStatus.isOverLimit) && (
+            <div className="mb-4">
+              <CreditLimitAlert
+                creditStatus={creditStatus}
+                currency={currency}
+                showDismiss={false}
+                variant="card"
+              />
+            </div>
+          )}
+
+          {/* Balance Card with Credit Info */}
           <div className={`rounded-2xl border p-4 mb-4 ${balance > 0 ? "border-danger/20 bg-danger/10" : "border-success/20 bg-success/10"}`}>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">Saldo Total</p>
-            <p className={`mt-1 text-2xl font-bold ${balance > 0 ? "text-danger" : "text-success"}`}>
-              {formatCurrency(Math.abs(balance), currency)}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">Saldo Total</p>
+                <p className={`mt-1 text-2xl font-bold ${balance > 0 ? "text-danger" : "text-success"}`}>
+                  {formatCurrency(Math.abs(balance), currency)}
+                </p>
+              </div>
+              {client?.creditLimit && client.creditLimit > 0 && (
+                <div className="text-right">
+                  <p className="text-[10px] text-default-500">Límite de crédito</p>
+                  <p className="text-sm font-semibold text-foreground">{formatCurrency(client.creditLimit, currency)}</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Credit Progress Bar */}
+            {client?.creditLimit && client.creditLimit > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-default-500">Utilización</span>
+                  <span className={`font-semibold ${
+                    creditStatus?.isOverLimit ? "text-danger" : 
+                    creditStatus?.isNearLimit ? "text-warning" : "text-success"
+                  }`}>
+                    {creditStatus?.utilizationPercentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+                  <div 
+                    className={`h-full rounded-full transition-all ${
+                      creditStatus?.isOverLimit ? "bg-danger" : 
+                      creditStatus?.isNearLimit ? "bg-warning" : "bg-success"
+                    }`}
+                    style={{ width: `${Math.min(creditStatus?.utilizationPercentage || 0, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Aging Breakdown */}
+          {aging && aging.totalOutstanding > 0 && (
+            <div className="rounded-2xl border border-white/10 bg-content2 p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <CalendarDays size={16} className="text-primary" />
+                  Antigüedad de saldos
+                </h3>
+                <Link 
+                  to="/client-account"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Ver reporte completo →
+                </Link>
+              </div>
+              <AgingChart data={aging} currency={currency} type="bar" height={150} />
+            </div>
+          )}
 
           {/* Filtros Rápidos de Fecha */}
           <div className="mb-4">

@@ -47,6 +47,7 @@ export interface Order {
         phone?: string;
         taxId?: string;
         fiscalAddress?: string;
+        priceList?: "retail" | "wholesale" | "distributor";
       };
   items: OrderItem[];
   totalAmount: number;

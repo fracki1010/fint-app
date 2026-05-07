@@ -9,7 +9,9 @@ export interface Client {
   name: string;
   phone: string;
   taxId?: string;
+  /** @deprecated: Use account balance from entries */
   debt?: number;
+  creditLimit?: number;
   email?: string;
   address?: string;
   fiscalAddress?: string;
@@ -189,6 +191,14 @@ export interface SupplierAccount {
 
 export type ClientEntryType = "CHARGE" | "PAYMENT" | "CREDIT_NOTE" | "DEBIT_NOTE";
 
+export type ClientEntryStatus = "pending" | "partial" | "paid" | "cancelled";
+
+export interface Allocation {
+  entryId: string;
+  amount: number;
+  date: string;
+}
+
 export interface ClientAccountEntry {
   _id: string;
   client: string;
@@ -202,11 +212,161 @@ export interface ClientAccountEntry {
   notes: string;
   createdBy?: string | null;
   createdAt?: string;
+  // --- Reconciliation Fields (PR 1: Core Reconciliation) ---
+  dueDate?: string | null;
+  remainingAmount?: number | null;
+  status?: ClientEntryStatus | null;
+  allocations?: Allocation[];
 }
 
 export interface ClientAccount {
   entries: ClientAccountEntry[];
   balance: number;
+}
+
+// --- Payment Allocation Types ---
+
+export interface PaymentAllocationRequest {
+  amount: number;
+  paymentMethod?: string;
+  reference?: string;
+  notes?: string;
+  allocations?: { entryId: string; amount: number }[];
+}
+
+export interface PaymentAllocationResponse {
+  success: boolean;
+  paymentEntry: ClientAccountEntry;
+  allocations: Allocation[];
+  affectedCharges: {
+    entryId: string;
+    amount: number;
+    previousRemaining: number;
+    newRemaining: number;
+    status: ClientEntryStatus;
+  }[];
+  unallocatedAmount: number;
+}
+
+export interface ClientBalanceResponse {
+  clientId: string;
+  balance: number;
+  formattedBalance: string;
+}
+
+export interface PendingChargesResponse {
+  clientId: string;
+  charges: (ClientAccountEntry & {
+    remainingAmount: number;
+    allocatedAmount: number;
+  })[];
+  totalPending: number;
+}
+
+// ── Aging Types ──────────────────────────────────────────────────────────
+
+export interface AgingBucket {
+  bucket: "current" | "1-30" | "31-60" | "61-90" | "90+";
+  total: number;
+  count: number;
+  entries: Array<{
+    _id: string;
+    date: string;
+    dueDate: string;
+    amount: number;
+    remainingAmount: number;
+    daysOverdue: number;
+  }>;
+}
+
+export interface ClientAgingReport {
+  clientId: string;
+  clientName: string;
+  clientPhone?: string;
+  creditLimit?: number;
+  totalOutstanding: number;
+  buckets: {
+    current: number;
+    "1-30": number;
+    "31-60": number;
+    "61-90": number;
+    "90+": number;
+  };
+  entries: AgingBucket[];
+  generatedAt: string;
+}
+
+export interface AllClientsAgingReport {
+  clients: Array<{
+    clientId: string;
+    clientName: string;
+    clientPhone?: string;
+    creditLimit?: number;
+    totalOutstanding: number;
+    buckets: {
+      current: number;
+      "1-30": number;
+      "31-60": number;
+      "61-90": number;
+      "90+": number;
+    };
+  }>;
+  totals: {
+    current: number;
+    "1-30": number;
+    "31-60": number;
+    "61-90": number;
+    "90+": number;
+    totalOutstanding: number;
+  };
+  generatedAt: string;
+}
+
+export interface CreditStatus {
+  clientId: string;
+  clientName: string;
+  creditLimit: number;
+  currentBalance: number;
+  remainingCredit: number | null;
+  utilizationPercentage: number;
+  status: "ok" | "near_limit" | "over_limit" | "no_limit";
+  isNearLimit: boolean;
+  isOverLimit: boolean;
+}
+
+export interface ReceivablesSummary {
+  summary: {
+    totalReceivables: number;
+    totalEntries: number;
+    overdueAmount: number;
+    currentAmount: number;
+  };
+  agingSummary: {
+    current: number;
+    "1-30": number;
+    "31-60": number;
+    "61-90": number;
+    "90+": number;
+    totalOutstanding: number;
+  };
+  topOverdueClients: Array<{
+    clientId: string;
+    clientName: string;
+    clientPhone: string;
+    overdueAmount: number;
+    overdueCount: number;
+    oldestDueDate: string;
+    daysOverdue: number;
+  }>;
+  creditAlerts: Array<{
+    clientId: string;
+    clientName: string;
+    creditLimit: number;
+    currentBalance: number;
+    utilizationPercentage: number;
+    status: "near_limit" | "over_limit";
+  }>;
+  generatedAt: string;
 }
 
 // ── Equipo ────────────────────────────────────────────────────────────

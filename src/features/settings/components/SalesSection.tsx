@@ -1,6 +1,8 @@
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import type { Setting } from "@features/settings/hooks/useSettings";
+import { PriceTierConfigSection } from "./PriceTierConfigSection";
+import { PriceTierConfig } from "@shared/types";
 
 interface SalesSectionProps {
   formData: Partial<Setting>;
@@ -11,8 +13,12 @@ export default function SalesSection({
   formData,
   handleInputChange,
 }: SalesSectionProps) {
+  const handlePriceTierConfigChange = (config: PriceTierConfig) => {
+    handleInputChange("priceTierConfig", config);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label="Prefijo de pedido"
@@ -134,6 +140,14 @@ export default function SalesSection({
           <SelectItem key="Preparando">Preparando</SelectItem>
           <SelectItem key="Entregada">Entregada</SelectItem>
         </Select>
+      </div>
+
+      {/* Price Tier Configuration */}
+      <div className="border-t border-divider/20 pt-6">
+        <PriceTierConfigSection
+          config={formData.priceTierConfig}
+          onChange={handlePriceTierConfigChange}
+        />
       </div>
     </div>
   );

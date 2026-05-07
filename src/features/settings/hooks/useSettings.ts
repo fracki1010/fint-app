@@ -44,6 +44,7 @@ export interface Setting {
   defaultPaymentStatus: "Pendiente" | "Parcial" | "Pagado";
   defaultDeliveryStatus: "Pendiente" | "Preparando" | "Entregada";
   priceTierConfig?: PriceTierConfig;
+  blockOverCreditLimit?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,12 +1,15 @@
 import { useState, useCallback, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Product, Presentation, PaymentMethod, QuickSaleItem } from "@shared/types";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { Product, Presentation, PaymentMethod, QuickSaleItem, PriceTier, CreditStatus } from "@shared/types";
 import api from "@shared/api/axios";
 import { useSettings } from "@features/settings/hooks/useSettings";
 import { canAddProductToCart, getAvailableStock, validateCartStock } from "@features/products/utils/stock";
+import { resolveProductPrice } from "@features/products/utils/priceResolver";
 
 interface UseQuickSaleOptions {
   clientId: string;
+  priceTier?: PriceTier;
+  checkCreditLimit?: boolean;
 }
 
 interface BuildQuickSalePayloadOptions {
@@ -15,6 +18,7 @@ interface BuildQuickSalePayloadOptions {
   total: number;
   paymentMethod: PaymentMethod;
   cashReceived: number;
+  priceTier?: PriceTier;
 }
 
 export function buildQuickSalePayload({
@@ -23,6 +27,7 @@ export function buildQuickSalePayload({
   total,
   paymentMethod,
   cashReceived,
+  priceTier = "retail",
 }: BuildQuickSalePayloadOptions) {
   return {
     client: clientId,
@@ -30,7 +35,8 @@ export function buildQuickSalePayload({
       product: item.product.name,
       productId: item.product._id,
       quantity: item.quantity,
-      price: item.presentation?.price ?? item.product.price,
+      // Use presentation price if available, otherwise resolve tier price
+      price: item.presentation?.price ?? resolveProductPrice(item.product, priceTier),
       ...(item.presentation ? { presentationId: item.presentation._id } : {}),
     })),
     totalAmount: total,
@@ -46,12 +52,23 @@ export function buildQuickSalePayload({
   };
 }
 
-export function useQuickSale({ clientId }: UseQuickSaleOptions) {
+export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit = true }: UseQuickSaleOptions) {
   const [items, setItems] = useState<QuickSaleItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [cashReceived, setCashReceived] = useState<number>(0);
   const { settings } = useSettings();
   const queryClient = useQueryClient();
+
+  // Fetch credit status if enabled and client is selected
+  const { data: creditStatus } = useQuery({
+    queryKey: ["quick-sale-credit", clientId],
+    enabled: checkCreditLimit && Boolean(clientId) && clientId !== "",
+    queryFn: async () => {
+      const response = await api.get<CreditStatus>(`/clients/${clientId}/account/credit-status`);
+      return response.data;
+    },
+    staleTime: 30_000,
+  });
 
   const currency = settings?.currency || "USD";
   const taxRate = (settings?.taxRate || 0) / 100;
@@ -123,10 +140,10 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
     () =>
       items.reduce(
         (sum, item) =>
-          sum + ((item.presentation?.price ?? item.product.price) * item.quantity),
+          sum + (resolveProductPrice(item.product, priceTier) * item.quantity),
         0,
       ),
-    [items],
+    [items, priceTier],
   );
 
   const tax = useMemo(() => subtotal * taxRate, [subtotal, taxRate]);
@@ -149,6 +166,7 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
         total,
         paymentMethod,
         cashReceived,
+        priceTier,
       });
       const response = await api.post("/orders", orderData);
       return response.data;
@@ -163,9 +181,30 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
 
   const stockErrors = useMemo(() => validateCartStock(items), [items]);
 
+  // Credit limit check
+  const creditCheck = useMemo(() => {
+    if (!creditStatus || creditStatus.creditLimit <= 0) {
+      return { isBlocked: false, isWarning: false, remainingCredit: null };
+    }
+
+    const projectedBalance = creditStatus.currentBalance + total;
+    const isOverLimit = projectedBalance > creditStatus.creditLimit;
+    const isNearLimit = !isOverLimit && creditStatus.utilizationPercentage >= 80;
+    const remainingCredit = Math.max(0, creditStatus.creditLimit - projectedBalance);
+
+    return {
+      isBlocked: isOverLimit && settings?.blockOverCreditLimit !== false,
+      isWarning: isNearLimit || isOverLimit,
+      remainingCredit,
+      projectedBalance,
+      creditStatus,
+    };
+  }, [creditStatus, total, settings?.blockOverCreditLimit]);
+
   const canFinalize =
     items.length > 0 &&
     stockErrors.length === 0 &&
+    !creditCheck.isBlocked &&
     (paymentMethod !== "cash" || cashReceived >= total);
 
   return {
@@ -185,6 +224,8 @@ export function useQuickSale({ clientId }: UseQuickSaleOptions) {
     change,
     currency,
     stockErrors,
+    priceTier,
+    creditCheck,
     createOrder: createOrderMutation.mutateAsync,
     orderResult: createOrderMutation.data,
     isCreating: createOrderMutation.isPending,

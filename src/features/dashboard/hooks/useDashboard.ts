@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
+import { ReceivablesSummary } from "@shared/types";
 
 export interface DashboardSummary {
   generatedAt: string;
@@ -238,6 +239,24 @@ export function useDashboardOptionalKpis(days = 90) {
 
   return {
     optionalKpis: data || null,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
+
+export function useReceivables() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["dashboard-receivables"],
+    queryFn: async () => {
+      const response = await api.get<ReceivablesSummary>("/dashboard/receivables");
+      return response.data;
+    },
+    staleTime: 60_000,
+  });
+
+  return {
+    receivables: data || null,
     loading: isLoading,
     error: error?.message || null,
     refetch,

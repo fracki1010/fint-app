@@ -21,13 +21,14 @@ import {
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 
-import { useDashboard, useDashboardOptionalKpis, useDailySales } from "@features/dashboard/hooks/useDashboard";
+import { useDashboard, useDashboardOptionalKpis, useDailySales, useReceivables } from "@features/dashboard/hooks/useDashboard";
 import { useSettings } from "@features/settings/hooks/useSettings";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { BarChart } from "@shared/components/Charts";
 import SummaryCards from "@features/dashboard/components/SummaryCards";
 import ChartsSection from "@features/dashboard/components/ChartsSection";
 import RecentActivity from "@features/dashboard/components/RecentActivity";
+import ReceivablesSummaryCard from "@features/dashboard/components/ReceivablesSummaryCard";
 
 export default function DashboardPage() {
   const [optionalRangeDays, setOptionalRangeDays] = useState(90);
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const { optionalKpis, loading: optionalLoading } =
     useDashboardOptionalKpis(optionalRangeDays);
   const { sales: dailySales, loading: dailyLoading } = useDailySales(7);
+  const { receivables, loading: receivablesLoading } = useReceivables();
   const { settings } = useSettings();
   const currency = settings?.currency || "USD";
 
@@ -498,6 +500,13 @@ export default function DashboardPage() {
 
         {/* ── Purchasing Widgets ─────────────────────────────────────────── */}
         <section className="grid gap-5 lg:grid-cols-3">
+          {/* Cuentas por Cobrar - NEW */}
+          <ReceivablesSummaryCard 
+            data={receivables} 
+            currency={currency}
+            loading={receivablesLoading}
+          />
+
           {/* Insumos con stock bajo */}
           <div className="app-panel rounded-[28px] p-5">
             <div className="mb-4 flex items-center justify-between">

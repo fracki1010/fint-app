@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildQuickSalePayload } from "@features/sales/hooks/useQuickSale";
-import { Product, Presentation, QuickSaleItem } from "@shared/types";
+import { Product, Presentation, QuickSaleItem, PriceTiers } from "@shared/types";
 
 function buildProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -113,5 +113,82 @@ describe("buildQuickSalePayload", () => {
     expect(payload.items).toHaveLength(2);
     expect(payload.items[0]).not.toHaveProperty("presentationId");
     expect(payload.items[1].presentationId).toBe("pres-b");
+  });
+
+  it("usa precio de tier mayorista cuando se especifica", () => {
+    const priceTiers: PriceTiers = {
+      retail: 100,
+      wholesale: 80,
+      distributor: 60,
+    };
+    const product = buildProduct({ _id: "p-1", name: "Producto", price: 100, priceTiers });
+    const items: QuickSaleItem[] = [{ product, quantity: 2 }];
+
+    const payload = buildQuickSalePayload({
+      clientId: "client-1",
+      items,
+      total: 160,
+      paymentMethod: "cash",
+      cashReceived: 200,
+      priceTier: "wholesale",
+    });
+
+    expect(payload.items[0].price).toBe(80);
+  });
+
+  it("usa precio de tier distribuidor cuando se especifica", () => {
+    const priceTiers: PriceTiers = {
+      retail: 100,
+      wholesale: 80,
+      distributor: 60,
+    };
+    const product = buildProduct({ _id: "p-1", name: "Producto", price: 100, priceTiers });
+    const items: QuickSaleItem[] = [{ product, quantity: 1 }];
+
+    const payload = buildQuickSalePayload({
+      clientId: "client-1",
+      items,
+      total: 60,
+      paymentMethod: "transfer",
+      cashReceived: 0,
+      priceTier: "distributor",
+    });
+
+    expect(payload.items[0].price).toBe(60);
+  });
+
+  it("hace fallback a retail cuando el tier solicitado no existe", () => {
+    const priceTiers: PriceTiers = {
+      retail: 100,
+    };
+    const product = buildProduct({ _id: "p-1", name: "Producto", price: 100, priceTiers });
+    const items: QuickSaleItem[] = [{ product, quantity: 1 }];
+
+    const payload = buildQuickSalePayload({
+      clientId: "client-1",
+      items,
+      total: 100,
+      paymentMethod: "cash",
+      cashReceived: 100,
+      priceTier: "wholesale", // Tier not available
+    });
+
+    expect(payload.items[0].price).toBe(100); // Falls back to retail
+  });
+
+  it("hace fallback a legacy price cuando no hay tiers definidos", () => {
+    const product = buildProduct({ _id: "p-1", name: "Producto", price: 150 });
+    const items: QuickSaleItem[] = [{ product, quantity: 1 }];
+
+    const payload = buildQuickSalePayload({
+      clientId: "client-1",
+      items,
+      total: 150,
+      paymentMethod: "cash",
+      cashReceived: 150,
+      priceTier: "wholesale",
+    });
+
+    expect(payload.items[0].price).toBe(150); // Uses legacy price
   });
 });

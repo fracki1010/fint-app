@@ -6,7 +6,13 @@ import {
 } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
-import { Client } from "@shared/types";
+import {
+  Client,
+  PaymentAllocationRequest,
+  PaymentAllocationResponse,
+  ClientBalanceResponse,
+  PendingChargesResponse,
+} from "@shared/types";
 import { Order } from "@features/sales/hooks/useOrders";
 
 export interface PaginatedClientsResponse {
@@ -207,6 +213,84 @@ export function useClientDetail(id?: string) {
     client: data?.client || null,
     orders: data?.orders || [],
     metrics: data?.metrics || null,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
+
+// ── Payment Allocation (PR 1: Core Reconciliation) ────────────────────────
+
+export function useAllocatePayment(clientId?: string) {
+  const queryClient = useQueryClient();
+
+  const allocateMutation = useMutation({
+    mutationFn: async (data: PaymentAllocationRequest) => {
+      if (!clientId) throw new Error("Client ID is required");
+
+      const response = await api.post<PaymentAllocationResponse>(
+        `/clients/${clientId}/account/allocate`,
+        data,
+      );
+
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate client account queries
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ["client", clientId, "account"] });
+        queryClient.invalidateQueries({ queryKey: ["client", clientId, "balance"] });
+        queryClient.invalidateQueries({ queryKey: ["client", clientId, "pending-charges"] });
+        queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      }
+    },
+  });
+
+  return {
+    allocatePayment: allocateMutation.mutateAsync,
+    isAllocating: allocateMutation.isPending,
+    error: allocateMutation.error?.message || null,
+  };
+}
+
+export function useClientBalance(clientId?: string) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["client", clientId, "balance"],
+    enabled: Boolean(clientId),
+    queryFn: async () => {
+      const response = await api.get<ClientBalanceResponse>(
+        `/clients/${clientId}/account/balance`,
+      );
+
+      return response.data;
+    },
+  });
+
+  return {
+    balance: data?.balance ?? null,
+    formattedBalance: data?.formattedBalance ?? null,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
+
+export function usePendingCharges(clientId?: string) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["client", clientId, "pending-charges"],
+    enabled: Boolean(clientId),
+    queryFn: async () => {
+      const response = await api.get<PendingChargesResponse>(
+        `/clients/${clientId}/account/pending-charges`,
+      );
+
+      return response.data;
+    },
+  });
+
+  return {
+    charges: data?.charges ?? [],
+    totalPending: data?.totalPending ?? 0,
     loading: isLoading,
     error: error?.message || null,
     refetch,

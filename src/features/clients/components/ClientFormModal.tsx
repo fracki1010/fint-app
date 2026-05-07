@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Building2, Hash, Loader2, Mail, MapPin, Phone, Users, X } from "lucide-react";
+import { Building2, CreditCard, Hash, Loader2, Mail, MapPin, Phone, Users, X } from "lucide-react";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 import { PriceTier } from "@shared/types";
 import { Button } from "./Button";
@@ -18,6 +18,7 @@ export type ClientFormState = {
   company: string;
   notes: string;
   debt: string;
+  creditLimit: string;
   priceList: PriceTier;
 };
 
@@ -31,6 +32,7 @@ export const emptyForm: ClientFormState = {
   company: "",
   notes: "",
   debt: "0",
+  creditLimit: "0",
   priceList: "retail",
 };
 
@@ -205,12 +207,22 @@ export function ClientFormModal({
           icon={MapPin}
         />
 
-        <Input
-          label="Deuda inicial"
-          value={formData.debt}
-          onChange={(v) => onChange("debt", v)}
-          type="number"
-        />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Input
+            label="Deuda inicial"
+            value={formData.debt}
+            onChange={(v) => onChange("debt", v)}
+            type="number"
+          />
+          <Input
+            label="Límite de crédito"
+            value={formData.creditLimit}
+            onChange={(v) => onChange("creditLimit", v)}
+            placeholder="0 = Sin límite"
+            type="number"
+            icon={CreditCard}
+          />
+        </div>
 
         <ClientPriceListSelector
           value={formData.priceList}

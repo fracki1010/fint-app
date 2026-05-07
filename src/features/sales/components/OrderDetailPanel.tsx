@@ -25,6 +25,8 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { downloadOrderInvoicePdf } from "@features/sales/utils/invoice";
 import { getClientName, getClientPhone } from "@shared/utils/entity";
 import { StatusBadge } from "@shared/components/StatusBadge";
+import { TierBadge } from "@features/sales/components/TierBadge";
+import { PriceTier } from "@shared/types";
 
 const MOVEMENTS_PREVIEW_LIMIT = 8;
 
@@ -175,7 +177,16 @@ export function OrderDetailPanel({
             {/* Client + amount */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
-                <p className="section-kicker">Cliente</p>
+                <div className="flex items-center justify-between">
+                  <p className="section-kicker">Cliente</p>
+                  {(() => {
+                    const client = typeof selectedOrder.client === "object" ? selectedOrder.client : null;
+                    const tier = client?.priceList || "retail";
+                    return tier !== "retail" ? (
+                      <TierBadge tier={tier as PriceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+                    ) : null;
+                  })()}
+                </div>
                 <p className="mt-2 font-semibold text-foreground">{getClientName(selectedOrder.client)}</p>
                 <p className="mt-0.5 text-xs text-default-400">{getClientPhone(selectedOrder.client)}</p>
               </div>

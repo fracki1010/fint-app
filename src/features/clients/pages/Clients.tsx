@@ -368,6 +368,7 @@ export default function ClientsPage() {
         notes: selectedClient.notes || "",
         debt: selectedClient.debt?.toString() || "0",
         priceList: selectedClient.priceList || "retail",
+        creditLimit: selectedClient.creditLimit?.toString() || "0",
       });
     }
   }, [isEditOpen, selectedClient]);

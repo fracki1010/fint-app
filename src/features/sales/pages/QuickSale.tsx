@@ -20,6 +20,9 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { formatCurrency } from "@shared/utils/currency";
 import { printTicket } from "@features/sales/utils/ticket";
 import { getAvailableStock } from "@features/products/utils/stock";
+import { resolveProductPrice } from "@features/products/utils/priceResolver";
+import { TierBadge } from "@features/sales/components/TierBadge";
+import { CreditLimitAlert } from "@features/clients/components/CreditLimitAlert";
 
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import { Client, Product, Presentation } from "@shared/types";
@@ -51,6 +54,7 @@ export default function QuickSalePage() {
   }, [genericClient, selectedClient]);
 
   const clientId = selectedClient?._id || genericClient?._id || "";
+  const clientPriceTier = selectedClient?.priceList || "retail";
 
   const {
     items,
@@ -69,11 +73,13 @@ export default function QuickSalePage() {
     change,
     currency,
     stockErrors,
+    priceTier,
+    creditCheck,
     createOrder,
     isCreating,
     canFinalize,
     orderResult,
-  } = useQuickSale({ clientId });
+  } = useQuickSale({ clientId, priceTier: clientPriceTier });
 
   const { searchProducts } = useProductLookupManual();
   const { products: searchResults, loading: searching } = useProductSearch(
@@ -318,7 +324,7 @@ export default function QuickSalePage() {
                         )}
                       </div>
                       <div className="ml-3 shrink-0 text-right">
-                        <p className="text-sm font-bold text-primary">{formatCurrency(p.price, currency)}</p>
+                        <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
                         {!hasPresentations && (
                           <p className="text-[10px] text-default-400">{p.unitOfMeasure || "ud."}</p>
                         )}
@@ -349,7 +355,7 @@ export default function QuickSalePage() {
                               {baseOutOfStock ? "Sin stock" : `${baseAvailable} disp.`}
                               {baseInCart > 0 && ` · ${baseInCart} en carrito`}
                             </span>
-                            <span className="text-sm font-bold text-primary">{formatCurrency(p.price, currency)}</span>
+                            <span className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</span>
                           </div>
                         </button>
 
@@ -406,7 +412,10 @@ export default function QuickSalePage() {
         >
           <User size={15} className="shrink-0 text-default-400" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-default-500">Cliente</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-default-500">Cliente</p>
+              <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+            </div>
             <p className="truncate text-sm font-semibold text-foreground">
               {selectedClient?.name || "Consumidor Final"}
             </p>
@@ -522,7 +531,7 @@ export default function QuickSalePage() {
                     (item.presentation ? e.productName.includes(item.presentation.name) : true),
                 );
                 const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                const itemPrice = item.presentation?.price ?? item.product.price;
+                const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
                 return (
                   <CartItem
                     key={`${item.product._id}-${item.presentation?._id || "base"}`}
@@ -541,6 +550,18 @@ export default function QuickSalePage() {
           </>
         )}
       </div>
+
+      {/* Credit Limit Warning */}
+      {creditCheck.isWarning && creditCheck.creditStatus && (
+        <div className="px-4 pt-2">
+          <CreditLimitAlert
+            creditStatus={creditCheck.creditStatus}
+            currency={currency}
+            showDismiss={false}
+            variant="banner"
+          />
+        </div>
+      )}
 
       {/* Payment + total */}
       <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg space-y-3">
@@ -643,7 +664,7 @@ export default function QuickSalePage() {
                               )}
                             </div>
                             <div className="ml-3 shrink-0 text-right">
-                              <p className="text-sm font-bold text-primary">{formatCurrency(p.price, currency)}</p>
+                              <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
                               {!hasPresentations && <p className="text-[10px] text-default-400">{p.unitOfMeasure || "ud."}</p>}
                             </div>
                           </button>
@@ -660,10 +681,10 @@ export default function QuickSalePage() {
                                   <span className="ml-2 text-default-400">{p.unitOfMeasure || "ud."}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className={`text-[11px] font-semibold ${baseOutOfStock ? "text-danger" : baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"}`}>
-                                    {baseOutOfStock ? "Sin stock" : `${baseAvailable} disp.`}{baseInCart > 0 && ` · ${baseInCart} en carrito`}
-                                  </span>
-                                  <span className="text-sm font-bold text-primary">{formatCurrency(p.price, currency)}</span>
+                                   <span className={`text-[11px] font-semibold ${baseOutOfStock ? "text-danger" : baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"}`}>
+                                     {baseOutOfStock ? "Sin stock" : `${baseAvailable} disp.`}{baseInCart > 0 && ` · ${baseInCart} en carrito`}
+                                   </span>
+                                   <span className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</span>
                                 </div>
                               </button>
 
@@ -706,7 +727,10 @@ export default function QuickSalePage() {
               <button className="flex w-full items-center gap-2 text-left" onClick={() => setShowClientSearch(!showClientSearch)}>
                 <User size={15} className="shrink-0 text-default-400" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-default-500">Cliente</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-default-500">Cliente</p>
+                    <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+                  </div>
                   <p className="truncate text-sm font-semibold text-foreground">{selectedClient?.name || "Consumidor Final"}</p>
                 </div>
                 <span className="text-xs text-primary">Cambiar</span>
@@ -776,20 +800,20 @@ export default function QuickSalePage() {
                     {items.map((item) => {
                       const available = getAvailableStock(item.product, item.presentation);
                       const error = stockErrors.find((e) => e.productId === item.product._id && (item.presentation ? e.productName.includes(item.presentation.name) : true));
-                      const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                      const itemPrice = item.presentation?.price ?? item.product.price;
-                      return (
-                        <CartItem
-                          key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                          item={item}
-                          currency={currency}
-                          available={available}
-                          error={error}
-                          isWarning={isWarning}
-                          itemPrice={itemPrice}
-                          onUpdateQuantity={updateQuantity}
-                          onRemove={removeItem}
-                        />
+                       const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
+                       const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
+                       return (
+                         <CartItem
+                           key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                           item={item}
+                           currency={currency}
+                           available={available}
+                           error={error}
+                           isWarning={isWarning}
+                           itemPrice={itemPrice}
+                           onUpdateQuantity={updateQuantity}
+                           onRemove={removeItem}
+                         />
                       );
                     })}
                   </div>
@@ -807,8 +831,8 @@ export default function QuickSalePage() {
                 <p className="text-sm text-default-400 text-center py-8">Agregá productos al carrito</p>
               ) : (
                 <div className="space-y-3">
-                  {items.map((item) => {
-                    const itemPrice = item.presentation?.price ?? item.product.price;
+                   {items.map((item) => {
+                    const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
                     return (
                       <div key={`sum-${item.product._id}-${item.presentation?._id || "base"}`} className="flex items-center justify-between text-sm">
                         <div className="min-w-0 flex-1">
@@ -825,6 +849,18 @@ export default function QuickSalePage() {
                 </div>
               )}
             </div>
+
+            {/* Credit Limit Warning */}
+            {creditCheck.isWarning && creditCheck.creditStatus && (
+              <div className="px-6 pt-4">
+                <CreditLimitAlert
+                  creditStatus={creditCheck.creditStatus}
+                  currency={currency}
+                  showDismiss={false}
+                  variant="banner"
+                />
+              </div>
+            )}
 
             {/* Payment + total */}
             <div className="border-t border-divider/60 px-6 py-5 space-y-4 bg-background/80">
