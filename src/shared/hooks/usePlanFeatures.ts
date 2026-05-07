@@ -34,7 +34,7 @@ export function usePlanFeatures() {
   const { user } = useAuth();
   const tenant = user?.tenant;
   const plan = tenant?.plan || "essential";
-  const features = tenant?.enabledFeatures || FEATURE_MATRIX[plan] || [];
+  const features = tenant?.enabledFeatures ?? FEATURE_MATRIX[plan] ?? [];
   const limits = tenant?.limits;
   const usage = tenant?.usage;
 

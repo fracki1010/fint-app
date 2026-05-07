@@ -88,6 +88,7 @@ export function useSupplierAccount(supplierId?: string) {
   });
 
   return {
+    data,
     entries: data?.entries || [],
     balance: data?.balance || 0,
     loading,

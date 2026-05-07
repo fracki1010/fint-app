@@ -191,6 +191,23 @@ export interface SupplierAccountEntry {
 export interface SupplierAccount {
   entries: SupplierAccountEntry[];
   balance: number;
+  totalDebt?: number;
+  totalPaid?: number;
+  aging?: {
+    current: number;
+    days30: number;
+    days60: number;
+    days90plus: number;
+  };
+  pendingPurchases?: Array<{
+    _id: string;
+    date: string;
+    total: number;
+    paidAmount?: number;
+    paymentStatus: string;
+    paymentCondition: string;
+    status: string;
+  }>;
 }
 
 // ── Cuenta Corriente Cliente ──────────────────────────────────────────

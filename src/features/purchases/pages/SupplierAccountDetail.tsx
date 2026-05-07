@@ -69,7 +69,7 @@ export default function SupplierAccountDetailPage() {
   const currency = settings?.currency || "USD";
 
   const { supplier } = useSupplierDetail(supplierId);
-  const { entries, balance, loading, createPayment, isCreatingPayment } = useSupplierAccount(supplierId);
+  const { data, entries, balance, loading, createPayment, isCreatingPayment } = useSupplierAccount(supplierId);
   
   const [selectedEntry, setSelectedEntry] = useState<SupplierAccountEntry | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -348,13 +348,95 @@ export default function SupplierAccountDetailPage() {
       {/* Content */}
       <div className="flex-1 px-4 py-4 lg:px-6 lg:py-6">
         <div className="mx-auto max-w-4xl">
-          {/* Balance Card */}
-          <div className={`rounded-2xl border p-4 mb-4 ${balance > 0 ? "border-danger/20 bg-danger/10" : "border-success/20 bg-success/10"}`}>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">Saldo Total</p>
-            <p className={`mt-1 text-2xl font-bold ${balance > 0 ? "text-danger" : "text-success"}`}>
-              {formatCurrency(Math.abs(balance), currency)}
-            </p>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="rounded-2xl border border-danger/20 bg-danger/10 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-danger/70">Deuda Total</p>
+              <p className="mt-1 text-xl font-bold text-danger">
+                {formatCurrency(data?.totalDebt || 0, currency)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-success/20 bg-success/10 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-success/70">Total Pagado</p>
+              <p className="mt-1 text-xl font-bold text-success">
+                {formatCurrency(data?.totalPaid || 0, currency)}
+              </p>
+            </div>
+            <div className={`rounded-2xl border p-3 ${balance > 0 ? "border-danger/20 bg-danger/5" : "border-success/20 bg-success/5"}`}>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-default-500">Saldo</p>
+              <p className={`mt-1 text-xl font-bold ${balance > 0 ? "text-danger" : "text-success"}`}>
+                {formatCurrency(Math.abs(balance), currency)}
+                <span className="text-xs font-normal ml-1">{balance > 0 ? "(Debe)" : "(A Favor)"}</span>
+              </p>
+            </div>
+            <div className="rounded-2xl border border-warning/20 bg-warning/10 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-warning/70">Compras Pend.</p>
+              <p className="mt-1 text-xl font-bold text-warning">
+                {data?.pendingPurchases?.length || 0}
+              </p>
+            </div>
           </div>
+
+          {/* Aging Breakdown */}
+          {data?.aging && (data.aging.days30 > 0 || data.aging.days60 > 0 || data.aging.days90plus > 0) && (
+            <div className="rounded-2xl border border-divider/10 bg-content2/30 p-4 mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-default-500 mb-3">Antigüedad de la Deuda</p>
+              <div className="space-y-2">
+                {[
+                  { key: 'current', label: '1-30 días', color: 'text-success', bar: 'bg-success' },
+                  { key: 'days30', label: '31-60 días', color: 'text-warning', bar: 'bg-warning' },
+                  { key: 'days60', label: '61-90 días', color: 'text-orange-500', bar: 'bg-orange-500' },
+                  { key: 'days90plus', label: '+90 días', color: 'text-danger', bar: 'bg-danger' },
+                ].map(({ key, label, color, bar }) => {
+                  const amount = data.aging![key as keyof typeof data.aging] || 0;
+                  const max = Math.max(data.aging!.current, data.aging!.days30, data.aging!.days60, data.aging!.days90plus, 1);
+                  const pct = (amount / max) * 100;
+                  return (
+                    <div key={key} className="flex items-center gap-3">
+                      <span className={`w-20 text-xs font-semibold ${color}`}>{label}</span>
+                      <div className="flex-1 h-2 bg-default-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${bar} transition-all`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-24 text-right text-xs font-mono text-foreground">
+                        {formatCurrency(amount, currency)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Pending Purchases */}
+          {data?.pendingPurchases && data.pendingPurchases.length > 0 && (
+            <div className="rounded-2xl border border-divider/10 bg-content2/30 p-4 mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-default-500 mb-3">
+                Compras Pendientes de Pago ({data.pendingPurchases.length})
+              </p>
+              <div className="space-y-2">
+                {data.pendingPurchases.map((pp) => {
+                  const remaining = (pp.total || 0) - (pp.paidAmount || 0);
+                  return (
+                    <div key={pp._id} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {pp.date} · {pp.paymentCondition === "CREDIT" ? "Crédito" : "Contado"}
+                        </p>
+                        <p className="text-xs text-default-500">
+                          {pp.status === "RECEIVED" ? "Recibida" : "Confirmada"} · 
+                          {pp.paymentStatus === "PENDING" ? " Sin pagar" : pp.paymentStatus === "PARTIAL" ? ` Pagado ${formatCurrency(pp.paidAmount || 0, currency)}` : ""}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-bold text-danger">{formatCurrency(remaining, currency)}</p>
+                        <p className="text-xs text-default-500">adeudado</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Filtros Rápidos de Fecha */}
           <div className="mb-4">
