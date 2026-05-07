@@ -11,6 +11,7 @@ import {
   X,
   ChartNoAxesCombined,
   Palette,
+  Receipt,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/button";
@@ -30,6 +31,7 @@ import InventorySection from "../components/InventorySection";
 import AppearanceSection from "../components/AppearanceSection";
 import WhatsAppSection from "../components/WhatsAppSection";
 import AdvancedSection from "../components/AdvancedSection";
+import VoucherConfigSection from "@features/vouchers/components/VoucherConfigSection";
 
 type SettingsSectionKey =
   | "empresa"
@@ -37,7 +39,8 @@ type SettingsSectionKey =
   | "inventario"
   | "apariencia"
   | "integraciones"
-  | "movimientos";
+  | "movimientos"
+  | "comprobantes";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -250,6 +253,7 @@ export default function SettingsPage() {
     apariencia: "Apariencia",
     integraciones: "Integraciones",
     movimientos: "Movimientos",
+    comprobantes: "Comprobantes",
   };
 
   const renderSectionContent = () => {
@@ -305,6 +309,13 @@ export default function SettingsPage() {
           <AdvancedSection
             navigate={navigate}
             onClose={() => setActiveSection(null)}
+          />
+        );
+      case "comprobantes":
+        return (
+          <VoucherConfigSection
+            formData={formData}
+            handleInputChange={handleInputChange}
           />
         );
       default:
@@ -402,6 +413,14 @@ export default function SettingsPage() {
             icon={<ArrowUpRight size={18} />}
             onClick={() => setActiveSection("movimientos")}
             summary="Ir al modulo de movimientos"
+          />
+
+          <SettingsSection
+            title="Comprobantes"
+            description="Configuracion de facturas, remitos y recibos."
+            icon={<Receipt size={18} />}
+            onClick={() => setActiveSection("comprobantes")}
+            summary={`Prefijos: ${formData.invoicePrefix || "F-"}, ${formData.deliveryNotePrefix || "R-"}, ${formData.receiptPrefix || "D-"}`}
           />
 
           <SettingsSection

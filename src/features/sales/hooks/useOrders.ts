@@ -7,6 +7,7 @@ import {
 
 import api from "@shared/api/axios";
 import { getErrorMessage } from "@shared/utils/errors";
+import type { Voucher } from "@shared/types";
 
 export type SalesStatus = "Pendiente" | "Confirmada" | "Cancelada";
 export type PaymentStatus = "Pendiente" | "Parcial" | "Pagado";
@@ -54,6 +55,7 @@ export interface Order {
   status: "Pendiente" | "Pagado" | "Entregado" | "Confirmada" | "Cancelada";
   salesStatus: SalesStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod?: string;
   deliveryStatus: DeliveryStatus;
   notes?: string;
   source: "WhatsApp" | "Dashboard";
@@ -62,6 +64,7 @@ export interface Order {
   paidAt?: string | null;
   deliveredAt?: string | null;
   cancelledAt?: string | null;
+  vouchers?: Voucher[];
   createdAt: string;
   updatedAt: string;
 }

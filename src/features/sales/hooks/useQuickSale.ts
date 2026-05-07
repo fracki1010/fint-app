@@ -43,6 +43,7 @@ export function buildQuickSalePayload({
     status: "Confirmada",
     salesStatus: "Confirmada",
     paymentStatus: "Pagado",
+    paymentMethod,
     deliveryStatus: "Entregada",
     source: "Dashboard",
     notes:
@@ -159,7 +160,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
   );
 
   const createOrderMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (extraData?: { vouchersToGenerate?: import("@shared/types").VoucherType[] }) => {
       const orderData = buildQuickSalePayload({
         clientId,
         items,
@@ -168,7 +169,10 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
         cashReceived,
         priceTier,
       });
-      const response = await api.post("/orders", orderData);
+      const response = await api.post("/orders", {
+        ...orderData,
+        ...extraData,
+      });
       return response.data;
     },
     onSuccess: () => {

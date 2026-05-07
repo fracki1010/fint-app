@@ -23,6 +23,9 @@ import { getAvailableStock } from "@features/products/utils/stock";
 import { resolveProductPrice } from "@features/products/utils/priceResolver";
 import { TierBadge } from "@features/sales/components/TierBadge";
 import { CreditLimitAlert } from "@features/clients/components/CreditLimitAlert";
+import { VoucherSelector } from "@features/vouchers/components/VoucherSelector";
+import { VoucherType } from "@shared/types";
+import { getDefaultVoucherTypes } from "@features/vouchers/utils/voucherUtils";
 
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import { Client, Product, Presentation } from "@shared/types";
@@ -46,6 +49,15 @@ export default function QuickSalePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [selectedVoucherTypes, setSelectedVoucherTypes] = useState<VoucherType[]>([]);
+
+  // Initialize default voucher types from settings
+  useEffect(() => {
+    if (settings) {
+      const defaults = getDefaultVoucherTypes(settings, "Pagado");
+      setSelectedVoucherTypes(defaults);
+    }
+  }, [settings]);
 
   useEffect(() => {
     if (genericClient && !selectedClient) {
@@ -162,7 +174,11 @@ export default function QuickSalePage() {
   const handleFinalize = async () => {
     if (!canFinalize) return;
     try {
-      await createOrder();
+      // Create order with voucher generation request
+      const orderData = {
+        vouchersToGenerate: selectedVoucherTypes,
+      };
+      await createOrder(orderData);
     } catch (error) {
       showToast({
         variant: "error",
@@ -563,6 +579,17 @@ export default function QuickSalePage() {
         </div>
       )}
 
+      {/* Voucher Selection */}
+      {items.length > 0 && (
+        <div className="px-4 py-3 border-t border-divider/60">
+          <VoucherSelector
+            selectedTypes={selectedVoucherTypes}
+            onChange={setSelectedVoucherTypes}
+            paymentStatus="Pagado"
+          />
+        </div>
+      )}
+
       {/* Payment + total */}
       <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg space-y-3">
         <PaymentSummary
@@ -858,6 +885,17 @@ export default function QuickSalePage() {
                   currency={currency}
                   showDismiss={false}
                   variant="banner"
+                />
+              </div>
+            )}
+
+            {/* Voucher Selection */}
+            {items.length > 0 && (
+              <div className="px-6 py-4 border-t border-divider/60">
+                <VoucherSelector
+                  selectedTypes={selectedVoucherTypes}
+                  onChange={setSelectedVoucherTypes}
+                  paymentStatus="Pagado"
                 />
               </div>
             )}

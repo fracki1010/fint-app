@@ -29,6 +29,7 @@ import {
   Sun,
   Moon,
   MoreHorizontal,
+  Lock,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-5.svg";
@@ -52,6 +53,7 @@ export default function MobileLayout() {
   const operationNav = [
     { path: "/", label: "Inicio", icon: LayoutGrid },
     { path: "/sales", label: "Ventas", icon: ReceiptText },
+    { path: "/cash-closing", label: "Cierre de Caja", icon: Lock },
     { path: "/clients", label: "Clientes", icon: Users },
     { path: "/products", label: "Productos", icon: ClipboardList },
     { path: "/supplies", label: "Insumos", icon: Package },

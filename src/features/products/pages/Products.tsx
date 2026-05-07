@@ -17,7 +17,7 @@ import {
 } from "@features/products/hooks/useProducts";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useSettings } from "@features/settings/hooks/useSettings";
-import { Product } from "@shared/types";
+import { Product, PriceTier } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getErrorMessage } from "@shared/utils/errors";
@@ -218,8 +218,21 @@ export default function ProductsPage() {
   const resetForm = () =>
     setFormData({ ...emptyForm, unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure });
 
-  const handleFormChange = (field: keyof ProductFormState, value: string) =>
+  const handleFormChange = (field: keyof ProductFormState, value: string) => {
+    // Handle nested price tier fields
+    if (field.startsWith("priceTier_")) {
+      const tier = field.replace("priceTier_", "") as PriceTier;
+      setFormData((prev) => ({
+        ...prev,
+        priceTiers: {
+          ...prev.priceTiers,
+          [tier]: value === "" ? undefined : Number(value),
+        },
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const buildPayload = () => ({
     sku: formData.sku || undefined,
@@ -243,6 +256,7 @@ export default function ProductsPage() {
       equivalentQty: Number(p.equivalentQty || 1),
       isActive: p.isActive,
     })) as Product["presentations"],
+    priceTiers: formData.priceTiers || undefined,
   });
 
   const handleCreateProduct = async () => {

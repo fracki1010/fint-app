@@ -27,6 +27,10 @@ import { getClientName, getClientPhone } from "@shared/utils/entity";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { TierBadge } from "@features/sales/components/TierBadge";
 import { PriceTier } from "@shared/types";
+import { VoucherList } from "@features/vouchers/components/VoucherList";
+import { VoucherActions } from "@features/vouchers/components/VoucherActions";
+import { useVouchers, useGenerateVouchers } from "@features/vouchers/hooks/useVouchers";
+import { VoucherType } from "@shared/types";
 
 const MOVEMENTS_PREVIEW_LIMIT = 8;
 
@@ -61,9 +65,37 @@ export function OrderDetailPanel({
     refetch: refetchOrderDetail,
   } = useOrderDetail(orderId);
 
+  // Voucher integration
+  const { vouchers, loading: vouchersLoading, refetch: refetchVouchers } = useVouchers(orderId);
+  const { generateVouchers, isGenerating } = useGenerateVouchers();
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [voucherTypesToGenerate, setVoucherTypesToGenerate] = useState<VoucherType[]>(["invoice"]);
+
+  const handleGenerateVouchers = async () => {
+    if (!orderId || voucherTypesToGenerate.length === 0) return;
+    try {
+      await generateVouchers({
+        orderId,
+        data: { types: voucherTypesToGenerate, generatePdf: true },
+      });
+      showToast({
+        variant: "success",
+        message: `${voucherTypesToGenerate.length} comprobante(s) generado(s) correctamente`,
+      });
+      setShowGenerateModal(false);
+      refetchVouchers();
+    } catch (error) {
+      showToast({
+        variant: "error",
+        message: getErrorMessage(error, "No se pudieron generar los comprobantes"),
+      });
+    }
+  };
+
   const [notesDraft, setNotesDraft] = useState("");
   const [salesStatusDraft, setSalesStatusDraft] = useState<SalesStatus>("Pendiente");
   const [paymentStatusDraft, setPaymentStatusDraft] = useState<PaymentStatus>("Pendiente");
+  const [paymentMethodDraft, setPaymentMethodDraft] = useState<string>("cash");
   const [deliveryStatusDraft, setDeliveryStatusDraft] = useState<DeliveryStatus>("Pendiente");
   const [showAllMovements, setShowAllMovements] = useState(false);
 
@@ -77,6 +109,7 @@ export function OrderDetailPanel({
     if (selectedOrder) {
       setSalesStatusDraft(selectedOrder.salesStatus || "Pendiente");
       setPaymentStatusDraft(selectedOrder.paymentStatus || "Pendiente");
+      setPaymentMethodDraft((selectedOrder as any).paymentMethod || "cash");
       setDeliveryStatusDraft(selectedOrder.deliveryStatus || "Pendiente");
       setNotesDraft(selectedOrder.notes || "");
     }
@@ -85,7 +118,7 @@ export function OrderDetailPanel({
 
   const handleSave = async () => {
     try {
-      await updateOrder({ id: orderId, orderData: { salesStatus: salesStatusDraft, paymentStatus: paymentStatusDraft, deliveryStatus: deliveryStatusDraft, notes: notesDraft } });
+      await updateOrder({ id: orderId, orderData: { salesStatus: salesStatusDraft, paymentStatus: paymentStatusDraft, paymentMethod: paymentMethodDraft, deliveryStatus: deliveryStatusDraft, notes: notesDraft } });
       showToast({ variant: "success", message: "Venta actualizada." });
     } catch (error) {
       showToast({ variant: "error", message: getErrorMessage(error, "No se pudo actualizar.") });
@@ -248,6 +281,31 @@ export function OrderDetailPanel({
                     {DELIVERY_STATUS_OPTIONS.map((s) => <SelectItem key={s}>{s}</SelectItem>)}
                   </Select>
                 </div>
+
+                {/* Payment Method Selector - only visible when payment status is Pagado */}
+                {paymentStatusDraft === "Pagado" && (
+                  <div className="mt-3">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-success">
+                      <CircleDollarSign size={13} />
+                      <span className="text-[11px] font-semibold uppercase tracking-wider">Método de pago</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {(["cash", "card", "transfer"] as const).map((method) => (
+                        <button
+                          key={method}
+                          className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+                            paymentMethodDraft === method
+                              ? "bg-primary text-white shadow-md shadow-primary/25"
+                              : "border border-divider/30 bg-content2/50 text-default-500 hover:bg-content2"
+                          }`}
+                          onClick={() => setPaymentMethodDraft(method)}
+                        >
+                          {method === "cash" ? "Efectivo" : method === "card" ? "Tarjeta" : "Transferencia"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -267,6 +325,48 @@ export function OrderDetailPanel({
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Vouchers */}
+            <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground">Comprobantes</p>
+                {vouchers.length > 0 && (
+                  <VoucherActions
+                    vouchers={vouchers}
+                    orderId={orderId}
+                    onViewList={() => { /* Could expand to show full list */ }}
+                    onGenerateMore={() => setShowGenerateModal(true)}
+                  />
+                )}
+              </div>
+              {vouchersLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 size={20} className="animate-spin text-default-400" />
+                </div>
+              ) : (
+                <VoucherList
+                  vouchers={vouchers}
+                  orderId={orderId}
+                  onVoucherVoided={refetchVouchers}
+                />
+              )}
+              {vouchers.length === 0 && !vouchersLoading && selectedOrder.salesStatus === "Confirmada" && (
+                <button
+                  className="mt-3 w-full rounded-xl border border-dashed border-divider/50 py-2.5 text-xs font-semibold text-default-500 transition hover:border-primary/30 hover:text-primary"
+                  onClick={() => setShowGenerateModal(true)}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={14} className="animate-spin" />
+                      Generando...
+                    </span>
+                  ) : (
+                    "Generar comprobantes"
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Notes */}
@@ -341,6 +441,99 @@ export function OrderDetailPanel({
           </div>
         )}
       </div>
+
+      {/* Generate Vouchers Modal */}
+      {showGenerateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-content1 p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-foreground">Generar comprobantes</h3>
+            <p className="mt-1 text-sm text-default-500">
+              Selecciona los tipos de comprobantes a generar para esta orden
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {(['invoice', 'delivery_note', 'receipt'] as VoucherType[]).map((type) => {
+                const isSelected = voucherTypesToGenerate.includes(type);
+                const isReceiptDisabled = type === 'receipt' && selectedOrder?.paymentStatus !== 'Pagado';
+                const labels: Record<VoucherType, string> = {
+                  invoice: 'Factura',
+                  delivery_note: 'Remito',
+                  receipt: 'Recibo',
+                };
+
+                return (
+                  <label
+                    key={type}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
+                      isReceiptDisabled
+                        ? 'cursor-not-allowed border-divider/30 bg-content2/30 opacity-60'
+                        : isSelected
+                          ? 'border-primary/40 bg-primary/5'
+                          : 'border-divider/60 bg-content2/20 hover:border-primary/20'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-divider text-primary focus:ring-primary"
+                      checked={isSelected}
+                      disabled={isReceiptDisabled}
+                      onChange={() => {
+                        if (isReceiptDisabled) return;
+                        setVoucherTypesToGenerate((prev) =>
+                          isSelected
+                            ? prev.filter((t) => t !== type)
+                            : [...prev, type]
+                        );
+                      }}
+                    />
+                    <span className="flex-1 text-sm font-medium text-foreground">
+                      {labels[type]}
+                    </span>
+                    {type === 'receipt' && isReceiptDisabled && (
+                      <span className="text-[10px] text-warning">
+                        Solo para órdenes pagadas
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+
+            {voucherTypesToGenerate.length === 0 && (
+              <p className="mt-3 text-xs text-warning">
+                Selecciona al menos un tipo de comprobante
+              </p>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                className="flex-1 rounded-xl border border-divider/60 py-2.5 text-sm font-semibold text-default-600 transition hover:bg-content2"
+                onClick={() => {
+                  setShowGenerateModal(false);
+                  setVoucherTypesToGenerate(['invoice']);
+                }}
+                disabled={isGenerating}
+              >
+                Cancelar
+              </button>
+              <button
+                className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-50"
+                onClick={handleGenerateVouchers}
+                disabled={voucherTypesToGenerate.length === 0 || isGenerating}
+              >
+                {isGenerating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={16} className="animate-spin" />
+                    Generando...
+                  </span>
+                ) : (
+                  `Generar ${voucherTypesToGenerate.length > 0 ? `(${voucherTypesToGenerate.length})` : ''}`
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

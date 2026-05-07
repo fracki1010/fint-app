@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   User,
@@ -22,7 +22,7 @@ import { useSettings } from "@features/settings/hooks/useSettings";
 import { useProductLookupManual } from "@features/products/hooks/useProductLookup";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
-import { Client, Product, Presentation } from "@shared/types";
+import { Client, Product, Presentation, VoucherType } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import { formatCompactCurrency } from "@shared/utils/currency";
@@ -32,6 +32,8 @@ import {
   getAvailableStock,
   validateCartStock,
 } from "@features/products/utils/stock";
+import { VoucherSelector } from "@features/vouchers/components/VoucherSelector";
+import { getDefaultVoucherTypes } from "@features/vouchers/utils/voucherUtils";
 
 interface CartItem {
   product: Product;
@@ -54,8 +56,18 @@ export default function NewOperationPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [notes, setNotes] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [selectedVoucherTypes, setSelectedVoucherTypes] = useState<VoucherType[]>([]);
   const { searchProducts } = useProductLookupManual();
   const scanHandlerRef = useRef<(code: string) => void>(() => {});
+
+  // Initialize default voucher types from settings
+  useEffect(() => {
+    if (settings) {
+      const paymentStatus = settings?.defaultPaymentStatus || "Pendiente";
+      const defaults = getDefaultVoucherTypes(settings, paymentStatus);
+      setSelectedVoucherTypes(defaults);
+    }
+  }, [settings]);
 
   const {
     state: scannerState,
@@ -196,7 +208,7 @@ export default function NewOperationPage() {
     }
 
     try {
-      await createOrder({
+      const orderPayload: Record<string, unknown> = {
         client: selectedClient._id,
         items: cart.map((item) => ({
           product: item.product.name,
@@ -212,10 +224,14 @@ export default function NewOperationPage() {
         deliveryStatus: settings?.defaultDeliveryStatus || "Pendiente",
         notes: notes || undefined,
         source: "Dashboard",
-      });
+        vouchersToGenerate: selectedVoucherTypes,
+      };
+      await createOrder(orderPayload as Parameters<typeof createOrder>[0]);
       showToast({
         variant: "success",
-        message: "Venta registrada correctamente.",
+        message: selectedVoucherTypes.length > 0
+          ? `Venta registrada con ${selectedVoucherTypes.length} comprobante(s).`
+          : "Venta registrada correctamente.",
       });
       navigate("/");
     } catch (error) {
@@ -553,7 +569,18 @@ export default function NewOperationPage() {
           />
         </section>
 
-        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start lg:sticky lg:top-24">
+        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start lg:sticky lg:top-24 space-y-5">
+          {/* Voucher Selection */}
+          {cart.length > 0 && (
+            <div className="border-b border-divider/70 pb-5">
+              <VoucherSelector
+                selectedTypes={selectedVoucherTypes}
+                onChange={setSelectedVoucherTypes}
+                paymentStatus={settings?.defaultPaymentStatus || "Pendiente"}
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-sm">
             <span className="text-default-500">Subtotal</span>
             <span className="font-medium text-foreground">
@@ -599,6 +626,17 @@ export default function NewOperationPage() {
           </div>
         </section>
       </div>
+
+      {/* Mobile Voucher Selection */}
+      {cart.length > 0 && (
+        <div className="px-4 py-3 border-t border-divider/60 lg:hidden">
+          <VoucherSelector
+            selectedTypes={selectedVoucherTypes}
+            onChange={setSelectedVoucherTypes}
+            paymentStatus={settings?.defaultPaymentStatus || "Pendiente"}
+          />
+        </div>
+      )}
 
       <div className="bottom-sheet-surface fixed bottom-0 w-full max-w-md p-4 lg:hidden">
         <div className="flex gap-3">
