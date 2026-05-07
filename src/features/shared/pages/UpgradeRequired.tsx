@@ -12,6 +12,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   team_management: "Gestión de Equipo",
   unlimited_products: "Productos Ilimitados",
   unlimited_orders: "Ventas Ilimitadas",
+  banking: "Conciliación Bancaria",
 };
 
 const FEATURE_PLANS: Record<Feature, { plan: string; icon: React.ElementType }> = {
@@ -24,6 +25,7 @@ const FEATURE_PLANS: Record<Feature, { plan: string; icon: React.ElementType }> 
   team_management: { plan: "Business", icon: Building2 },
   unlimited_products: { plan: "Business", icon: Building2 },
   unlimited_orders: { plan: "Business", icon: Building2 },
+  banking: { plan: "Business", icon: Building2 },
 };
 
 interface UpgradeRequiredProps {

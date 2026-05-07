@@ -23,6 +23,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   team_management: "Gestión de Equipo",
   unlimited_products: "Productos Ilimitados",
   unlimited_orders: "Ventas Ilimitadas",
+  banking: "Conciliación Bancaria",
 };
 
 function ChangePlanModal({
