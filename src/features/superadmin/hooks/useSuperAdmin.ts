@@ -79,6 +79,7 @@ export function useTenant(id?: string) {
   return {
     tenant: data?.tenant as Tenant | undefined,
     adminUser: data?.adminUser,
+    settings: data?.settings as { supportEmail?: string } | undefined,
     stats: (data?.stats as TenantStats) || { totalUsers: 0, totalProducts: 0, totalOrders: 0 },
     usagePercentages: (data?.usagePercentages as UsagePercentages) || { users: 0, products: 0 },
     loading: isLoading,

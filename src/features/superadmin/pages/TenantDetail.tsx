@@ -46,7 +46,7 @@ export default function TenantDetail() {
   const queryClient = useQueryClient();
   const { showToast } = useAppToast();
 
-  const { tenant, adminUser, stats, usagePercentages, loading } = useTenant(tenantId);
+  const { tenant, adminUser, settings, stats, usagePercentages, loading } = useTenant(tenantId);
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -389,6 +389,23 @@ export default function TenantDetail() {
             ) : (
               <p className="mt-4 text-sm text-default-400">No se encontró usuario administrador</p>
             )}
+          </div>
+
+          {/* Email Configuration */}
+          <div className="rounded-2xl border border-divider bg-content1 p-6">
+            <h2 className="text-lg font-bold text-foreground">Configuración de Email</h2>
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-default-500">Email de Soporte</p>
+                <div className="flex items-center gap-2 text-sm text-default-300">
+                  <Mail size={14} className="text-default-500" />
+                  {settings?.supportEmail || "No configurado (usa valor por defecto)"}
+                </div>
+                <p className="mt-1 text-xs text-default-400">
+                  Los emails de notificación se enviarán desde esta dirección
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

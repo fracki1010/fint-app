@@ -119,6 +119,11 @@ export default function ProductsPage() {
           equivalentQty: p.equivalentQty?.toString() || "1",
           isActive: p.isActive !== false,
         })),
+        priceTiers: selectedProduct.priceTiers || {
+          retail: undefined,
+          wholesale: undefined,
+          distributor: undefined,
+        },
       });
     }
   }, [showEditModal, selectedProduct]);

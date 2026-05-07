@@ -367,6 +367,7 @@ export default function ClientsPage() {
         company: selectedClient.company || "",
         notes: selectedClient.notes || "",
         debt: selectedClient.debt?.toString() || "0",
+        priceList: selectedClient.priceList || "retail",
       });
     }
   }, [isEditOpen, selectedClient]);
@@ -384,6 +385,7 @@ export default function ClientsPage() {
     company: formData.company.trim() || undefined,
     notes: formData.notes.trim() || undefined,
     debt: Number(formData.debt || 0),
+    priceList: formData.priceList,
   });
 
   const handleCreate = async () => {

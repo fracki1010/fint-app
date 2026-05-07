@@ -105,6 +105,8 @@ export function ProductFormModal({
   onAddCategory,
   onRemoveCategory,
   existingCategories,
+  suggestedSku: _suggestedSku,
+  onUseSuggestedSku: _onUseSuggestedSku,
   suggestedPrices,
   onApplySuggestedPrice,
   onClose,
@@ -113,6 +115,7 @@ export function ProductFormModal({
   onAddPresentation,
   onUpdatePresentation,
   onRemovePresentation,
+  tierConfig,
 }: {
   mode: "create" | "edit";
   isDesktop: boolean;

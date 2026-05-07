@@ -50,6 +50,7 @@ export default function TenantCreate() {
     passwordType: "auto",
     customPassword: "",
     sendWelcomeEmail: false,
+    supportEmail: "",
     notes: "",
   });
 
@@ -70,6 +71,7 @@ export default function TenantCreate() {
         passwordType: data.passwordType,
         customPassword: data.passwordType === "custom" ? data.customPassword : undefined,
         sendWelcomeEmail: data.sendWelcomeEmail,
+        supportEmail: data.supportEmail || undefined,
         notes: data.notes,
       });
       return response.data;
@@ -155,6 +157,7 @@ export default function TenantCreate() {
                     passwordType: "auto",
                     customPassword: "",
                     sendWelcomeEmail: false,
+                    supportEmail: "",
                     notes: "",
                   });
                 }}
@@ -339,7 +342,7 @@ export default function TenantCreate() {
           {/* Options */}
           <div className="rounded-2xl border border-divider bg-content1 p-6">
             <h2 className="text-lg font-bold text-foreground">Opciones</h2>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -352,6 +355,24 @@ export default function TenantCreate() {
                   <p className="text-xs text-default-400">El cliente recibirá un email con sus credenciales</p>
                 </div>
               </label>
+
+              {formData.sendWelcomeEmail && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
+                    Email de Soporte (Remitente)
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.supportEmail}
+                    onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })}
+                    className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground placeholder:text-default-500 focus:border-primary focus:outline-none"
+                    placeholder="soporte@mi-dominio.com"
+                  />
+                  <p className="mt-1.5 text-xs text-default-400">
+                    El email de bienvenida se enviará desde esta dirección. Si lo dejás vacío, se usará el valor por defecto del sistema.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">

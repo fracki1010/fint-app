@@ -55,6 +55,14 @@ export default function GeneralSection({
           onChange={(e) => handleInputChange("email", e.target.value)}
         />
       </div>
+      <Input
+        description="Email que aparecerá como remitente en las notificaciones (ej: soporte@mi-dominio.com)"
+        label="Email de soporte"
+        type="email"
+        value={formData.supportEmail || ""}
+        variant="bordered"
+        onChange={(e) => handleInputChange("supportEmail", e.target.value)}
+      />
     </div>
   );
 }
