@@ -71,8 +71,13 @@ export default function CartItem({
                   )}
                   <div className="space-y-2">
                     {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
-                      const price = resolveProductPrice(item.product, tier);
-                      if (price <= 0) return null;
+                      const baseRetail = resolveProductPrice(item.product, "retail");
+                      const tierBasePrice = resolveProductPrice(item.product, tier);
+                      if (tierBasePrice <= 0) return null;
+                      // For presentations, scale price by tier ratio
+                      const price = item.presentation?.price
+                        ? item.presentation.price * (baseRetail > 0 ? tierBasePrice / baseRetail : 1)
+                        : tierBasePrice;
                       const active = (item.priceTier || "retail") === tier;
                       return (
                         <button

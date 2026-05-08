@@ -34,6 +34,19 @@ import SaleSuccessScreen from "@features/sales/components/SaleSuccessScreen";
 import CartItem from "@features/sales/components/CartItem";
 import PaymentSummary from "@features/sales/components/PaymentSummary";
 
+/** Calculate item price respecting per-item tier override for presentations */
+function calcItemPrice(item: { product: Product; presentation?: Presentation; priceTier?: PriceTier }, globalTier: PriceTier): number {
+  const effectiveTier = item.priceTier || globalTier;
+  // If item has presentation price, scale it by the tier ratio
+  if (item.presentation?.price) {
+    const baseRetail = resolveProductPrice(item.product, "retail");
+    const tierPrice = resolveProductPrice(item.product, effectiveTier);
+    const ratio = baseRetail > 0 ? tierPrice / baseRetail : 1;
+    return item.presentation.price * ratio;
+  }
+  return resolveProductPrice(item.product, effectiveTier);
+}
+
 export default function QuickSalePage() {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
@@ -579,7 +592,7 @@ export default function QuickSalePage() {
                     (item.presentation ? e.productName.includes(item.presentation.name) : true),
                 );
                 const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
+                const itemPrice = calcItemPrice(item, priceTier);
                 return (
                   <CartItem
                     key={`${item.product._id}-${item.presentation?._id || "base"}`}
@@ -883,7 +896,7 @@ export default function QuickSalePage() {
                       const available = getAvailableStock(item.product, item.presentation);
                       const error = stockErrors.find((e) => e.productId === item.product._id && (item.presentation ? e.productName.includes(item.presentation.name) : true));
                        const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                       const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
+                       const itemPrice = calcItemPrice(item, priceTier);
                        return (
                           <CartItem
                             key={`${item.product._id}-${item.presentation?._id || "base"}`}
@@ -915,7 +928,7 @@ export default function QuickSalePage() {
               ) : (
                 <div className="space-y-3">
                    {items.map((item) => {
-                    const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
+                    const itemPrice = calcItemPrice(item, priceTier);
                     return (
                       <div key={`sum-${item.product._id}-${item.presentation?._id || "base"}`} className="flex items-center justify-between text-sm">
                         <div className="min-w-0 flex-1">
