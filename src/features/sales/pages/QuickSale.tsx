@@ -7,6 +7,7 @@ import {
   User,
   ScanBarcode,
   Search as SearchIcon,
+  Tags,
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
 import { useProductSearch, useProductLookupManual } from "@features/products/hooks/useProductLookup";
@@ -67,6 +68,7 @@ export default function QuickSalePage() {
 
   const clientId = selectedClient?._id || genericClient?._id || "";
   const [overrideTier, setOverrideTier] = useState<PriceTier | null>(null);
+  const [showTierMenu, setShowTierMenu] = useState(false);
   const clientPriceTier = selectedClient?.priceList || "retail";
   const effectivePriceTier = overrideTier || clientPriceTier;
   const tierOverridden = overrideTier !== null && overrideTier !== clientPriceTier;
@@ -395,20 +397,45 @@ export default function QuickSalePage() {
             <div className="flex items-center gap-2">
               <p className="text-xs text-default-500">Cliente</p>
               <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
-              <button
-                className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                  tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
-                  const idx = tiers.indexOf(overrideTier || clientPriceTier);
-                  setOverrideTier(tiers[(idx + 1) % tiers.length]);
-                }}
-                title="Cambiar lista de precios"
-              >
-                {tierOverridden ? "★" : "⇄"}
-              </button>
+              <div className="relative">
+                <button
+                  className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTierMenu(!showTierMenu);
+                  }}
+                >
+                  ▼
+                </button>
+                {showTierMenu && (
+                  <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
+                    {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                      const active = (overrideTier || clientPriceTier) === tier;
+                      return (
+                        <button
+                          key={tier}
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition-colors ${
+                            active
+                              ? "bg-primary/10 text-primary"
+                              : "text-default-500 hover:bg-content2/60"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOverrideTier(tier);
+                            setShowTierMenu(false);
+                          }}
+                        >
+                          <Tags size={12} />
+                          <span>{tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}</span>
+                          {active && <span className="ml-auto text-primary">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
             <p className="truncate text-sm font-semibold text-foreground">
               {selectedClient?.name || "Consumidor Final"}
@@ -705,20 +732,45 @@ export default function QuickSalePage() {
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-default-500">Cliente</p>
                     <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
-                    <button
-                      className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                        tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
-                        const idx = tiers.indexOf(overrideTier || clientPriceTier);
-                        setOverrideTier(tiers[(idx + 1) % tiers.length]);
-                      }}
-                      title="Cambiar lista de precios"
-                    >
-                      {tierOverridden ? "★" : "⇄"}
-                    </button>
+                    <div className="relative">
+                      <button
+                        className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                          tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTierMenu(!showTierMenu);
+                        }}
+                      >
+                        ▼
+                      </button>
+                      {showTierMenu && (
+                        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
+                          {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                            const active = (overrideTier || clientPriceTier) === tier;
+                            return (
+                              <button
+                                key={tier}
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition-colors ${
+                                  active
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-default-500 hover:bg-content2/60"
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOverrideTier(tier);
+                                  setShowTierMenu(false);
+                                }}
+                              >
+                                <Tags size={12} />
+                                <span>{tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}</span>
+                                {active && <span className="ml-auto text-primary">✓</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <p className="truncate text-sm font-semibold text-foreground">
                     {selectedClient?.name || "Consumidor Final"}
