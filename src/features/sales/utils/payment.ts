@@ -1,22 +1,21 @@
 import {
   Banknote,
   CreditCard,
-  Smartphone,
   Building2,
-  CircleDollarSign,
   ScrollText,
   Ellipsis,
 } from "lucide-react";
 import { PaymentMethod } from "@shared/types";
+import { MercadoPagoIcon, UalaIcon, NaranjaXIcon } from "@shared/components/PaymentBrandIcons";
 
 export function getPaymentIcon(method: PaymentMethod) {
   switch (method) {
     case "cash": return Banknote;
     case "card": return CreditCard;
-    case "mercadopago": return Smartphone;
+    case "mercadopago": return MercadoPagoIcon;
     case "transfer": return Building2;
-    case "naranja_x": return CircleDollarSign;
-    case "uala": return Smartphone;
+    case "naranja_x": return NaranjaXIcon;
+    case "uala": return UalaIcon;
     case "check": return ScrollText;
     case "other": return Ellipsis;
   }
