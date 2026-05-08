@@ -1,7 +1,9 @@
-import { Minus, Plus, Trash2, Tags } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus, Trash2, Tags, Check } from "lucide-react";
 import { QuickSaleItem, PriceTier } from "@shared/types";
 import { InvalidStockItem } from "@features/products/utils/stock";
 import { formatCurrency } from "@shared/utils/currency";
+import { resolveProductPrice } from "@features/products/utils/priceResolver";
 
 interface CartItemProps {
   item: QuickSaleItem;
@@ -26,6 +28,7 @@ export default function CartItem({
   onRemove,
   onTierChange,
 }: CartItemProps) {
+  const [showTierModal, setShowTierModal] = useState(false);
   const lowStock = available > 0 && available <= (item.product.minStock || 5);
 
   return (
@@ -48,20 +51,62 @@ export default function CartItem({
           )}
         </p>
         {onTierChange && (
-          <button
-            className="mt-0.5 inline-flex items-center gap-1 rounded bg-default-100 px-1.5 py-0.5 text-[10px] font-semibold text-default-500 hover:bg-default-200 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
-              const current = item.priceTier || "retail";
-              const idx = tiers.indexOf(current);
-              onTierChange(item.product._id, tiers[(idx + 1) % tiers.length], item.presentation?._id);
-            }}
-            title="Cambiar lista de precios"
-          >
-            <Tags size={10} />
-            {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
-          </button>
+          <>
+            <button
+              className="mt-0.5 inline-flex items-center gap-1 rounded bg-default-100 px-1.5 py-0.5 text-[10px] font-semibold text-default-500 hover:bg-default-200 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setShowTierModal(true); }}
+              title="Cambiar lista de precios"
+            >
+              <Tags size={10} />
+              {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
+            </button>
+
+            {/* Tier selection modal */}
+            {showTierModal && (
+              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 p-4" onClick={() => setShowTierModal(false)}>
+                <div className="w-full max-w-xs rounded-2xl border border-divider/10 bg-content1 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-sm font-bold text-foreground mb-1">{item.product.name}</p>
+                  {item.presentation && (
+                    <p className="text-xs text-default-500 mb-3">{item.presentation.name}</p>
+                  )}
+                  <div className="space-y-2">
+                    {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                      const price = resolveProductPrice(item.product, tier);
+                      if (price <= 0) return null;
+                      const active = (item.priceTier || "retail") === tier;
+                      return (
+                        <button
+                          key={tier}
+                          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+                            active ? "bg-primary/10 border border-primary/30" : "bg-content2/50 border border-transparent hover:bg-content2/80"
+                          }`}
+                          onClick={() => {
+                            onTierChange(item.product._id, tier, item.presentation?._id);
+                            setShowTierModal(false);
+                          }}
+                        >
+                          <div className="flex-1">
+                            <p className={`text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>
+                              {tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}
+                            </p>
+                            <p className="text-xs text-default-500">
+                              {tier === "retail" ? "Precio de lista común" : tier === "wholesale" ? "Volumen mayor" : "Distribución"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>
+                              {formatCurrency(price, "ARS")}
+                            </p>
+                          </div>
+                          {active && <Check size={16} className="text-primary" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
         <p className="mt-0.5 text-xs text-default-400">
           {formatCurrency(itemPrice, currency)} c/u
