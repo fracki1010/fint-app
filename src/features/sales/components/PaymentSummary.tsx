@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Loader2, Printer, ChevronDown, ChevronUp } from "lucide-react";
 import { PaymentMethod } from "@shared/types";
 import { formatCurrency } from "@shared/utils/currency";
-import { getPaymentLabel, getPaymentEmoji } from "@features/sales/utils/payment";
+import { getPaymentLabel, getPaymentIcon } from "@features/sales/utils/payment";
+
+function PaymentIcon({ method, size = 16 }: { method: PaymentMethod; size?: number }) {
+  const Icon = getPaymentIcon(method);
+  return <Icon size={size} />;
+}
 
 interface PaymentSummaryProps {
   paymentMethod: PaymentMethod;
@@ -22,11 +27,11 @@ interface PaymentSummaryProps {
 
 type PaymentCategory = "cash" | "card" | "transfer" | "other";
 
-const CATEGORIES: { key: PaymentCategory; label: string; emoji: string }[] = [
-  { key: "cash", label: "Efectivo", emoji: "💵" },
-  { key: "card", label: "Tarjeta", emoji: "💳" },
-  { key: "transfer", label: "Transferencia", emoji: "📱" },
-  { key: "other", label: "Otro", emoji: "❓" },
+const CATEGORIES: { key: PaymentCategory; label: string }[] = [
+  { key: "cash", label: "Efectivo" },
+  { key: "card", label: "Tarjeta" },
+  { key: "transfer", label: "Transferencia" },
+  { key: "other", label: "Otro" },
 ];
 
 const CARD_OPTIONS: PaymentMethod[] = ["card"];
@@ -90,7 +95,7 @@ export default function PaymentSummary({
     <>
       {/* Category selector */}
       <div className="flex gap-2">
-        {CATEGORIES.map(({ key, label, emoji }) => (
+        {CATEGORIES.map(({ key, label }) => (
           <button
             key={key}
             className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-bold transition ${
@@ -100,7 +105,7 @@ export default function PaymentSummary({
             }`}
             onClick={() => handleCategoryClick(key)}
           >
-            <span className="text-base">{emoji}</span>
+            <PaymentIcon method={key as PaymentMethod} size={18} />
             <span>{label}</span>
           </button>
         ))}
@@ -114,7 +119,7 @@ export default function PaymentSummary({
             onClick={() => setExpanded(!expanded)}
           >
             <span>
-              {getPaymentEmoji(paymentMethod)} {getPaymentLabel(paymentMethod)}
+              <PaymentIcon method={paymentMethod} /> {getPaymentLabel(paymentMethod)}
             </span>
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -131,8 +136,8 @@ export default function PaymentSummary({
                   }`}
                   onClick={() => handleSubSelect(method)}
                 >
-                  <span>{getPaymentEmoji(method)}</span>
-                  <span>{getPaymentLabel(method, true)}</span>
+            <PaymentIcon method={method} size={15} />
+            <span>{getPaymentLabel(method, true)}</span>
                 </button>
               ))}
             </div>
@@ -183,7 +188,7 @@ export default function PaymentSummary({
       <div className="flex items-center justify-between text-xs text-default-400">
         <span>Método:</span>
         <span className="font-semibold text-foreground">
-          {getPaymentEmoji(paymentMethod)} {getPaymentLabel(paymentMethod)}
+          <PaymentIcon method={paymentMethod} /> {getPaymentLabel(paymentMethod)}
         </span>
       </div>
 

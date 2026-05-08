@@ -1,8 +1,25 @@
-import { DollarSign } from "lucide-react";
+import {
+  Banknote,
+  CreditCard,
+  Smartphone,
+  Building2,
+  CircleDollarSign,
+  ScrollText,
+  Ellipsis,
+} from "lucide-react";
 import { PaymentMethod } from "@shared/types";
 
 export function getPaymentIcon(method: PaymentMethod) {
-  return method === "cash" ? DollarSign : null;
+  switch (method) {
+    case "cash": return Banknote;
+    case "card": return CreditCard;
+    case "mercadopago": return Smartphone;
+    case "transfer": return Building2;
+    case "naranja_x": return CircleDollarSign;
+    case "uala": return Smartphone;
+    case "check": return ScrollText;
+    case "other": return Ellipsis;
+  }
 }
 
 export function getPaymentLabel(method: PaymentMethod, short = false): string {
