@@ -537,3 +537,32 @@ export interface TreasuryCashFlow {
     net: number;
   };
 }
+
+// ── Cost Centers ──────────────────────────────────────────────────────
+
+export interface CostCenter {
+  _id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface CostCenterReportRow {
+  _id: string | null;
+  name: string;
+  revenue: number;
+  orderCount: number;
+  costs: number;
+  purchaseCount: number;
+  margin: number;
+}
+
+export interface CostCenterReport {
+  rows: CostCenterReportRow[];
+  totals: {
+    revenue: number;
+    costs: number;
+    margin: number;
+  };
+  dateRange: { from: string; to: string };
+}

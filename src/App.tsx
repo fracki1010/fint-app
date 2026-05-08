@@ -48,6 +48,9 @@ const PurchasesDashboardPage = lazy(
 const TreasuryDashboardPage = lazy(
   () => import("@features/financial/pages/TreasuryDashboard"),
 );
+const CostCentersPage = lazy(
+  () => import("@features/financial/pages/CostCenters"),
+);
 const SuperAdminDashboardPage = lazy(() => import("@features/superadmin/pages/SuperAdminDashboard"));
 const TenantListPage = lazy(() => import("@features/superadmin/pages/TenantList"));
 const TenantCreatePage = lazy(() => import("@features/superadmin/pages/TenantCreate"));
@@ -195,6 +198,10 @@ function App() {
             <Route
               element={<TreasuryDashboardPage />}
               path="/financial/treasury"
+            />
+            <Route
+              element={<CostCentersPage />}
+              path="/financial/cost-centers"
             />
           </Route>
           <Route element={<PlanGuard feature="banking"><BankAccountsPage /></PlanGuard>} path="/banking" />

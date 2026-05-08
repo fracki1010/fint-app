@@ -1,14 +1,15 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Bell,
-  ChartNoAxesCombined,
-  Cog,
-  DollarSign,
-  ReceiptText,
   LayoutGrid,
+  ReceiptText,
+  ChartNoAxesCombined,
   LineChart,
-  Settings as SettingsIcon,
+  DollarSign,
   ShoppingCart,
+  Building2,
+  Bell,
+  Cog,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 const financialNav = [
@@ -47,6 +48,12 @@ const financialNav = [
     label: "Compras",
     mobileLabel: "COMPRAS",
     icon: ShoppingCart,
+  },
+  {
+    path: "/financial/cost-centers",
+    label: "Centros de Costo",
+    mobileLabel: "COSTOS",
+    icon: Building2,
   },
   {
     path: "/settings",
