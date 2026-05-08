@@ -9,7 +9,10 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 
 import { useQuotes, type QuoteFilters } from "@features/quotes/hooks/useQuotes";
 import type { QuoteStatus } from "@shared/types";
@@ -28,20 +31,12 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
   REJECTED: "Rechazado",
 };
 
-const STATUS_COLORS: Record<QuoteStatus, string> = {
-  DRAFT: "bg-default-200/60 text-default-600 dark:text-default-400",
-  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  ACCEPTED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  CONVERTED: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  REJECTED: "bg-red-500/15 text-red-600 dark:text-red-400",
-};
-
-const STATUS_DOTS: Record<QuoteStatus, string> = {
-  DRAFT: "bg-default-400",
-  SENT: "bg-blue-500",
-  ACCEPTED: "bg-emerald-500",
-  CONVERTED: "bg-violet-500",
-  REJECTED: "bg-red-500",
+const STATUS_CHIP_COLOR: Record<QuoteStatus, "default" | "primary" | "success" | "secondary" | "danger"> = {
+  DRAFT: "default",
+  SENT: "primary",
+  ACCEPTED: "success",
+  CONVERTED: "secondary",
+  REJECTED: "danger",
 };
 
 const AVATAR_COLORS = [
@@ -148,13 +143,13 @@ export default function QuotesPage() {
             <h1 className="page-title mt-0.5">Presupuestos</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_8px_24px_rgba(59,130,246,0.40)] hover:scale-[1.02] active:scale-[0.98]"
-              onClick={() => navigate("/quotes/new")}
+            <Button
+              color="primary"
+              onPress={() => navigate("/quotes/new")}
+              startContent={<Plus size={16} />}
             >
-              <Plus size={16} strokeWidth={2.5} />
               Nuevo Presupuesto
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -262,67 +257,68 @@ export default function QuotesPage() {
                   </p>
                 </div>
               ) : (
-                <table className="w-full min-w-[800px]">
-                  <thead>
-                    <tr className="text-left text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">
-                      <th className="px-5 pb-3 pt-4">Número</th>
-                      <th className="px-4 pb-3 pt-4">Cliente</th>
-                      <th className="px-4 pb-3 pt-4">Fecha</th>
-                      <th className="px-4 pb-3 pt-4">Vencimiento</th>
-                      <th className="px-4 pb-3 pt-4">Estado</th>
-                      <th className="px-4 pb-3 pt-4 text-right">Total</th>
-                      <th className="px-5 pb-3 pt-4 text-right w-16" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayQuotes.map((quote) => {
+                <Table
+                  aria-label="Presupuestos"
+                  className="min-w-[800px]"
+                  selectionMode="single"
+                  onRowAction={(key) => navigate(`/quotes/${key}`)}
+                >
+                  <TableHeader>
+                    <TableColumn>NÚMERO</TableColumn>
+                    <TableColumn>CLIENTE</TableColumn>
+                    <TableColumn>FECHA</TableColumn>
+                    <TableColumn>VENCIMIENTO</TableColumn>
+                    <TableColumn>ESTADO</TableColumn>
+                    <TableColumn align="end">TOTAL</TableColumn>
+                  </TableHeader>
+                  <TableBody
+                    items={displayQuotes}
+                    emptyContent="No se encontraron presupuestos."
+                  >
+                    {(quote) => {
                       const name = getClientName(quote.client);
                       return (
-                        <tr
-                          key={quote._id}
-                          className="group cursor-pointer border-t border-divider/10 transition-colors hover:bg-blue-500/5"
-                          onClick={() => navigate(`/quotes/${quote._id}`)}
-                        >
-                          <td className="px-5 py-4">
-                            <span className="text-sm font-bold font-mono text-blue-500">
+                        <TableRow key={quote._id}>
+                          <TableCell>
+                            <span className="font-bold font-mono text-blue-500">
                               {quote.quoteNumber}
                             </span>
-                          </td>
-                          <td className="px-4 py-4">
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-3">
                               <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-[11px] font-bold ${avatarColor(name)}`}>
                                 {clientInitials(name)}
                               </div>
-                              <span className="text-sm font-semibold text-foreground">{name}</span>
+                              <span className="font-semibold text-foreground">{name}</span>
                             </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm font-mono text-default-500">{formatDateShort(quote.date)}</span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm font-mono text-default-500">
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono text-default-500">{formatDateShort(quote.date)}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono text-default-500">
                               {quote.expirationDate ? formatDateShort(quote.expirationDate) : "—"}
                             </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${STATUS_COLORS[quote.status]}`}>
-                              <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[quote.status]}`} />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              color={STATUS_CHIP_COLOR[quote.status]}
+                              variant="flat"
+                              size="sm"
+                            >
                               {STATUS_LABELS[quote.status]}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-right">
+                            </Chip>
+                          </TableCell>
+                          <TableCell>
                             <span className="text-sm font-bold font-mono text-foreground">
                               {formatCurrency(quote.total)}
                             </span>
-                          </td>
-                          <td className="px-5 py-4 text-right">
-                            <ChevronRight size={15} className="text-default-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
-                    })}
-                  </tbody>
-                </table>
+                    }}
+                  </TableBody>
+                </Table>
               )}
             </div>
 
@@ -354,12 +350,14 @@ export default function QuotesPage() {
               Presupuestos
             </h1>
           </div>
-          <button
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
-            onClick={() => navigate("/quotes/new")}
+          <Button
+            isIconOnly
+            color="primary"
+            className="h-11 w-11 rounded-2xl shadow-lg shadow-blue-500/25"
+            onPress={() => navigate("/quotes/new")}
           >
             <Plus size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
@@ -452,10 +450,13 @@ export default function QuotesPage() {
                       {quote.quoteNumber} · {formatDateShort(quote.date)}
                     </p>
                     <div className="mt-2 flex gap-2 flex-wrap">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.06em] ${STATUS_COLORS[quote.status]}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[quote.status]}`} />
+                      <Chip
+                        color={STATUS_CHIP_COLOR[quote.status]}
+                        variant="flat"
+                        size="sm"
+                      >
                         {STATUS_LABELS[quote.status]}
-                      </span>
+                      </Chip>
                       {quote.expirationDate && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-default-100 px-2.5 py-1 text-[9px] font-bold text-default-500">
                           <Calendar size={10} />
@@ -492,12 +493,15 @@ export default function QuotesPage() {
       </div>
 
       {/* FAB */}
-      <button
-        className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-[0_16px_34px_rgba(59,130,246,0.35)] transition-all hover:scale-105 active:scale-95 hover:shadow-[0_16px_40px_rgba(59,130,246,0.45)]"
-        onClick={() => navigate("/quotes/new")}
+      <Button
+        isIconOnly
+        color="primary"
+        size="lg"
+        className="fixed bottom-[100px] right-6 z-50 h-14 w-14 rounded-full shadow-[0_16px_34px_rgba(59,130,246,0.35)]"
+        onPress={() => navigate("/quotes/new")}
       >
-        <Plus size={26} strokeWidth={2.5} />
-      </button>
+        <Plus size={26} />
+      </Button>
     </div>
   );
 }
