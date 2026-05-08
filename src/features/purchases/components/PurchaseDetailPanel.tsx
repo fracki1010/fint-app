@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import {
   Loader2,
   ShoppingBag,
@@ -8,11 +10,11 @@ import {
   Receipt,
   PackageCheck,
   FileText,
+  Download,
   Clock,
   BadgeCheck,
   Truck,
   Ban,
-  CreditCard,
   CheckCircle2,
   XCircle,
   DollarSign,
@@ -33,20 +35,6 @@ const STATUS_LABELS: Record<PurchaseStatus, string> = {
   CANCELLED: "Cancelada",
 };
 
-const STATUS_COLORS: Record<PurchaseStatus, string> = {
-  DRAFT: "bg-amber-400/15 text-amber-500 dark:text-amber-400",
-  CONFIRMED: "bg-blue-500/15 text-blue-500 dark:text-blue-400",
-  RECEIVED: "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400",
-  CANCELLED: "bg-red-500/15 text-red-500 dark:text-red-400",
-};
-
-const STATUS_DOTS: Record<PurchaseStatus, string> = {
-  DRAFT: "bg-amber-400",
-  CONFIRMED: "bg-blue-500",
-  RECEIVED: "bg-emerald-500",
-  CANCELLED: "bg-red-500",
-};
-
 const PAYMENT_LABELS: Record<PaymentCondition, string> = {
   CASH: "Contado",
   CREDIT: "Crédito 30d",
@@ -56,12 +44,6 @@ const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   PENDING: "Pendiente",
   PAID: "Pagado",
   PARTIAL: "Parcial",
-};
-
-const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
-  PENDING: "bg-gray-500/15 text-gray-500 dark:text-gray-400",
-  PAID: "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400",
-  PARTIAL: "bg-amber-500/15 text-amber-500 dark:text-amber-400",
 };
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -219,20 +201,31 @@ export default function PurchaseDetailPanel({
       <div className="flex-1 px-6 pb-28">
         <div className="space-y-5 pt-4">
           {/* Status & payment badges */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] ${STATUS_COLORS[selectedPurchase.status]}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[selectedPurchase.status]}`} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <Chip
+              color={status === "DRAFT" ? "default" : status === "CONFIRMED" ? "primary" : status === "RECEIVED" ? "success" : "danger"}
+              variant="flat"
+              size="sm"
+            >
               {STATUS_LABELS[selectedPurchase.status]}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-default-100 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-default-600">
-              <CreditCard size={12} />
+            </Chip>
+            <Chip color={selectedPurchase.paymentCondition === "CASH" ? "success" : "warning"} variant="flat" size="sm">
               {PAYMENT_LABELS[selectedPurchase.paymentCondition]}
-            </span>
+            </Chip>
             {selectedPurchase.paymentStatus && (
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] ${PAYMENT_STATUS_COLORS[selectedPurchase.paymentStatus]}`}>
-                <DollarSign size={12} />
+              <Chip color={selectedPurchase.paymentStatus === "PAID" ? "success" : selectedPurchase.paymentStatus === "PARTIAL" ? "warning" : "default"} variant="flat" size="sm">
                 {PAYMENT_STATUS_LABELS[selectedPurchase.paymentStatus]}
-              </span>
+              </Chip>
+            )}
+            {(status === "CONFIRMED" || status === "RECEIVED") && (
+              <Button size="sm" variant="light" className="ml-auto" onPress={() => {
+                const link = document.createElement("a");
+                link.href = `/api/purchases/${selectedPurchase._id}/pdf`;
+                link.download = `compra_${selectedPurchase._id}.pdf`;
+                link.click();
+              }} startContent={<Download size={14} />}>
+                PDF
+              </Button>
             )}
           </div>
 
@@ -460,58 +453,30 @@ export default function PurchaseDetailPanel({
           <div className="flex gap-3 pt-1">
             {status === "DRAFT" && (
               <>
-                <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 hover:shadow-blue-500/35 transition-all"
-                  disabled={isConfirming}
-                  onClick={onConfirm}
-                >
-                  {isConfirming ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
+                <Button color="primary" className="flex-1" isLoading={isConfirming} onPress={onConfirm} startContent={isConfirming ? null : <CheckCircle2 size={18} />}>
                   Confirmar
-                </button>
-                <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 disabled:opacity-50 hover:shadow-red-500/35 transition-all"
-                  disabled={isCancelling}
-                  onClick={onCancel}
-                >
-                  {isCancelling ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={18} />}
+                </Button>
+                <Button color="danger" className="flex-1" isLoading={isCancelling} onPress={onCancel} startContent={isCancelling ? null : <XCircle size={18} />}>
                   Cancelar
-                </button>
+                </Button>
               </>
             )}
             {status === "CONFIRMED" && (
               <>
-                <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 hover:shadow-emerald-500/35 transition-all"
-                  disabled={isReceiving}
-                  onClick={onReceive}
-                >
-                  {isReceiving ? <Loader2 className="animate-spin" size={18} /> : <PackageCheck size={18} />}
+                <Button color="success" className="flex-1" isLoading={isReceiving} onPress={onReceive} startContent={isReceiving ? null : <PackageCheck size={18} />}>
                   Recibir
-                </button>
-                <button
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 disabled:opacity-50 hover:shadow-red-500/35 transition-all"
-                  disabled={isCancelling}
-                  onClick={onCancel}
-                >
-                  {isCancelling ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={18} />}
+                </Button>
+                <Button color="danger" variant="flat" className="flex-1" isLoading={isCancelling} onPress={onCancel} startContent={isCancelling ? null : <XCircle size={18} />}>
                   Cancelar
-                </button>
+                </Button>
               </>
             )}
-            {status === "RECEIVED" && selectedPurchase?.paymentStatus !== "PAID" && (
-              <button
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 hover:shadow-emerald-500/35 transition-all"
-                disabled={isPaying}
-                onClick={() => {
-                  setPayData({ amount: remaining, paymentMethod: "transfer" });
-                  setShowPayModal(true);
-                }}
-              >
-                {isPaying ? <Loader2 className="animate-spin" size={18} /> : <DollarSign size={18} />}
+            {(status === "CONFIRMED" || status === "RECEIVED") && selectedPurchase?.paymentStatus !== "PAID" && (
+              <Button color="secondary" className="flex-1" isDisabled={isPaying} onPress={() => { setPayData({ amount: remaining, paymentMethod: "transfer" }); setShowPayModal(true); }} startContent={<DollarSign size={18} />}>
                 Registrar Pago
-              </button>
+              </Button>
             )}
-            {status === "RECEIVED" && selectedPurchase?.paymentStatus === "PAID" && (
+            {selectedPurchase?.paymentStatus === "PAID" && (
               <div className="flex-1 rounded-2xl border border-divider/20 bg-emerald-500/10 px-4 py-3.5 text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 size={14} className="inline mr-1" />
                 Compra pagada
