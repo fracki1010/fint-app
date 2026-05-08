@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, Trash2, Tags, Check } from "lucide-react";
+import { Minus, Plus, Trash2, Tags, Check, ChevronDown } from "lucide-react";
 import { QuickSaleItem, PriceTier } from "@shared/types";
 import { InvalidStockItem } from "@features/products/utils/stock";
 import { formatCurrency } from "@shared/utils/currency";
@@ -53,12 +53,15 @@ export default function CartItem({
         {onTierChange && (
           <>
             <button
-              className="mt-0.5 inline-flex items-center gap-1 rounded bg-default-100 px-1.5 py-0.5 text-[10px] font-semibold text-default-500 hover:bg-default-200 transition-colors"
+              className="mt-1 flex items-center gap-1.5 rounded-lg border border-dashed border-default-300 px-2 py-1 text-[11px] font-semibold text-default-500 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
               onClick={(e) => { e.stopPropagation(); setShowTierModal(true); }}
-              title="Cambiar lista de precios"
+              title="Tocar para cambiar lista de precios"
             >
-              <Tags size={10} />
-              {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
+              <Tags size={12} className={item.priceTier && item.priceTier !== "retail" ? "text-warning" : ""} />
+              <span className={item.priceTier && item.priceTier !== "retail" ? "text-warning" : ""}>
+                {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
+              </span>
+              <ChevronDown size={10} className="opacity-60" />
             </button>
 
             {/* Tier selection modal */}
