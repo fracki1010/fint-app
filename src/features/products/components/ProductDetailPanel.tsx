@@ -331,7 +331,7 @@ export function ProductDetailPanel({
                               )}
                             </div>
                             <p className="mt-1 text-xs text-default-500">
-                              {pres.equivalentQty} {pres.unitOfMeasure || product.unitOfMeasure || "u."} por unidad
+                              {pres.equivalentQty} {pres.unitOfMeasure || pres.name || "u."} por presentación
                             </p>
                           </div>
                           <div className="text-right shrink-0">
@@ -697,7 +697,7 @@ export function ProductDetailPanel({
                           <p className={`stat-card-value mt-2 ${isOut || isLow ? "text-danger" : ""}`}>
                             {isOut ? "0" : presStock}
                           </p>
-                          <p className="stat-card-sub">{pres.unitOfMeasure || product.unitOfMeasure || "unidades"}</p>
+                          <p className="stat-card-sub">{pres.unitOfMeasure || pres.name || "unidades"}</p>
                         </div>
                       </div>
 
