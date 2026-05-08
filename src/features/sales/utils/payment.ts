@@ -2,8 +2,7 @@ import { DollarSign } from "lucide-react";
 import { PaymentMethod } from "@shared/types";
 
 export function getPaymentIcon(method: PaymentMethod) {
-  if (method === "cash") return DollarSign;
-  return null;
+  return method === "cash" ? DollarSign : null;
 }
 
 export function getPaymentLabel(method: PaymentMethod, short = false): string {
@@ -11,6 +10,9 @@ export function getPaymentLabel(method: PaymentMethod, short = false): string {
     case "cash": return short ? "Efectivo" : "Efectivo";
     case "card": return short ? "Tarjeta" : "Tarjeta";
     case "transfer": return short ? "Transf." : "Transferencia";
+    case "mercadopago": return "Mercado Pago";
+    case "check": return "Cheque";
+    case "other": return "Otro";
   }
 }
 
@@ -19,5 +21,8 @@ export function getPaymentEmoji(method: PaymentMethod): string {
     case "cash": return "";
     case "card": return "💳";
     case "transfer": return "📱";
+    case "mercadopago": return "🟡";
+    case "check": return "📄";
+    case "other": return "❓";
   }
 }
