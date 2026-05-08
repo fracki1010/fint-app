@@ -25,6 +25,8 @@ import {
   useDeleteQuote,
 } from "@features/quotes/hooks/useQuotes";
 import type { QuoteStatus } from "@shared/types";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCurrency } from "@shared/utils/currency";
 import { formatDateShort, formatDateTime } from "@shared/utils/date";
@@ -40,20 +42,12 @@ const STATUS_LABELS: Record<QuoteStatus, string> = {
   REJECTED: "Rechazado",
 };
 
-const STATUS_COLORS: Record<QuoteStatus, string> = {
-  DRAFT: "bg-default-200/60 text-default-600 dark:text-default-400",
-  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  ACCEPTED: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  CONVERTED: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  REJECTED: "bg-red-500/15 text-red-600 dark:text-red-400",
-};
-
-const STATUS_DOTS: Record<QuoteStatus, string> = {
-  DRAFT: "bg-default-400",
-  SENT: "bg-blue-500",
-  ACCEPTED: "bg-emerald-500",
-  CONVERTED: "bg-violet-500",
-  REJECTED: "bg-red-500",
+const STATUS_CHIP_COLOR: Record<QuoteStatus, "default" | "primary" | "success" | "secondary" | "danger"> = {
+  DRAFT: "default",
+  SENT: "primary",
+  ACCEPTED: "success",
+  CONVERTED: "secondary",
+  REJECTED: "danger",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -108,18 +102,10 @@ function ConfirmActionModal({
         <h3 className="text-lg font-bold text-foreground">{title}</h3>
         <p className="mt-2 text-sm text-default-500">{message}</p>
         <div className="mt-6 flex gap-3">
-          <button
-            className="flex-1 rounded-xl border border-divider/20 px-4 py-2.5 text-sm font-semibold text-default-600 hover:bg-content2/60 transition-colors"
-            disabled={isLoading}
-            onClick={onCancel}
-          >
+          <Button variant="flat" className="flex-1" isDisabled={isLoading} onPress={onCancel}>
             Cancelar
-          </button>
-          <button
-            className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50 ${confirmColor}`}
-            disabled={isLoading}
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button color={confirmColor === "bg-red-500" ? "danger" : "primary"} className="flex-1" isDisabled={isLoading} onPress={onConfirm}>
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="animate-spin" size={16} />
@@ -128,7 +114,7 @@ function ConfirmActionModal({
             ) : (
               confirmLabel
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -263,20 +249,21 @@ export default function QuoteDetailPage() {
       {/* Header */}
       <header className="page-header flex shrink-0 items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-divider/20 text-default-400 hover:text-foreground transition-colors"
-            onClick={() => navigate("/quotes")}
+          <Button
+            isIconOnly
+            variant="flat"
+            className="border border-divider/20"
+            onPress={() => navigate("/quotes")}
           >
             <ArrowLeft size={16} />
-          </button>
+          </Button>
           <div>
             <p className="section-kicker">Presupuestos</p>
             <div className="flex items-center gap-3 mt-0.5">
               <h1 className="page-title">{quote.quoteNumber}</h1>
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${STATUS_COLORS[quote.status]}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[quote.status]}`} />
+              <Chip color={STATUS_CHIP_COLOR[quote.status]} variant="flat" size="sm">
                 {STATUS_LABELS[quote.status]}
-              </span>
+              </Chip>
             </div>
           </div>
         </div>
@@ -285,72 +272,44 @@ export default function QuoteDetailPage() {
         <div className="flex items-center gap-2">
           {quote.status === "DRAFT" && (
             <>
-              <button
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/35 disabled:opacity-50"
-                disabled={isPending}
-                onClick={() => setConfirmAction({ type: "send" })}
-              >
-                <Send size={15} />
+              <Button color="primary" onPress={() => setConfirmAction({ type: "send" })} isDisabled={isPending} startContent={<Send size={15} />}>
                 Enviar
-              </button>
-              <button
-                className="flex items-center gap-2 rounded-xl border border-divider/20 px-4 py-2.5 text-sm font-semibold text-default-600 hover:bg-content2/60 transition-colors"
-                onClick={() => navigate(`/quotes/${quote._id}/edit`)}
-              >
-                <FileEdit size={15} />
+              </Button>
+              <Button variant="flat" onPress={() => navigate(`/quotes/${quote._id}/edit`)} startContent={<FileEdit size={15} />}>
                 Editar
-              </button>
-              <button
-                className="flex items-center gap-2 rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
-                disabled={isPending}
-                onClick={() => setConfirmAction({ type: "delete" })}
-              >
-                <Trash2 size={15} />
+              </Button>
+              <Button color="danger" variant="flat" onPress={() => setConfirmAction({ type: "delete" })} isDisabled={isPending} startContent={<Trash2 size={15} />}>
                 Eliminar
-              </button>
+              </Button>
             </>
           )}
 
           {quote.status === "SENT" && (
             <>
-              <button
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/35 disabled:opacity-50"
-                disabled={isPending}
-                onClick={() => setConfirmAction({ type: "accept" })}
-              >
-                <CheckCircle size={15} />
+              <Button color="success" onPress={() => setConfirmAction({ type: "accept" })} isDisabled={isPending} startContent={<CheckCircle size={15} />}>
                 Aceptar
-              </button>
-              <button
-                className="flex items-center gap-2 rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
-                disabled={isPending}
-                onClick={() => setConfirmAction({ type: "reject" })}
-              >
-                <XCircle size={15} />
+              </Button>
+              <Button color="danger" variant="flat" onPress={() => setConfirmAction({ type: "reject" })} isDisabled={isPending} startContent={<XCircle size={15} />}>
                 Rechazar
-              </button>
+              </Button>
             </>
           )}
 
           {quote.status === "ACCEPTED" && (
-            <button
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/35 disabled:opacity-50"
-              disabled={isPending}
-              onClick={() => setConfirmAction({ type: "convert" })}
-            >
-              <ShoppingCart size={15} />
+            <Button color="secondary" onPress={() => setConfirmAction({ type: "convert" })} isDisabled={isPending} startContent={<ShoppingCart size={15} />}>
               Convertir en Venta
-            </button>
+            </Button>
           )}
 
           {quote.status === "CONVERTED" && quote.convertedToOrder && (
-            <Link
-              to={`/sales/${quote.convertedToOrder}`}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/35"
+            <Button
+              color="secondary"
+              as={Link}
+              href={`/sales/${quote.convertedToOrder}`}
+              startContent={<ExternalLink size={15} />}
             >
-              <ExternalLink size={15} />
               Ver Venta
-            </Link>
+            </Button>
           )}
         </div>
       </header>
