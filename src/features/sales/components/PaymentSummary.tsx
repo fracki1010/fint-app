@@ -4,7 +4,7 @@ import { PaymentMethod } from "@shared/types";
 import { formatCurrency } from "@shared/utils/currency";
 import { getPaymentLabel, getPaymentIcon } from "@features/sales/utils/payment";
 
-function PaymentIcon({ method, size = 16 }: { method: PaymentMethod; size?: number }) {
+function PaymentIcon({ method, size = 14 }: { method: PaymentMethod; size?: number }) {
   const Icon = getPaymentIcon(method);
   return <Icon size={size} />;
 }
@@ -109,7 +109,7 @@ export default function PaymentSummary({
             }`}
             onClick={() => handleCategoryClick(key)}
           >
-            <PaymentIcon method={key as PaymentMethod} size={18} />
+            <PaymentIcon method={key as PaymentMethod} size={14} />
             <span>{label}</span>
           </button>
         ))}
@@ -140,7 +140,7 @@ export default function PaymentSummary({
                   }`}
                   onClick={() => handleSubSelect(method)}
                 >
-            <PaymentIcon method={method} size={15} />
+            <PaymentIcon method={method} size={12} />
             <span>{getPaymentLabel(method, true)}</span>
                 </button>
               ))}
