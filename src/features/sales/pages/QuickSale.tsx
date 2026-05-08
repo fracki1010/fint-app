@@ -340,7 +340,7 @@ export default function QuickSalePage() {
                         </p>
                         {/* Tier prices preview */}
                         <div className="mt-1 flex items-center gap-2 text-[10px]">
-                          {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                          {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
                             const tierPrice = resolveProductPrice(p, tier);
                             const isActive = tier === priceTier;
                             return (
@@ -446,7 +446,7 @@ export default function QuickSalePage() {
                 </button>
                 {showTierMenu && (
                   <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
-                    {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                    {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
                       const active = (overrideTier || clientPriceTier) === tier;
                       return (
                         <button
@@ -722,7 +722,7 @@ export default function QuickSalePage() {
                               <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
                               <p className="text-[11px] text-default-400">{p.barcode || p.sku || "Sin código"}</p>
                               <div className="mt-1 flex items-center gap-2 text-[10px]">
-                                {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                                {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
                                   const tierPrice = resolveProductPrice(p, tier);
                                   const isActive = tier === priceTier;
                                   return (
@@ -793,7 +793,7 @@ export default function QuickSalePage() {
                       </button>
                       {showTierMenu && (
                         <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
-                          {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                          {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
                             const active = (overrideTier || clientPriceTier) === tier;
                             return (
                               <button

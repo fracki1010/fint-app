@@ -18,14 +18,18 @@ const DEFAULT_TIER_CONFIG: Record<PriceTier, TierConfig> = {
   retail: { name: "Minorista", enabled: true },
   wholesale: { name: "Mayorista", enabled: true },
   distributor: { name: "Distribuidor", enabled: true },
+  premium: { name: "Premium", enabled: true },
+  especial: { name: "Especial", enabled: true },
 };
 
-const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor"];
+const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
 
 const TIER_BADGE_COLORS: Record<PriceTier, string> = {
   retail: "bg-primary/10 text-primary border-primary/20",
   wholesale: "bg-success/10 text-success border-success/20",
   distributor: "bg-warning/10 text-warning border-warning/20",
+  premium: "bg-secondary/10 text-secondary border-secondary/20",
+  especial: "bg-danger/10 text-danger border-danger/20",
 };
 
 export function ClientPriceListSelector({

@@ -50,12 +50,14 @@ export interface Presentation {
   isActive?: boolean;
 }
 
-export type PriceTier = "retail" | "wholesale" | "distributor";
+export type PriceTier = "retail" | "wholesale" | "distributor" | "premium" | "especial";
 
 export interface PriceTiers {
   retail?: number;
   wholesale?: number;
   distributor?: number;
+  premium?: number;
+  especial?: number;
 }
 
 export interface Product {
@@ -467,6 +469,8 @@ export interface PriceTierConfig {
   retail: { name: string; enabled: boolean };
   wholesale: { name: string; enabled: boolean };
   distributor: { name: string; enabled: boolean };
+  premium?: { name: string; enabled: boolean };
+  especial?: { name: string; enabled: boolean };
 }
 
 // ── Bulk Import Types ─────────────────────────────────────────────────

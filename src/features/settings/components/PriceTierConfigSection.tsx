@@ -15,24 +15,14 @@ const DEFAULT_CONFIG: PriceTierConfig = {
   distributor: { name: "Distribuidor", enabled: true },
 };
 
-const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor"];
+const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
 
 const TIER_LABELS: Record<PriceTier, { label: string; description: string; color: string }> = {
-  retail: {
-    label: "Minorista (Retail)",
-    description: "Precio estándar para ventas al público general",
-    color: "primary",
-  },
-  wholesale: {
-    label: "Mayorista (Wholesale)",
-    description: "Precio especial para compras al por mayor",
-    color: "success",
-  },
-  distributor: {
-    label: "Distribuidor (Distributor)",
-    description: "Precio preferencial para distribuidores",
-    color: "warning",
-  },
+  retail: { label: "Minorista (Retail)", description: "Precio estándar para ventas al público general", color: "primary" },
+  wholesale: { label: "Mayorista (Wholesale)", description: "Precio especial para compras al por mayor", color: "success" },
+  distributor: { label: "Distribuidor (Distributor)", description: "Precio preferencial para distribuidores", color: "warning" },
+  premium: { label: "Premium", description: "Precio para línea premium", color: "secondary" },
+  especial: { label: "Especial", description: "Precio especial/promocional", color: "danger" },
 };
 
 export function PriceTierConfigSection({
@@ -82,7 +72,7 @@ export function PriceTierConfigSection({
       {/* Tier configurations */}
       <div className="space-y-4">
         {TIER_ORDER.map((tier) => {
-          const tierConfig = localConfig[tier];
+          const tierConfig = localConfig[tier] || { name: tier, enabled: true };
           const tierMeta = TIER_LABELS[tier];
           const isRetail = tier === "retail";
 

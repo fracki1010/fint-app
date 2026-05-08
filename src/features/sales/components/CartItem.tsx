@@ -59,7 +59,7 @@ export default function CartItem({
             >
               <Tags size={12} className={item.priceTier && item.priceTier !== "retail" ? "text-warning" : ""} />
               <span className={item.priceTier && item.priceTier !== "retail" ? "text-warning" : ""}>
-                {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
+                {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : item.priceTier === "premium" ? "Premium" : item.priceTier === "especial" ? "Especial" : "Minorista"}
               </span>
               <ChevronDown size={10} className="opacity-60" />
             </button>
@@ -73,7 +73,7 @@ export default function CartItem({
                     <p className="text-xs text-default-500 mb-3">{item.presentation.name}</p>
                   )}
                   <div className="space-y-2">
-                    {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                    {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
                       const baseRetail = resolveProductPrice(item.product, "retail");
                       const tierBasePrice = resolveProductPrice(item.product, tier);
                       if (tierBasePrice <= 0) return null;
@@ -95,10 +95,10 @@ export default function CartItem({
                         >
                           <div className="flex-1">
                             <p className={`text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>
-                              {tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}
+                              {tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : tier === "distributor" ? "Distribuidor" : tier === "premium" ? "Premium" : "Especial"}
                             </p>
                             <p className="text-xs text-default-500">
-                              {tier === "retail" ? "Precio de lista común" : tier === "wholesale" ? "Volumen mayor" : "Distribución"}
+                              {tier === "retail" ? "Precio de lista común" : tier === "wholesale" ? "Volumen mayor" : tier === "distributor" ? "Distribución" : tier === "premium" ? "Lista premium" : "Precio especial"}
                             </p>
                           </div>
                           <div className="text-right">

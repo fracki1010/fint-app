@@ -135,7 +135,9 @@ export function getTierDisplayName(
     retail: "Minorista",
     wholesale: "Mayorista",
     distributor: "Distribuidor",
+    premium: "Premium",
+    especial: "Especial",
   };
 
-  return defaultNames[tier];
+  return defaultNames[tier] || tier;
 }

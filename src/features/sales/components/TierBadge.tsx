@@ -1,4 +1,4 @@
-import { PriceTier } from "@shared/types";
+import { PriceTier, PriceTierConfig } from "@shared/types";
 import { getTierDisplayName } from "@features/products/utils/priceResolver";
 import { Tags } from "lucide-react";
 
@@ -6,19 +6,23 @@ interface TierBadgeProps {
   tier: PriceTier;
   size?: "sm" | "md" | "lg";
   showIcon?: boolean;
-  tierConfig?: Record<PriceTier, { name: string; enabled: boolean }>;
+  tierConfig?: PriceTierConfig;
 }
 
 const TIER_BADGE_COLORS: Record<PriceTier, string> = {
   retail: "bg-primary/10 text-primary border-primary/20",
   wholesale: "bg-success/10 text-success border-success/20",
   distributor: "bg-warning/10 text-warning border-warning/20",
+  premium: "bg-secondary/10 text-secondary border-secondary/20",
+  especial: "bg-danger/10 text-danger border-danger/20",
 };
 
 const TIER_ORDER_LABELS: Record<PriceTier, string> = {
   retail: "Minorista",
   wholesale: "Mayorista",
   distributor: "Distribuidor",
+  premium: "Premium",
+  especial: "Especial",
 };
 
 const SIZE_CLASSES = {
