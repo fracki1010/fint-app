@@ -59,6 +59,9 @@ const AuditLogPage = lazy(() => import("@features/superadmin/pages/AuditLogPage"
 const BankAccountsPage = lazy(() => import("@features/banking/pages/BankAccounts"));
 const BankTransactionsPage = lazy(() => import("@features/banking/pages/BankTransactions"));
 const ReconciliationPage = lazy(() => import("@features/banking/pages/Reconciliation"));
+const QuotesPage = lazy(() => import("@features/quotes/pages/Quotes"));
+const QuoteDetailPage = lazy(() => import("@features/quotes/pages/QuoteDetail"));
+const QuoteFormPage = lazy(() => import("@features/quotes/pages/QuoteForm"));
 
 function FullScreenLoader() {
   return (
@@ -207,6 +210,10 @@ function App() {
           <Route element={<PlanGuard feature="banking"><BankAccountsPage /></PlanGuard>} path="/banking" />
           <Route element={<PlanGuard feature="banking"><BankTransactionsPage /></PlanGuard>} path="/banking/:id/transactions" />
           <Route element={<PlanGuard feature="banking"><ReconciliationPage /></PlanGuard>} path="/banking/:id/reconciliation" />
+          <Route element={<PlanGuard feature="quotes"><QuotesPage /></PlanGuard>} path="/quotes" />
+          <Route element={<PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard>} path="/quotes/new" />
+          <Route element={<PlanGuard feature="quotes"><QuoteDetailPage /></PlanGuard>} path="/quotes/:id" />
+          <Route element={<PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard>} path="/quotes/:id/edit" />
           <Route element={<NotFoundPage />} path="*" />
         </Route>
       </Routes>

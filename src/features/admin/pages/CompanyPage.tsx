@@ -24,6 +24,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   unlimited_products: "Productos Ilimitados",
   unlimited_orders: "Ventas Ilimitadas",
   banking: "Conciliación Bancaria",
+  quotes: "Presupuestos",
 };
 
 function ChangePlanModal({

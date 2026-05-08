@@ -11,11 +11,12 @@ export type Feature =
   | "team_management"
   | "unlimited_products"
   | "unlimited_orders"
-  | "banking";
+  | "banking"
+  | "quotes";
 
 const FEATURE_MATRIX: Record<string, Feature[]> = {
   essential: [],
-  business: ["financial_center", "recipes", "supplier_account", "client_account", "team_management", "unlimited_products", "unlimited_orders", "banking"],
+  business: ["financial_center", "recipes", "supplier_account", "client_account", "team_management", "unlimited_products", "unlimited_orders", "banking", "quotes"],
   enterprise: [
     "financial_center",
     "recipes",
@@ -27,6 +28,7 @@ const FEATURE_MATRIX: Record<string, Feature[]> = {
     "unlimited_products",
     "unlimited_orders",
     "banking",
+    "quotes",
   ],
 };
 

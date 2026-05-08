@@ -30,6 +30,7 @@ import {
   Moon,
   MoreHorizontal,
   Lock,
+  FileText,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-5.svg";
@@ -59,6 +60,7 @@ export default function MobileLayout() {
     { path: "/supplies", label: "Insumos", icon: Package },
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     { path: "/purchases", label: "Compras", icon: ShoppingCart },
+    ...(hasFeature("quotes") ? [{ path: "/quotes", label: "Presupuestos", icon: FileText }] : []),
     { path: "/suppliers", label: "Proveedores", icon: Truck },
     ...(hasFeature("recipes") ? [{ path: "/recipes", label: "Recetas", icon: ChefHat }] : []),
   ];

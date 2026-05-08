@@ -566,3 +566,44 @@ export interface CostCenterReport {
   };
   dateRange: { from: string; to: string };
 }
+
+// ── Quotes / Presupuestos ──────────────────────────────────────────────
+
+export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "CONVERTED" | "REJECTED";
+
+export interface QuoteItem {
+  product: string;
+  productId?: string;
+  presentationId?: string;
+  quantity: number;
+  price: number;
+  lineTotal: number;
+}
+
+export interface Quote {
+  _id: string;
+  quoteNumber: string;
+  client: { _id: string; name?: string; phone?: string } | string;
+  date: string;
+  expirationDate?: string;
+  status: QuoteStatus;
+  items: QuoteItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  notes?: string;
+  createdBy?: { _id: string; fullName: string };
+  convertedToOrder?: string;
+  createdAt: string;
+}
+
+export interface CreateQuoteRequest {
+  client: string;
+  date: string;
+  expirationDate?: string;
+  items: { product: string; productId?: string; quantity: number; price: number; lineTotal: number }[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  notes?: string;
+}
