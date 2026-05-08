@@ -35,13 +35,16 @@ const CATEGORIES: { key: PaymentCategory; label: string }[] = [
 ];
 
 const CARD_OPTIONS: PaymentMethod[] = ["card"];
-const TRANSFER_OPTIONS: PaymentMethod[] = ["mercadopago", "naranja_x", "uala", "transfer"];
+const TRANSFER_OPTIONS: PaymentMethod[] = [
+  "mercadopago", "naranja_x", "uala", "brubank", "santander",
+  "supervielle", "frances", "bna", "prex", "cocos", "galicia", "transfer",
+];
 const OTHER_OPTIONS: PaymentMethod[] = ["check", "other"];
 
 function getCategory(method: PaymentMethod): PaymentCategory {
   if (method === "cash") return "cash";
   if (method === "card") return "card";
-  if (["mercadopago", "naranja_x", "uala", "transfer"].includes(method)) return "transfer";
+  if (["mercadopago", "naranja_x", "uala", "brubank", "santander", "supervielle", "frances", "bna", "prex", "cocos", "galicia", "transfer"].includes(method)) return "transfer";
   return "other";
 }
 
@@ -125,7 +128,7 @@ export default function PaymentSummary({
           </button>
 
           {expanded && (
-            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+            <div className="mt-1.5 grid grid-cols-3 gap-1.5">
               {subOptions.map((method) => (
                 <button
                   key={method}

@@ -429,7 +429,11 @@ export interface Recipe {
   updatedAt?: string;
 }
 
-export type PaymentMethod = "cash" | "card" | "mercadopago" | "transfer" | "naranja_x" | "uala" | "check" | "other";
+export type PaymentMethod =
+  | "cash" | "card" | "mercadopago" | "transfer"
+  | "naranja_x" | "uala" | "brubank" | "santander"
+  | "supervielle" | "frances" | "bna" | "prex" | "cocos" | "galicia"
+  | "check" | "other";
 
 export interface QuickSaleItem {
   product: Product;
