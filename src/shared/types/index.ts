@@ -440,6 +440,7 @@ export interface QuickSaleItem {
   product: Product;
   presentation?: Presentation;
   quantity: number;
+  priceTier?: PriceTier;
 }
 
 export interface ProduceResult {

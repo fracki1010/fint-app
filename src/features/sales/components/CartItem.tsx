@@ -1,5 +1,5 @@
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { QuickSaleItem } from "@shared/types";
+import { Minus, Plus, Trash2, Tags } from "lucide-react";
+import { QuickSaleItem, PriceTier } from "@shared/types";
 import { InvalidStockItem } from "@features/products/utils/stock";
 import { formatCurrency } from "@shared/utils/currency";
 
@@ -12,6 +12,7 @@ interface CartItemProps {
   itemPrice: number;
   onUpdateQuantity: (productId: string, quantity: number, presentationId?: string) => void;
   onRemove: (productId: string, presentationId?: string) => void;
+  onTierChange?: (productId: string, tier: PriceTier, presentationId?: string) => void;
 }
 
 export default function CartItem({
@@ -23,6 +24,7 @@ export default function CartItem({
   itemPrice,
   onUpdateQuantity,
   onRemove,
+  onTierChange,
 }: CartItemProps) {
   const lowStock = available > 0 && available <= (item.product.minStock || 5);
 
@@ -45,7 +47,23 @@ export default function CartItem({
             </span>
           )}
         </p>
-        <p className="text-xs text-default-400">
+        {onTierChange && (
+          <button
+            className="mt-0.5 inline-flex items-center gap-1 rounded bg-default-100 px-1.5 py-0.5 text-[10px] font-semibold text-default-500 hover:bg-default-200 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
+              const current = item.priceTier || "retail";
+              const idx = tiers.indexOf(current);
+              onTierChange(item.product._id, tiers[(idx + 1) % tiers.length], item.presentation?._id);
+            }}
+            title="Cambiar lista de precios"
+          >
+            <Tags size={10} />
+            {item.priceTier === "wholesale" ? "Mayorista" : item.priceTier === "distributor" ? "Distribuidor" : "Minorista"}
+          </button>
+        )}
+        <p className="mt-0.5 text-xs text-default-400">
           {formatCurrency(itemPrice, currency)} c/u
         </p>
         <p

@@ -91,6 +91,7 @@ export default function QuickSalePage() {
     currency,
     stockErrors,
     priceTier,
+    updateItemTier,
     creditCheck,
     createOrder,
     isCreating,
@@ -578,7 +579,7 @@ export default function QuickSalePage() {
                     (item.presentation ? e.productName.includes(item.presentation.name) : true),
                 );
                 const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
+                const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
                 return (
                   <CartItem
                     key={`${item.product._id}-${item.presentation?._id || "base"}`}
@@ -590,6 +591,7 @@ export default function QuickSalePage() {
                     itemPrice={itemPrice}
                     onUpdateQuantity={updateQuantity}
                     onRemove={removeItem}
+                    onTierChange={updateItemTier}
                   />
                 );
               })}
@@ -881,19 +883,20 @@ export default function QuickSalePage() {
                       const available = getAvailableStock(item.product, item.presentation);
                       const error = stockErrors.find((e) => e.productId === item.product._id && (item.presentation ? e.productName.includes(item.presentation.name) : true));
                        const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                       const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
+                       const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
                        return (
-                         <CartItem
-                           key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                           item={item}
-                           currency={currency}
-                           available={available}
-                           error={error}
-                           isWarning={isWarning}
-                           itemPrice={itemPrice}
-                           onUpdateQuantity={updateQuantity}
-                           onRemove={removeItem}
-                         />
+                          <CartItem
+                            key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                            item={item}
+                            currency={currency}
+                            available={available}
+                            error={error}
+                            isWarning={isWarning}
+                            itemPrice={itemPrice}
+                            onUpdateQuantity={updateQuantity}
+                            onRemove={removeItem}
+                            onTierChange={updateItemTier}
+                          />
                       );
                     })}
                   </div>
@@ -912,7 +915,7 @@ export default function QuickSalePage() {
               ) : (
                 <div className="space-y-3">
                    {items.map((item) => {
-                    const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, priceTier);
+                    const itemPrice = item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier);
                     return (
                       <div key={`sum-${item.product._id}-${item.presentation?._id || "base"}`} className="flex items-center justify-between text-sm">
                         <div className="min-w-0 flex-1">

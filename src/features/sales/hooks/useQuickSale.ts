@@ -36,7 +36,7 @@ export function buildQuickSalePayload({
       productId: item.product._id,
       quantity: item.quantity,
       // Use presentation price if available, otherwise resolve tier price
-      price: item.presentation?.price ?? resolveProductPrice(item.product, priceTier),
+      price: item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier),
       ...(item.presentation ? { presentationId: item.presentation._id } : {}),
     })),
     totalAmount: total,
@@ -74,8 +74,9 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
   const currency = settings?.currency || "USD";
   const taxRate = (settings?.taxRate || 0) / 100;
 
-  const addItem = useCallback((product: Product, presentation?: Presentation): boolean => {
+  const addItem = useCallback((product: Product, presentation?: Presentation, itemTier?: PriceTier): boolean => {
     let added = true;
+    const effectiveTier = itemTier || priceTier;
     setItems((current) => {
       if (!canAddProductToCart(current, product, presentation)) {
         added = false;
@@ -94,10 +95,10 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
             : item,
         );
       }
-      return [...current, { product, presentation, quantity: 1 }];
+      return [...current, { product, presentation, quantity: 1, priceTier: effectiveTier }];
     });
     return added;
-  }, []);
+  }, [priceTier]);
 
   const updateQuantity = useCallback((productId: string, quantity: number, presentationId?: string) => {
     if (quantity <= 0) {
@@ -131,6 +132,16 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     );
   }, []);
 
+  const updateItemTier = useCallback((productId: string, tier: PriceTier, presentationId?: string) => {
+    setItems((current) =>
+      current.map((item) =>
+        item.product._id === productId && item.presentation?._id === (presentationId || null)
+          ? { ...item, priceTier: tier }
+          : item,
+      ),
+    );
+  }, []);
+
   const clearCart = useCallback(() => {
     setItems([]);
     setCashReceived(0);
@@ -141,7 +152,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     () =>
       items.reduce(
         (sum, item) =>
-          sum + ((item.presentation?.price ?? resolveProductPrice(item.product, priceTier)) * item.quantity),
+          sum + ((item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier)) * item.quantity),
         0,
       ),
     [items, priceTier],
@@ -216,6 +227,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     addItem,
     updateQuantity,
     removeItem,
+    updateItemTier,
     clearCart,
     subtotal,
     tax,
