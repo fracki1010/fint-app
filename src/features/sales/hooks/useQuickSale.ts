@@ -134,11 +134,13 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
 
   const updateItemTier = useCallback((productId: string, tier: PriceTier, presentationId?: string) => {
     setItems((current) =>
-      current.map((item) =>
-        item.product._id === productId && item.presentation?._id === (presentationId || null)
+      current.map((item) => {
+        const itemPresId = item.presentation?._id || null;
+        const targetPresId = presentationId || null;
+        return item.product._id === productId && itemPresId === targetPresId
           ? { ...item, priceTier: tier }
-          : item,
-      ),
+          : item;
+      }),
     );
   }, []);
 
