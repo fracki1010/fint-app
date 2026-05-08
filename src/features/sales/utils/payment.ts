@@ -18,6 +18,9 @@ import {
   PrexIcon,
   CocosIcon,
   GaliciaIcon,
+  LemonIcon,
+  AstroPayIcon,
+  ModoIcon,
 } from "@shared/components/PaymentBrandIcons";
 
 export function getPaymentIcon(method: PaymentMethod) {
@@ -36,6 +39,9 @@ export function getPaymentIcon(method: PaymentMethod) {
     case "prex": return PrexIcon;
     case "cocos": return CocosIcon;
     case "galicia": return GaliciaIcon;
+    case "lemon": return LemonIcon;
+    case "astropay": return AstroPayIcon;
+    case "modo": return ModoIcon;
     case "check": return ScrollText;
     case "other": return Ellipsis;
   }
@@ -57,6 +63,9 @@ export function getPaymentLabel(method: PaymentMethod, short = false): string {
     case "prex": return "Prex";
     case "cocos": return "Cocos";
     case "galicia": return "Galicia";
+    case "lemon": return "Lemon";
+    case "astropay": return "AstroPay";
+    case "modo": return "MODO";
     case "check": return "Cheque";
     case "other": return "Otro";
   }
