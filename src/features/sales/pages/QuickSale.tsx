@@ -309,72 +309,33 @@ export default function QuickSalePage() {
                   .filter((i) => i.product._id === p._id && !i.presentation)
                   .reduce((s, i) => s + i.quantity, 0);
                 const baseOutOfStock = baseAvailable <= 0;
-                const baseCantAdd = baseInCart >= baseAvailable;
 
                 return (
                   <div key={p._id} className="border-b border-divider/60 last:border-0">
-                    {/* Base product header — always visible, always clickable */}
-                    <button
-                      className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
-                        baseOutOfStock || baseCantAdd
-                          ? "cursor-not-allowed opacity-50"
-                          : "hover:bg-content2/60"
-                      }`}
-                      disabled={baseOutOfStock || baseCantAdd}
-                      onMouseDown={() => {
-                        if (!baseOutOfStock && !baseCantAdd) addProductToCart(p);
-                      }}
-                    >
+                    {/* Product header */}
+                    <div className="flex w-full items-center justify-between px-4 py-3 pointer-events-none">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
                         <p className="text-[11px] text-default-400">
                           {p.barcode || p.sku || "Sin código"}
                         </p>
-                        {!hasPresentations && (
+                      </div>
+                      {!hasPresentations && (
+                        <div className="ml-3 shrink-0 text-right">
+                          <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
                           <p className={`mt-0.5 text-[11px] font-semibold ${
                             baseOutOfStock ? "text-danger" : baseAvailable > 0 && baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"
                           }`}>
                             {baseOutOfStock ? "Sin stock" : `${baseAvailable} en stock`}
                             {baseInCart > 0 && ` · ${baseInCart} en carrito`}
                           </p>
-                        )}
-                      </div>
-                      <div className="ml-3 shrink-0 text-right">
-                        <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
-                        {!hasPresentations && (
-                          <p className="text-[10px] text-default-400">{p.unitOfMeasure || "ud."}</p>
-                        )}
-                      </div>
-                    </button>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Presentations — shown as sub-options when any exist */}
                     {hasPresentations && (
                       <div className="space-y-1 px-4 pb-3">
-                        {/* Base product as a presentation option */}
-                        <button
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
-                            baseOutOfStock || baseCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"
-                          }`}
-                          disabled={baseOutOfStock || baseCantAdd}
-                          onMouseDown={() => {
-                            if (!baseOutOfStock && !baseCantAdd) addProductToCart(p);
-                          }}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <span className="font-semibold text-foreground">Base</span>
-                            <span className="ml-2 text-default-400">
-                              {p.unitOfMeasure || "ud."}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[11px] font-semibold ${baseOutOfStock ? "text-danger" : baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"}`}>
-                              {baseOutOfStock ? "Sin stock" : `${baseAvailable} disp.`}
-                              {baseInCart > 0 && ` · ${baseInCart} en carrito`}
-                            </span>
-                            <span className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</span>
-                          </div>
-                        </button>
-
                         {activePresentations.map((pr) => {
                           const prAvailable = getAvailableStock(p, pr);
                           const prInCart = items
@@ -669,52 +630,17 @@ export default function QuickSalePage() {
                     searchResults.map((p) => {
                       const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
                       const hasPresentations = activePresentations.length > 0;
-                      const baseAvailable = getAvailableStock(p);
-                      const baseInCart = items.filter((i) => i.product._id === p._id && !i.presentation).reduce((s, i) => s + i.quantity, 0);
-                      const baseOutOfStock = baseAvailable <= 0;
-                      const baseCantAdd = baseInCart >= baseAvailable;
-
                       return (
                         <div key={p._id} className="border-b border-divider/60 last:border-0">
-                          <button
-                            className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${baseOutOfStock || baseCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60"}`}
-                            disabled={baseOutOfStock || baseCantAdd}
-                            onMouseDown={() => { if (!baseOutOfStock && !baseCantAdd) addProductToCart(p); }}
-                          >
+                          <div className="flex w-full items-center justify-between px-4 py-3 pointer-events-none">
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
                               <p className="text-[11px] text-default-400">{p.barcode || p.sku || "Sin código"}</p>
-                              {!hasPresentations && (
-                                <p className={`mt-0.5 text-[11px] font-semibold ${baseOutOfStock ? "text-danger" : baseAvailable > 0 && baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"}`}>
-                                  {baseOutOfStock ? "Sin stock" : `${baseAvailable} en stock`}{baseInCart > 0 && ` · ${baseInCart} en carrito`}
-                                </p>
-                              )}
                             </div>
-                            <div className="ml-3 shrink-0 text-right">
-                              <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
-                              {!hasPresentations && <p className="text-[10px] text-default-400">{p.unitOfMeasure || "ud."}</p>}
-                            </div>
-                          </button>
+                          </div>
 
                           {hasPresentations && (
                             <div className="space-y-1 px-4 pb-3">
-                              <button
-                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${baseOutOfStock || baseCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"}`}
-                                disabled={baseOutOfStock || baseCantAdd}
-                                onMouseDown={() => { if (!baseOutOfStock && !baseCantAdd) addProductToCart(p); }}
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <span className="font-semibold text-foreground">Base</span>
-                                  <span className="ml-2 text-default-400">{p.unitOfMeasure || "ud."}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                   <span className={`text-[11px] font-semibold ${baseOutOfStock ? "text-danger" : baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"}`}>
-                                     {baseOutOfStock ? "Sin stock" : `${baseAvailable} disp.`}{baseInCart > 0 && ` · ${baseInCart} en carrito`}
-                                   </span>
-                                   <span className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</span>
-                                </div>
-                              </button>
-
                               {activePresentations.map((pr) => {
                                 const prAvailable = getAvailableStock(p, pr);
                                 const prInCart = items.filter((i) => i.product._id === p._id && i.presentation?._id === pr._id).reduce((s, i) => s + i.quantity, 0);
