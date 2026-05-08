@@ -466,12 +466,20 @@ export interface ProductionLog {
 // ── Settings ──────────────────────────────────────────────────────────
 
 export interface PriceTierConfig {
-  retail: { name: string; enabled: boolean };
-  wholesale: { name: string; enabled: boolean };
-  distributor: { name: string; enabled: boolean };
-  premium?: { name: string; enabled: boolean };
-  especial?: { name: string; enabled: boolean };
+  retail: { name: string; enabled: boolean; percentage?: number };
+  wholesale: { name: string; enabled: boolean; percentage?: number };
+  distributor: { name: string; enabled: boolean; percentage?: number };
+  premium?: { name: string; enabled: boolean; percentage?: number };
+  especial?: { name: string; enabled: boolean; percentage?: number };
 }
+
+export const DEFAULT_TIER_PERCENTAGES: Record<PriceTier, number> = {
+  retail: 100,
+  wholesale: 85,
+  distributor: 75,
+  premium: 120,
+  especial: 90,
+};
 
 // ── Bulk Import Types ─────────────────────────────────────────────────
 

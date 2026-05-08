@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Input } from "@heroui/input";
 import { Switch } from "@heroui/switch";
-import { PriceTier, PriceTierConfig } from "@shared/types";
-import { Tags, Info } from "lucide-react";
+import { PriceTier, PriceTierConfig, DEFAULT_TIER_PERCENTAGES } from "@shared/types";
+import { Tags, Info, Percent } from "lucide-react";
 
 interface PriceTierConfigSectionProps {
   config?: PriceTierConfig;
@@ -10,9 +10,11 @@ interface PriceTierConfigSectionProps {
 }
 
 const DEFAULT_CONFIG: PriceTierConfig = {
-  retail: { name: "Minorista", enabled: true },
-  wholesale: { name: "Mayorista", enabled: true },
-  distributor: { name: "Distribuidor", enabled: true },
+  retail: { name: "Minorista", enabled: true, percentage: 100 },
+  wholesale: { name: "Mayorista", enabled: true, percentage: 85 },
+  distributor: { name: "Distribuidor", enabled: true, percentage: 75 },
+  premium: { name: "Premium", enabled: true, percentage: 120 },
+  especial: { name: "Especial", enabled: true, percentage: 90 },
 };
 
 const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
@@ -38,6 +40,15 @@ export function PriceTierConfigSection({
     const updated = {
       ...localConfig,
       [tier]: { ...localConfig[tier], name },
+    };
+    setLocalConfig(updated);
+    onChange(updated);
+  };
+
+  const handlePercentageChange = (tier: PriceTier, percentage: number) => {
+    const updated = {
+      ...localConfig,
+      [tier]: { ...localConfig[tier], percentage: Math.max(1, Math.min(500, percentage || 100)) },
     };
     setLocalConfig(updated);
     onChange(updated);
@@ -115,19 +126,32 @@ export function PriceTierConfigSection({
               </div>
 
               {tierConfig.enabled && (
-                <div className="mt-4">
+                <div className="mt-4 flex gap-3">
                   <Input
-                    label="Nombre personalizado"
+                    label="Nombre"
                     placeholder={TIER_LABELS[tier].label.split(" ")[0]}
                     value={tierConfig.name}
                     onChange={(e) => handleNameChange(tier, e.target.value)}
                     variant="bordered"
                     size="sm"
-                    classNames={{
-                      input: "text-sm",
-                      label: "text-xs",
-                    }}
+                    className="flex-1"
+                    classNames={{ input: "text-sm", label: "text-xs" }}
                   />
+                  {!isRetail && (
+                    <Input
+                      label="% sobre Minorista"
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={String(tierConfig.percentage || DEFAULT_TIER_PERCENTAGES[tier])}
+                      onChange={(e) => handlePercentageChange(tier, Number(e.target.value))}
+                      variant="bordered"
+                      size="sm"
+                      className="w-28"
+                      endContent={<Percent size={14} className="text-default-400" />}
+                      classNames={{ input: "text-sm text-right", label: "text-xs" }}
+                    />
+                  )}
                 </div>
               )}
             </div>

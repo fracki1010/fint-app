@@ -6,6 +6,7 @@ import { calculateMargin, getTierDisplayName } from "../utils/priceResolver";
 interface TierConfig {
   name: string;
   enabled: boolean;
+  percentage?: number;
 }
 
 interface ProductTierPriceInputProps {
@@ -18,11 +19,11 @@ interface ProductTierPriceInputProps {
 }
 
 const DEFAULT_TIER_CONFIG: Record<PriceTier, TierConfig> = {
-  retail: { name: "Minorista", enabled: true },
-  wholesale: { name: "Mayorista", enabled: true },
-  distributor: { name: "Distribuidor", enabled: true },
-  premium: { name: "Premium", enabled: true },
-  especial: { name: "Especial", enabled: true },
+  retail: { name: "Minorista", enabled: true, percentage: 100 },
+  wholesale: { name: "Mayorista", enabled: true, percentage: 85 },
+  distributor: { name: "Distribuidor", enabled: true, percentage: 75 },
+  premium: { name: "Premium", enabled: true, percentage: 120 },
+  especial: { name: "Especial", enabled: true, percentage: 90 },
 };
 
 const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
@@ -85,9 +86,30 @@ export function ProductTierPriceInput({
                   <span className="text-sm font-semibold text-foreground">
                     {getTierDisplayName(tier, tierConf)}
                   </span>
+                  {!value && tier !== "retail" && tierConf?.percentage && (
+                    <span className="text-[10px] text-default-400 ml-1">
+                      ({tierConf.percentage}%)
+                    </span>
+                  )}
                 </label>
 
-                <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+                <div className="flex items-center gap-2 flex-1 max-w-[220px]">
+                  {!value && tier !== "retail" && tierConf?.percentage && (
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-lg bg-primary/10 px-2 py-1.5 text-[10px] font-semibold text-primary hover:bg-primary/20 transition-colors"
+                      onClick={() => {
+                        const retailPrice = priceTiers?.retail;
+                        if (retailPrice && retailPrice > 0) {
+                          const suggested = retailPrice * (tierConf.percentage! / 100);
+                          onChange(tier, suggested.toFixed(2));
+                        }
+                      }}
+                      title={`Auto-calcular: ${tierConf.percentage}% de Minorista`}
+                    >
+                      Sugerir
+                    </button>
+                  )}
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-default-400">
                       {currency === "USD" ? "$" : "$"}
