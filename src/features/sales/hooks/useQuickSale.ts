@@ -141,7 +141,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     () =>
       items.reduce(
         (sum, item) =>
-          sum + (resolveProductPrice(item.product, priceTier) * item.quantity),
+          sum + ((item.presentation?.price ?? resolveProductPrice(item.product, priceTier)) * item.quantity),
         0,
       ),
     [items, priceTier],

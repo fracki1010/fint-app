@@ -108,7 +108,7 @@ export default function NewOperationPage() {
   const subtotal = useMemo(
     () =>
       cart.reduce(
-        (acc, item) => acc + (item.product.price ?? 0) * item.quantity,
+        (acc, item) => acc + ((item.presentation?.price ?? item.product.price ?? 0) * item.quantity),
         0,
       ),
     [cart],
