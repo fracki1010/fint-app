@@ -35,8 +35,10 @@ export function buildQuickSalePayload({
       product: item.product.name,
       productId: item.product._id,
       quantity: item.quantity,
-      // Use presentation price if available, otherwise resolve tier price
-      price: item.presentation?.price ?? resolveProductPrice(item.product, item.priceTier || priceTier),
+      // Use presentation price scaled by tier, or resolve product tier price
+      price: item.presentation?.price
+        ? item.presentation.price * (resolveProductPrice(item.product, "retail") > 0 ? resolveProductPrice(item.product, item.priceTier || priceTier) / resolveProductPrice(item.product, "retail") : 1)
+        : resolveProductPrice(item.product, item.priceTier || priceTier),
       ...(item.presentation ? { presentationId: item.presentation._id } : {}),
     })),
     totalAmount: total,
