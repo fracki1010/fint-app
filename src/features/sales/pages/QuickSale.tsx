@@ -28,7 +28,7 @@ import { VoucherType } from "@shared/types";
 import { getDefaultVoucherTypes } from "@features/vouchers/utils/voucherUtils";
 
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
-import { Client, Product, Presentation } from "@shared/types";
+import { Client, Product, Presentation, PriceTier } from "@shared/types";
 import SaleSuccessScreen from "@features/sales/components/SaleSuccessScreen";
 import CartItem from "@features/sales/components/CartItem";
 import PaymentSummary from "@features/sales/components/PaymentSummary";
@@ -66,7 +66,10 @@ export default function QuickSalePage() {
   }, [genericClient, selectedClient]);
 
   const clientId = selectedClient?._id || genericClient?._id || "";
+  const [overrideTier, setOverrideTier] = useState<PriceTier | null>(null);
   const clientPriceTier = selectedClient?.priceList || "retail";
+  const effectivePriceTier = overrideTier || clientPriceTier;
+  const tierOverridden = overrideTier !== null && overrideTier !== clientPriceTier;
 
   const {
     items,
@@ -91,7 +94,7 @@ export default function QuickSalePage() {
     isCreating,
     canFinalize,
     orderResult,
-  } = useQuickSale({ clientId, priceTier: clientPriceTier });
+  } = useQuickSale({ clientId, priceTier: effectivePriceTier });
 
   const { searchProducts } = useProductLookupManual();
   const { products: searchResults, loading: searching } = useProductSearch(
@@ -392,9 +395,28 @@ export default function QuickSalePage() {
             <div className="flex items-center gap-2">
               <p className="text-xs text-default-500">Cliente</p>
               <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+              <button
+                className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                  tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
+                  const idx = tiers.indexOf(overrideTier || clientPriceTier);
+                  setOverrideTier(tiers[(idx + 1) % tiers.length]);
+                }}
+                title="Cambiar lista de precios"
+              >
+                {tierOverridden ? "★" : "⇄"}
+              </button>
             </div>
             <p className="truncate text-sm font-semibold text-foreground">
               {selectedClient?.name || "Consumidor Final"}
+              {tierOverridden && (
+                <span className="ml-2 text-[10px] text-warning font-medium">
+                  ({priceTier === "wholesale" ? "Mayorista" : priceTier === "distributor" ? "Distribuidor" : "Minorista"})
+                </span>
+              )}
             </p>
           </div>
           <span className="text-xs text-primary">Cambiar</span>
@@ -683,8 +705,29 @@ export default function QuickSalePage() {
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-default-500">Cliente</p>
                     <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+                    <button
+                      className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                        tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const tiers: PriceTier[] = ["retail", "wholesale", "distributor"];
+                        const idx = tiers.indexOf(overrideTier || clientPriceTier);
+                        setOverrideTier(tiers[(idx + 1) % tiers.length]);
+                      }}
+                      title="Cambiar lista de precios"
+                    >
+                      {tierOverridden ? "★" : "⇄"}
+                    </button>
                   </div>
-                  <p className="truncate text-sm font-semibold text-foreground">{selectedClient?.name || "Consumidor Final"}</p>
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {selectedClient?.name || "Consumidor Final"}
+                    {tierOverridden && (
+                      <span className="ml-2 text-[10px] text-warning font-medium">
+                        ({priceTier === "wholesale" ? "Mayorista" : priceTier === "distributor" ? "Distribuidor" : "Minorista"})
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <span className="text-xs text-primary">Cambiar</span>
               </button>
