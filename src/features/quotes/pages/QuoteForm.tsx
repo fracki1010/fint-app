@@ -12,6 +12,8 @@ import {
   Save,
 } from "lucide-react";
 import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Card, CardBody } from "@heroui/card";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 
 import {
@@ -269,29 +271,22 @@ export default function QuoteFormPage() {
 
         {/* Dates */}
         <div className="grid gap-5 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-              <Calendar size={13} /> Fecha *
-            </span>
-            <input
-              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-              type="date"
-              value={form.date}
-              onChange={(e) => updateField("date", e.target.value)}
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-              <Calendar size={13} /> Vencimiento
-            </span>
-            <input
-              className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-              type="date"
-              value={form.expirationDate}
-              onChange={(e) => updateField("expirationDate", e.target.value)}
-            />
-          </label>
+          <Input
+            label="Fecha *"
+            labelPlacement="outside"
+            type="date"
+            value={form.date}
+            onChange={(e) => updateField("date", e.target.value)}
+            startContent={<Calendar size={14} className="text-default-400" />}
+          />
+          <Input
+            label="Vencimiento"
+            labelPlacement="outside"
+            type="date"
+            value={form.expirationDate}
+            onChange={(e) => updateField("expirationDate", e.target.value)}
+            startContent={<Calendar size={14} className="text-default-400" />}
+          />
         </div>
 
         {/* Items */}
@@ -312,35 +307,36 @@ export default function QuoteFormPage() {
                 className="flex items-start gap-3 rounded-2xl border border-divider/15 bg-content2/30 p-3"
               >
                 <div className="flex-1 min-w-0">
-                  <input
-                    className="corp-input w-full rounded-xl px-3 py-2 text-sm"
+                  <Input
                     placeholder="Nombre del producto"
-                    type="text"
                     value={item.product}
                     onChange={(e) => updateItem(idx, "product", e.target.value)}
+                    size="sm"
                   />
                 </div>
                 <div className="w-20 shrink-0">
-                  <input
-                    className="corp-input w-full rounded-xl px-3 py-2 text-sm text-center font-mono"
-                    min="0"
-                    step="1"
+                  <Input
                     type="number"
+                    min={0}
+                    step={1}
                     value={item.quantity}
                     onChange={(e) => updateItem(idx, "quantity", e.target.value)}
+                    size="sm"
+                    className="text-center"
                   />
                 </div>
                 <div className="w-28 shrink-0">
-                  <input
-                    className="corp-input w-full rounded-xl px-3 py-2 text-sm font-mono"
-                    min="0"
-                    step="0.01"
+                  <Input
                     type="number"
+                    min={0}
+                    step={0.01}
                     value={item.price}
                     onChange={(e) => updateItem(idx, "price", e.target.value)}
+                    size="sm"
+                    className="text-right font-mono"
                   />
                 </div>
-                <div className="flex items-center justify-end w-24 shrink-0 pt-2 text-sm font-bold font-mono text-foreground">
+                <div className="flex items-center justify-end w-24 shrink-0 text-sm font-bold font-mono text-foreground">
                   {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
                 </div>
                 <Button isIconOnly variant="light" className="text-default-400 hover:text-red-500" isDisabled={form.items.length <= 1} onPress={() => removeItem(idx)}>
@@ -360,33 +356,34 @@ export default function QuoteFormPage() {
         </div>
 
         {/* Notes */}
-        <label className="block">
-          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-            <FileText size={13} /> Notas
-          </span>
-          <textarea
-            className="corp-input min-h-[72px] w-full rounded-2xl px-4 py-3 text-sm resize-none"
-            placeholder="Notas del presupuesto..."
-            value={form.notes}
-            onChange={(e) => updateField("notes", e.target.value)}
-          />
-        </label>
+        <Input
+          label="Notas"
+          labelPlacement="outside"
+          placeholder="Notas del presupuesto..."
+          value={form.notes}
+          onChange={(e) => updateField("notes", e.target.value)}
+          startContent={<FileText size={14} className="text-default-400" />}
+        />
 
         {/* Totals */}
-        <div className="rounded-2xl border border-blue-500/15 bg-gradient-to-br from-blue-500/5 to-blue-600/5 p-5">
-          <div className="flex justify-between text-sm text-default-500">
-            <span>Subtotal</span>
-            <span className="font-mono font-semibold text-foreground">{formatCurrency(subtotal)}</span>
-          </div>
-          <div className="mt-2 flex justify-between text-sm text-default-500">
-            <span>Impuesto</span>
-            <span className="font-mono font-semibold text-foreground">{formatCurrency(tax)}</span>
-          </div>
-          <div className="mt-3 flex justify-between border-t border-blue-500/15 pt-3 text-base font-bold text-foreground">
-            <span>Total</span>
-            <span className="font-mono">{formatCurrency(total)}</span>
-          </div>
-        </div>
+        <Card>
+          <CardBody>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-default-500">
+                <span>Subtotal</span>
+                <span className="font-mono font-semibold text-foreground">{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-default-500">
+                <span>Impuesto</span>
+                <span className="font-mono font-semibold text-foreground">{formatCurrency(tax)}</span>
+              </div>
+              <div className="flex justify-between border-t border-divider/60 pt-3 text-base font-bold text-foreground">
+                <span>Total</span>
+                <span className="font-mono">{formatCurrency(total)}</span>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Footer */}
