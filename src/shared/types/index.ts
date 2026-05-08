@@ -495,3 +495,45 @@ export interface VoucherCounter {
   lastNumber: number;
   year: number;
 }
+
+// ── Treasury / Cash Management ───────────────────────────────────────
+
+export interface TreasuryOverview {
+  moneyIn: {
+    total: number;
+    byMethod: Record<string, number>;
+    transactionCount: number;
+  };
+  moneyOut: {
+    total: number;
+    byMethod: Record<string, number>;
+    transactionCount: number;
+  };
+  netCashFlow: number;
+  balances: {
+    bankAccounts: Array<{
+      _id: string;
+      name: string;
+      bank: string;
+      currentBalance: number;
+    }>;
+    cashInRegister: number;
+    totalBalance: number;
+  };
+}
+
+export interface CashFlowPoint {
+  period: string;
+  moneyIn: number;
+  moneyOut: number;
+  net: number;
+}
+
+export interface TreasuryCashFlow {
+  series: CashFlowPoint[];
+  totals: {
+    moneyIn: number;
+    moneyOut: number;
+    net: number;
+  };
+}

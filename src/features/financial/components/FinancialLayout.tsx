@@ -3,6 +3,7 @@ import {
   Bell,
   ChartNoAxesCombined,
   Cog,
+  DollarSign,
   ReceiptText,
   LayoutGrid,
   LineChart,
@@ -34,6 +35,12 @@ const financialNav = [
     label: "Proyecciones",
     mobileLabel: "PROYEC",
     icon: LineChart,
+  },
+  {
+    path: "/financial/treasury",
+    label: "Tesorería",
+    mobileLabel: "TESOR",
+    icon: DollarSign,
   },
   {
     path: "/financial/purchases",
