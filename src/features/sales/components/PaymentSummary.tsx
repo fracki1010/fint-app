@@ -1,4 +1,5 @@
-import { Loader2, Printer } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Printer, ChevronDown, ChevronUp } from "lucide-react";
 import { PaymentMethod } from "@shared/types";
 import { formatCurrency } from "@shared/utils/currency";
 import { getPaymentLabel, getPaymentEmoji } from "@features/sales/utils/payment";
@@ -19,20 +20,32 @@ interface PaymentSummaryProps {
   canFinalize: boolean;
 }
 
-const PAYMENT_ROWS: { label: string; methods: PaymentMethod[] }[] = [
-  {
-    label: "Principales",
-    methods: ["cash", "card", "mercadopago"],
-  },
-  {
-    label: "Transferencias",
-    methods: ["transfer", "naranja_x", "uala"],
-  },
-  {
-    label: "Otros",
-    methods: ["check", "other"],
-  },
+type PaymentCategory = "cash" | "card" | "transfer" | "other";
+
+const CATEGORIES: { key: PaymentCategory; label: string; emoji: string }[] = [
+  { key: "cash", label: "Efectivo", emoji: "💵" },
+  { key: "card", label: "Tarjeta", emoji: "💳" },
+  { key: "transfer", label: "Transferencia", emoji: "📱" },
+  { key: "other", label: "Otro", emoji: "❓" },
 ];
+
+const CARD_OPTIONS: PaymentMethod[] = ["card"];
+const TRANSFER_OPTIONS: PaymentMethod[] = ["mercadopago", "naranja_x", "uala", "transfer"];
+const OTHER_OPTIONS: PaymentMethod[] = ["check", "other"];
+
+function getCategory(method: PaymentMethod): PaymentCategory {
+  if (method === "cash") return "cash";
+  if (method === "card") return "card";
+  if (["mercadopago", "naranja_x", "uala", "transfer"].includes(method)) return "transfer";
+  return "other";
+}
+
+const SUBCATEGORIES: Record<PaymentCategory, PaymentMethod[]> = {
+  cash: [],
+  card: CARD_OPTIONS,
+  transfer: TRANSFER_OPTIONS,
+  other: OTHER_OPTIONS,
+};
 
 export default function PaymentSummary({
   paymentMethod,
@@ -49,31 +62,85 @@ export default function PaymentSummary({
   isCreating,
   canFinalize,
 }: PaymentSummaryProps) {
+  const category = getCategory(paymentMethod);
+  const subOptions = SUBCATEGORIES[category];
+  const [expanded, setExpanded] = useState(false);
+
+  const handleCategoryClick = (cat: PaymentCategory) => {
+    const options = SUBCATEGORIES[cat];
+    if (options.length === 0) {
+      // No sub-options, select directly
+      onChangeMethod(cat);
+    } else if (options.includes(paymentMethod) && category === cat) {
+      // Same category, just toggle expansion
+      setExpanded(!expanded);
+    } else {
+      // Select first sub-option and expand
+      onChangeMethod(options[0]);
+      setExpanded(true);
+    }
+  };
+
+  const handleSubSelect = (method: PaymentMethod) => {
+    onChangeMethod(method);
+    setExpanded(false);
+  };
+
   return (
     <>
-      {/* Payment method selector */}
-      <div className="space-y-1">
-        {PAYMENT_ROWS.map((row) => (
-          <div key={row.label} className="flex gap-1.5">
-            {row.methods.map((method) => (
-              <button
-                key={method}
-                className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-bold transition ${
-                  paymentMethod === method
-                    ? "bg-primary text-white shadow-md shadow-primary/25 scale-105"
-                    : "bg-content2/70 text-default-500 hover:bg-content2/90 active:scale-95"
-                }`}
-                onClick={() => onChangeMethod(method)}
-              >
-                <span>{getPaymentEmoji(method)}</span>
-                <span>{getPaymentLabel(method, true)}</span>
-              </button>
-            ))}
-          </div>
+      {/* Category selector */}
+      <div className="flex gap-2">
+        {CATEGORIES.map(({ key, label, emoji }) => (
+          <button
+            key={key}
+            className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-bold transition ${
+              category === key
+                ? "bg-primary text-white shadow-md shadow-primary/25 scale-105"
+                : "bg-content2/70 text-default-500 hover:bg-content2/90 active:scale-95"
+            }`}
+            onClick={() => handleCategoryClick(key)}
+          >
+            <span className="text-base">{emoji}</span>
+            <span>{label}</span>
+          </button>
         ))}
       </div>
 
-      {/* Cash received input — only for cash */}
+      {/* Sub-options (tarjetas / transferencias) */}
+      {subOptions.length > 0 && (
+        <div className="overflow-hidden transition-all">
+          <button
+            className="flex w-full items-center justify-between rounded-xl bg-content2/50 px-3 py-2 text-xs font-semibold text-default-500"
+            onClick={() => setExpanded(!expanded)}
+          >
+            <span>
+              {getPaymentEmoji(paymentMethod)} {getPaymentLabel(paymentMethod)}
+            </span>
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          {expanded && (
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              {subOptions.map((method) => (
+                <button
+                  key={method}
+                  className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                    paymentMethod === method
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : "bg-content2/30 text-default-500 hover:bg-content2/50 border border-transparent"
+                  }`}
+                  onClick={() => handleSubSelect(method)}
+                >
+                  <span>{getPaymentEmoji(method)}</span>
+                  <span>{getPaymentLabel(method, true)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cash received input */}
       {paymentMethod === "cash" && (
         <div className="flex items-center gap-3">
           <input
@@ -114,7 +181,7 @@ export default function PaymentSummary({
 
       {/* Selected method badge */}
       <div className="flex items-center justify-between text-xs text-default-400">
-        <span>Método seleccionado:</span>
+        <span>Método:</span>
         <span className="font-semibold text-foreground">
           {getPaymentEmoji(paymentMethod)} {getPaymentLabel(paymentMethod)}
         </span>
