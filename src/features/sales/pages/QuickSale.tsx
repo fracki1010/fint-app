@@ -324,6 +324,27 @@ export default function QuickSalePage() {
                         <p className="text-[11px] text-default-400">
                           {p.barcode || p.sku || "Sin código"}
                         </p>
+                        {/* Tier prices preview */}
+                        <div className="mt-1 flex items-center gap-2 text-[10px]">
+                          {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                            const tierPrice = resolveProductPrice(p, tier);
+                            const isActive = tier === priceTier;
+                            return (
+                              <span
+                                key={tier}
+                                className={`rounded px-1.5 py-0.5 font-semibold ${
+                                  isActive
+                                    ? "bg-primary/10 text-primary"
+                                    : tierPrice > 0
+                                      ? "bg-default-100 text-default-500"
+                                      : "hidden"
+                                }`}
+                              >
+                                {tier === "retail" ? "R" : tier === "wholesale" ? "W" : "D"}${formatCurrency(tierPrice, currency)}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                       {!hasPresentations && (
                         <div className="ml-3 shrink-0 text-right">
@@ -685,6 +706,17 @@ export default function QuickSalePage() {
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
                               <p className="text-[11px] text-default-400">{p.barcode || p.sku || "Sin código"}</p>
+                              <div className="mt-1 flex items-center gap-2 text-[10px]">
+                                {(["retail", "wholesale", "distributor"] as PriceTier[]).map((tier) => {
+                                  const tierPrice = resolveProductPrice(p, tier);
+                                  const isActive = tier === priceTier;
+                                  return (
+                                    <span key={tier} className={`rounded px-1.5 py-0.5 font-semibold ${isActive ? "bg-primary/10 text-primary" : tierPrice > 0 ? "bg-default-100 text-default-500" : "hidden"}`}>
+                                      {tier === "retail" ? "R" : tier === "wholesale" ? "W" : "D"} {formatCurrency(tierPrice, currency)}
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
 
