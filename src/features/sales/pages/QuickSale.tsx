@@ -264,6 +264,14 @@ export default function QuickSalePage() {
 
   return (
     <div className={`flex min-h-screen flex-col bg-background ${isDesktop ? "lg:overflow-hidden lg:h-screen" : ""}`}>
+      {/* Loading overlay during order creation */}
+      {isCreating && (
+        <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Loader2 className="animate-spin text-primary mb-4" size={48} />
+          <p className="text-sm font-semibold text-foreground">Procesando venta...</p>
+          <p className="mt-1 text-xs text-default-500">Generando comprobantes y actualizando stock</p>
+        </div>
+      )}
       {/* ── Mobile layout ── */}
       <div className={`flex min-h-screen flex-col bg-background ${isDesktop ? "lg:hidden" : ""}`}>
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-divider/60 bg-background/80 px-4 py-3 backdrop-blur-lg">
