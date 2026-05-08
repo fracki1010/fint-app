@@ -1,4 +1,4 @@
-import { DollarSign, Loader2, Printer } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 import { PaymentMethod } from "@shared/types";
 import { formatCurrency } from "@shared/utils/currency";
 import { getPaymentLabel, getPaymentEmoji } from "@features/sales/utils/payment";
@@ -19,6 +19,21 @@ interface PaymentSummaryProps {
   canFinalize: boolean;
 }
 
+const PAYMENT_ROWS: { label: string; methods: PaymentMethod[] }[] = [
+  {
+    label: "Principales",
+    methods: ["cash", "card", "mercadopago"],
+  },
+  {
+    label: "Transferencias",
+    methods: ["transfer", "naranja_x", "uala"],
+  },
+  {
+    label: "Otros",
+    methods: ["check", "other"],
+  },
+];
+
 export default function PaymentSummary({
   paymentMethod,
   onChangeMethod,
@@ -37,25 +52,28 @@ export default function PaymentSummary({
   return (
     <>
       {/* Payment method selector */}
-      <div className="flex gap-2">
-        {(["cash", "card", "transfer"] as PaymentMethod[]).map((method) => (
-          <button
-            key={method}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition ${
-              paymentMethod === method
-                ? "bg-primary text-white shadow-md shadow-primary/25"
-                : "bg-content2/70 text-default-500"
-            }`}
-            onClick={() => onChangeMethod(method)}
-          >
-            {method === "cash" && <DollarSign size={14} />}
-            {getPaymentEmoji(method)}
-            {getPaymentLabel(method)}
-          </button>
+      <div className="space-y-1">
+        {PAYMENT_ROWS.map((row) => (
+          <div key={row.label} className="flex gap-1.5">
+            {row.methods.map((method) => (
+              <button
+                key={method}
+                className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-bold transition ${
+                  paymentMethod === method
+                    ? "bg-primary text-white shadow-md shadow-primary/25 scale-105"
+                    : "bg-content2/70 text-default-500 hover:bg-content2/90 active:scale-95"
+                }`}
+                onClick={() => onChangeMethod(method)}
+              >
+                <span>{getPaymentEmoji(method)}</span>
+                <span>{getPaymentLabel(method, true)}</span>
+              </button>
+            ))}
+          </div>
         ))}
       </div>
 
-      {/* Cash received input */}
+      {/* Cash received input — only for cash */}
       {paymentMethod === "cash" && (
         <div className="flex items-center gap-3">
           <input
@@ -92,6 +110,14 @@ export default function PaymentSummary({
           <span>TOTAL</span>
           <span className="text-primary">{formatCurrency(total, currency)}</span>
         </div>
+      </div>
+
+      {/* Selected method badge */}
+      <div className="flex items-center justify-between text-xs text-default-400">
+        <span>Método seleccionado:</span>
+        <span className="font-semibold text-foreground">
+          {getPaymentEmoji(paymentMethod)} {getPaymentLabel(paymentMethod)}
+        </span>
       </div>
 
       {/* Checkout button */}
