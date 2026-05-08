@@ -11,6 +11,7 @@ import {
   User,
   Save,
 } from "lucide-react";
+import { Button } from "@heroui/button";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 
 import {
@@ -213,7 +214,7 @@ export default function QuoteFormPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-divider/10 px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-blue-500/25">
             <FileText size={16} />
           </div>
           <div>
@@ -225,12 +226,9 @@ export default function QuoteFormPage() {
             </h2>
           </div>
         </div>
-        <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-divider/20 text-default-400 hover:bg-content2/60 hover:text-foreground transition-colors"
-          onClick={() => navigate("/quotes")}
-        >
+        <Button isIconOnly variant="flat" className="border border-divider/20" onPress={() => navigate("/quotes")}>
           <X size={16} />
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
@@ -302,14 +300,9 @@ export default function QuoteFormPage() {
             <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
               <Hash size={13} /> Items *
             </span>
-            <button
-              className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3.5 py-1.5 text-[11px] font-bold text-blue-500 hover:bg-blue-500/20 transition-colors"
-              type="button"
-              onClick={addItem}
-            >
-              <Plus size={13} />
+            <Button size="sm" variant="flat" color="primary" className="rounded-full" onPress={addItem} startContent={<Plus size={13} />}>
               Agregar línea
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-3">
@@ -350,13 +343,9 @@ export default function QuoteFormPage() {
                 <div className="flex items-center justify-end w-24 shrink-0 pt-2 text-sm font-bold font-mono text-foreground">
                   {formatCurrency((Number(item.quantity) || 0) * (Number(item.price) || 0))}
                 </div>
-                <button
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-default-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
-                  disabled={form.items.length <= 1}
-                  onClick={() => removeItem(idx)}
-                >
+                <Button isIconOnly variant="light" className="text-default-400 hover:text-red-500" isDisabled={form.items.length <= 1} onPress={() => removeItem(idx)}>
                   <Trash2 size={14} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -402,23 +391,12 @@ export default function QuoteFormPage() {
 
       {/* Footer */}
       <div className="flex shrink-0 gap-3 border-t border-divider/10 px-6 py-4">
-        <button
-          className="flex-1 rounded-2xl border border-divider/20 px-4 py-3 text-sm font-semibold text-default-600 hover:bg-content2/60 transition-colors"
-          onClick={() => navigate("/quotes")}
-        >
+        <Button variant="flat" className="flex-1" onPress={() => navigate("/quotes")}>
           Cancelar
-        </button>
-        <button
-          className="flex-1 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 hover:shadow-blue-500/35 transition-all"
-          disabled={saving}
-          onClick={handleSubmit}
-        >
-          <span className="flex items-center justify-center gap-2">
-            {saving && <Loader2 className="animate-spin" size={18} />}
-            <Save size={16} />
-            {isEditing ? "Guardar Cambios" : "Crear Presupuesto"}
-          </span>
-        </button>
+        </Button>
+        <Button color="primary" className="flex-1" isLoading={saving} onPress={handleSubmit} startContent={saving ? null : <Save size={16} />}>
+          {isEditing ? "Guardar Cambios" : "Crear Presupuesto"}
+        </Button>
       </div>
     </div>
   );
