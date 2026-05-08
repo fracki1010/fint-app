@@ -360,7 +360,7 @@ export function ProductDetailPanel({
                               : 'bg-success/15 text-success'
                         }`}>
                           <Box size={12} />
-                          {isOut ? "Sin stock" : `${presStock} disponibles`}
+                          {isOut ? "Sin stock" : `${presStock} ${pres.unitOfMeasure || product.unitOfMeasure || "disp."}`}
                         </div>
                         
                         {/* Margen si hay costo */}
