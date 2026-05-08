@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { Chip } from "@heroui/chip";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 import {
   ArrowUpDown,
   Banknote,
@@ -41,19 +44,6 @@ function monthInputToTo(v: string) {
   return `${v}-${String(lastDay).padStart(2, "0")}`;
 }
 
-function methodColor(method: string): string {
-  const map: Record<string, string> = {
-    cash: "text-success",
-    card: "text-primary",
-    transfer: "text-secondary",
-    mercadopago: "text-warning",
-    check: "text-default-500",
-    other: "text-default-400",
-  };
-
-  return map[method] ?? "text-default-400";
-}
-
 function methodLabel(method: string): string {
   const map: Record<string, string> = {
     cash: "Efectivo",
@@ -81,49 +71,46 @@ function MethodTable({
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
 
   return (
-    <article className="financial-card flex-1">
-      <h3 className="financial-section-title mb-4">{title}</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[220px]">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-[0.16em] text-default-500">
-              <th className="pb-2">Método</th>
-              <th className="pb-2 text-right">Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map(([method, amount]) => (
-              <tr className="border-t border-divider/60" key={method}>
-                <td
-                  className={`py-2 text-sm font-medium ${methodColor(method)}`}
-                >
-                  {methodLabel(method)}
-                </td>
-                <td className="py-2 text-right text-sm font-semibold tabular-nums">
-                  {formatCurrency(amount, "ARS")}
-                </td>
-              </tr>
-            ))}
-            {entries.length === 0 && (
-              <tr>
-                <td
-                  className="py-4 text-center text-sm text-default-500"
-                  colSpan={2}
-                >
-                  Sin datos
-                </td>
-              </tr>
+    <Card className="flex-1">
+      <CardHeader>
+        <p className="text-sm font-bold text-foreground">{title}</p>
+      </CardHeader>
+      <CardBody>
+        <Table aria-label={title} removeWrapper>
+          <TableHeader>
+            <TableColumn>MÉTODO</TableColumn>
+            <TableColumn align="end">MONTO</TableColumn>
+          </TableHeader>
+          <TableBody items={entries} emptyContent="Sin datos">
+            {(entry) => (
+              <TableRow key={entry[0]}>
+                <TableCell>
+                  <Chip
+                    color={
+                      entry[0] === "cash" ? "success" :
+                      entry[0] === "card" ? "primary" :
+                      entry[0] === "transfer" ? "secondary" :
+                      entry[0] === "mercadopago" ? "warning" : "default"
+                    }
+                    variant="flat"
+                    size="sm"
+                  >
+                    {methodLabel(entry[0])}
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  <span className="font-semibold tabular-nums">{formatCurrency(entry[1], "ARS")}</span>
+                </TableCell>
+              </TableRow>
             )}
-            <tr className="border-t-2 border-divider">
-              <td className="py-2 text-sm font-bold">Total</td>
-              <td className="py-2 text-right text-sm font-bold tabular-nums">
-                {formatCurrency(total, "ARS")}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
+          </TableBody>
+        </Table>
+        <div className="mt-3 flex justify-between border-t border-divider/60 pt-3 text-sm font-bold">
+          <span>Total</span>
+          <span className="tabular-nums">{formatCurrency(total, "ARS")}</span>
+        </div>
+      </CardBody>
+    </Card>
   );
 }
 
@@ -139,15 +126,19 @@ function BankAccountCard({
   balance: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-divider/60 px-4 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-        <p className="truncate text-xs text-default-500">{bank}</p>
-      </div>
-      <p className="ml-4 shrink-0 text-right text-sm font-bold tabular-nums text-foreground">
-        {formatCurrency(balance, "ARS")}
-      </p>
-    </div>
+    <Card className="flex-1">
+      <CardBody>
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+            <p className="truncate text-xs text-default-500">{bank}</p>
+          </div>
+          <p className="ml-4 shrink-0 text-right text-sm font-bold tabular-nums text-foreground">
+            {formatCurrency(balance, "ARS")}
+          </p>
+        </div>
+      </CardBody>
+    </Card>
   );
 }
 
