@@ -17,7 +17,9 @@ interface CartItemProps {
   onTierChange?: (productId: string, tier: PriceTier, presentationId?: string) => void;
 }
 
-export default function CartItem({
+import { memo } from "react";
+
+function CartItemRaw({
   item,
   currency,
   available,
@@ -182,3 +184,6 @@ export default function CartItem({
     </div>
   );
 }
+
+const CartItem = memo(CartItemRaw);
+export default CartItem;
