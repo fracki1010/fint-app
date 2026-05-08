@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 import { useCostCenters, useCostCenterReport } from "../hooks/useCostCenters";
 import { formatCurrency } from "@shared/utils/currency";
 
@@ -107,51 +108,48 @@ export default function CostCentersPage() {
             <p className="text-default-500 text-center py-8">Sin datos para el período seleccionado</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="py-2 px-3 font-medium text-default-500">Centro</th>
-                    <th className="py-2 px-3 text-right font-medium text-default-500">Ingresos</th>
-                    <th className="py-2 px-3 text-right font-medium text-default-500">Costos</th>
-                    <th className="py-2 px-3 text-right font-medium text-default-500">Margen</th>
-                    <th className="py-2 px-3 text-center font-medium text-default-500">Ventas</th>
-                    <th className="py-2 px-3 text-center font-medium text-default-500">Compras</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.rows.map((row) => (
-                    <tr key={row._id || "unassigned"} className="border-b last:border-0 hover:bg-default-50">
-                      <td className="py-3 px-3 font-medium text-foreground">{row.name}</td>
-                      <td className="py-3 px-3 text-right text-success font-mono">{formatCurrency(row.revenue, "ARS")}</td>
-                      <td className="py-3 px-3 text-right text-danger font-mono">{formatCurrency(row.costs, "ARS")}</td>
-                      <td className={`py-3 px-3 text-right font-mono font-semibold ${
-                        row.margin > 0 ? "text-success" : row.margin < 0 ? "text-danger" : "text-default-400"
-                      }`}>
-                        <span className="flex items-center justify-end gap-1">
+              <Table aria-label="Resultados por centro" removeWrapper>
+                <TableHeader>
+                  <TableColumn>Centro</TableColumn>
+                  <TableColumn align="end">Ingresos</TableColumn>
+                  <TableColumn align="end">Costos</TableColumn>
+                  <TableColumn align="end">Margen</TableColumn>
+                  <TableColumn align="center">Ventas</TableColumn>
+                  <TableColumn align="center">Compras</TableColumn>
+                </TableHeader>
+                <TableBody items={report.rows}>
+                  {(row) => (
+                    <TableRow key={row._id || "unassigned"}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-success font-mono">{formatCurrency(row.revenue, "ARS")}</TableCell>
+                      <TableCell className="text-danger font-mono">{formatCurrency(row.costs, "ARS")}</TableCell>
+                      <TableCell>
+                        <span className={`flex items-center justify-end gap-1 font-mono font-semibold ${
+                          row.margin > 0 ? "text-success" : row.margin < 0 ? "text-danger" : "text-default-400"
+                        }`}>
                           {row.margin > 0 ? <TrendingUp size={14} /> : row.margin < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
                           {formatCurrency(Math.abs(row.margin), "ARS")}
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-center text-default-600">{row.orderCount}</td>
-                      <td className="py-3 px-3 text-center text-default-600">{row.purchaseCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-default-100 font-semibold">
-                  <tr>
-                    <td className="py-3 px-3">TOTAL</td>
-                    <td className="py-3 px-3 text-right text-success">{formatCurrency(totalRevenue, "ARS")}</td>
-                    <td className="py-3 px-3 text-right text-danger">{formatCurrency(totalCosts, "ARS")}</td>
-                    <td className={`py-3 px-3 text-right ${
-                      totalMargin > 0 ? "text-success" : totalMargin < 0 ? "text-danger" : "text-default-400"
-                    }`}>
-                      {formatCurrency(Math.abs(totalMargin), "ARS")} {totalMargin > 0 ? "(Ganancia)" : totalMargin < 0 ? "(Pérdida)" : ""}
-                    </td>
-                    <td className="py-3 px-3 text-center">{report.rows.reduce((s, r) => s + r.orderCount, 0)}</td>
-                    <td className="py-3 px-3 text-center">{report.rows.reduce((s, r) => s + r.purchaseCount, 0)}</td>
-                  </tr>
-                </tfoot>
-              </table>
+                      </TableCell>
+                      <TableCell className="text-center text-default-600">{row.orderCount}</TableCell>
+                      <TableCell className="text-center text-default-600">{row.purchaseCount}</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {/* Totals row */}
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-default-100 px-4 py-3 text-sm font-semibold">
+                <span>TOTAL</span>
+                <div className="flex items-center gap-6">
+                  <span className="text-success w-24 text-right">{formatCurrency(totalRevenue, "ARS")}</span>
+                  <span className="text-danger w-24 text-right">{formatCurrency(totalCosts, "ARS")}</span>
+                  <span className={`w-24 text-right ${totalMargin > 0 ? "text-success" : totalMargin < 0 ? "text-danger" : "text-default-400"}`}>
+                    {formatCurrency(Math.abs(totalMargin), "ARS")} {totalMargin > 0 ? "(Ganancia)" : totalMargin < 0 ? "(Pérdida)" : ""}
+                  </span>
+                  <span className="w-16 text-center">{report.rows.reduce((s, r) => s + r.orderCount, 0)}</span>
+                  <span className="w-16 text-center">{report.rows.reduce((s, r) => s + r.purchaseCount, 0)}</span>
+                </div>
+              </div>
             </div>
           )}
         </CardBody>
