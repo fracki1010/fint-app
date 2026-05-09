@@ -19,7 +19,6 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import jsPDF from "jspdf";
 
 import { useDashboard, useDashboardOptionalKpis, useDailySales, useReceivables } from "@features/dashboard/hooks/useDashboard";
 import { useSettings } from "@features/settings/hooks/useSettings";
@@ -31,7 +30,7 @@ import RecentActivity from "@features/dashboard/components/RecentActivity";
 import ReceivablesSummaryCard from "@features/dashboard/components/ReceivablesSummaryCard";
 
 export default function DashboardPage() {
-  const [optionalRangeDays, setOptionalRangeDays] = useState(90);
+  const [optionalRangeDays, setOptionalRangeDays] = useState(30);
   const { dashboard, loading, error } = useDashboard();
   const { optionalKpis, loading: optionalLoading } =
     useDashboardOptionalKpis(optionalRangeDays);
@@ -169,9 +168,10 @@ export default function DashboardPage() {
     downloadFile(lines.join("\n"), `optional-kpis-${safeStart}-${safeEnd}.csv`, "text/csv;charset=utf-8;");
   };
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!optionalKpis) return;
 
+    const jsPDF = (await import("jspdf")).default;
     const doc = new jsPDF();
     let y = 16;
 
@@ -513,9 +513,9 @@ export default function DashboardPage() {
               <h2 className="section-kicker">Insumos con Stock Bajo</h2>
               <Link
                 className="text-xs font-semibold text-primary"
-                to="/supplies"
+                to="/products"
               >
-                Ver insumos
+                Ver productos
               </Link>
             </div>
             <div className="space-y-2">

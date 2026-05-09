@@ -17,10 +17,9 @@ const MovementDetailPage = lazy(() => import("@features/products/pages/MovementD
 const SettingsPage = lazy(() => import("@features/settings/pages/Settings"));
 const NewOperationPage = lazy(() => import("@features/sales/pages/NewOperation"));
 const LoginPage = lazy(() => import("@features/auth/pages/Login"));
-const SuppliesPage = lazy(() => import("@features/supplies/pages/Supplies"));
 const PurchasesPage = lazy(() => import("@features/purchases/pages/Purchases"));
 const SupplierAccountPage = lazy(() => import("@features/purchases/pages/SupplierAccount"));
-const RecipesPage = lazy(() => import("@features/recipes/pages/Recipes"));
+const BillOfMaterialsPage = lazy(() => import("@features/bill-of-materials/pages/BillOfMaterials"));
 const SuppliersPage = lazy(() => import("@features/suppliers/pages/Suppliers"));
 const TeamPage = lazy(() => import("@features/team/pages/Team"));
 const AdminDashboard = lazy(() => import("@features/admin/pages/AdminDashboard"));
@@ -29,6 +28,7 @@ const ClientAccountPage = lazy(() => import("@features/clients/pages/ClientAccou
 const ClientAccountDetailPage = lazy(() => import("@features/clients/pages/ClientAccountDetail"));
 const SupplierAccountDetailPage = lazy(() => import("@features/purchases/pages/SupplierAccountDetail"));
 const QuickSalePage = lazy(() => import("@features/sales/pages/QuickSale"));
+const InventorySnapshotsPage = lazy(() => import("@features/inventory/pages/InventorySnapshots"));
 const NotFoundPage = lazy(() => import("@features/shared/pages/NotFound"));
 const FinancialDashboardPage = lazy(
   () => import("@features/financial/pages/FinancialDashboard"),
@@ -44,6 +44,15 @@ const SpeculationsProjectionsPage = lazy(
 );
 const PurchasesDashboardPage = lazy(
   () => import("@features/financial/pages/PurchasesDashboard"),
+);
+const IvaReportsPage = lazy(
+  () => import("@features/financial/pages/IvaReports"),
+);
+const PaymentOrdersPage = lazy(
+  () => import("@features/purchases/pages/PaymentOrders"),
+);
+const PaymentOrderFormPage = lazy(
+  () => import("@features/purchases/pages/PaymentOrderForm"),
 );
 const TreasuryDashboardPage = lazy(
   () => import("@features/financial/pages/TreasuryDashboard"),
@@ -156,15 +165,17 @@ function App() {
             element={<MovementDetailPage />}
             path="/movements/:movementId"
           />
+          <Route element={<InventorySnapshotsPage />} path="/inventory" />
           <Route element={<QuickSalePage />} path="/quick-sale" />
           <Route element={<NewOperationPage />} path="/new-operation" />
-          <Route element={<SuppliesPage />} path="/supplies" />
-          <Route element={<SuppliesPage />} path="/supplies/:supplyId" />
+          <Route element={<Navigate replace to="/products?deprecated=supplies" />} path="/supplies" />
+          <Route element={<Navigate replace to="/products?deprecated=supplies" />} path="/supplies/:supplyId" />
           <Route element={<PurchasesPage />} path="/purchases" />
           <Route element={<PurchasesPage />} path="/purchases/:purchaseId" />
 <Route element={<PlanGuard feature="supplier_account"><SupplierAccountPage /></PlanGuard>} path="/supplier-account" />
 <Route element={<PlanGuard feature="supplier_account"><SupplierAccountDetailPage /></PlanGuard>} path="/supplier-account/:supplierId" />
-<Route element={<PlanGuard feature="recipes"><RecipesPage /></PlanGuard>} path="/recipes" />
+<Route element={<PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard>} path="/recipes" />
+<Route element={<PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard>} path="/bill-of-materials" />
           <Route element={<SuppliersPage />} path="/suppliers" />
           <Route element={<AdminDashboard />} path="/admin" />
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/admin/team" />
@@ -206,10 +217,16 @@ function App() {
               element={<CostCentersPage />}
               path="/financial/cost-centers"
             />
+            <Route
+              element={<IvaReportsPage />}
+              path="/financial/iva-reports"
+            />
           </Route>
           <Route element={<PlanGuard feature="banking"><BankAccountsPage /></PlanGuard>} path="/banking" />
           <Route element={<PlanGuard feature="banking"><BankTransactionsPage /></PlanGuard>} path="/banking/:id/transactions" />
           <Route element={<PlanGuard feature="banking"><ReconciliationPage /></PlanGuard>} path="/banking/:id/reconciliation" />
+          <Route element={<PlanGuard feature="supplier_account"><PaymentOrdersPage /></PlanGuard>} path="/supplier-payments" />
+          <Route element={<PlanGuard feature="supplier_account"><PaymentOrderFormPage /></PlanGuard>} path="/supplier-payments/new" />
           <Route element={<PlanGuard feature="quotes"><QuotesPage /></PlanGuard>} path="/quotes" />
           <Route element={<PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard>} path="/quotes/new" />
           <Route element={<PlanGuard feature="quotes"><QuoteDetailPage /></PlanGuard>} path="/quotes/:id" />

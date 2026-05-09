@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Chip } from "@heroui/chip";
-import { Card, CardBody, CardHeader } from "@heroui/card";
+
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
 import {
   ArrowUpDown,
@@ -71,12 +71,11 @@ function MethodTable({
   const entries = Object.entries(data).sort((a, b) => b[1] - a[1]);
 
   return (
-    <Card className="flex-1">
-      <CardHeader>
-        <p className="text-sm font-bold text-foreground">{title}</p>
-      </CardHeader>
-      <CardBody>
-        <Table aria-label={title} removeWrapper>
+    <div className="app-panel rounded-[28px] p-5 flex-1">
+      <div>
+        <p className="section-kicker">{title}</p>
+      </div>
+      <Table aria-label={title} removeWrapper>
           <TableHeader>
             <TableColumn>MÉTODO</TableColumn>
             <TableColumn align="end">MONTO</TableColumn>
@@ -109,8 +108,7 @@ function MethodTable({
           <span>Total</span>
           <span className="tabular-nums">{formatCurrency(total, "ARS")}</span>
         </div>
-      </CardBody>
-    </Card>
+    </div>
   );
 }
 
@@ -126,9 +124,8 @@ function BankAccountCard({
   balance: number;
 }) {
   return (
-    <Card className="flex-1">
-      <CardBody>
-        <div className="flex items-center justify-between">
+    <div className="app-panel rounded-[28px] p-5 flex-1">
+      <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-foreground">{name}</p>
             <p className="truncate text-xs text-default-500">{bank}</p>
@@ -137,8 +134,7 @@ function BankAccountCard({
             {formatCurrency(balance, "ARS")}
           </p>
         </div>
-      </CardBody>
-    </Card>
+    </div>
   );
 }
 

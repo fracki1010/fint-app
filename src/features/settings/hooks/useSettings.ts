@@ -76,6 +76,7 @@ export function useSettings() {
 
       return response.data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {

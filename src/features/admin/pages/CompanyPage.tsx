@@ -16,6 +16,7 @@ import { useMercadoPago } from "@features/sales/hooks/useMercadoPago";
 const FEATURE_LABELS: Record<Feature, string> = {
   financial_center: "Centro Financiero",
   recipes: "Recetas / Producción",
+  bill_of_materials: "Lista de Materiales / Producción",
   advanced_reports: "Reportes Avanzados",
   api_access: "Acceso a API",
   supplier_account: "Cta. Corriente Proveedores",

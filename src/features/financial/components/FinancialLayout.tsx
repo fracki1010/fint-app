@@ -56,6 +56,12 @@ const financialNav = [
     icon: Building2,
   },
   {
+    path: "/financial/iva-reports",
+    label: "Libro IVA",
+    mobileLabel: "IVA",
+    icon: FileText,
+  },
+  {
     path: "/settings",
     label: "Ajustes",
     mobileLabel: "AJUSTES",

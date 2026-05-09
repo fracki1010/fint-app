@@ -37,6 +37,11 @@ export interface OrderMovement {
   };
 }
 
+export interface PaymentSplitInfo {
+  method: string;
+  amount: number;
+}
+
 export interface Order {
   _id: string;
   orderNumber?: string;
@@ -56,6 +61,7 @@ export interface Order {
   salesStatus: SalesStatus;
   paymentStatus: PaymentStatus;
   paymentMethod?: string;
+  paymentSplits?: PaymentSplitInfo[];
   deliveryStatus: DeliveryStatus;
   notes?: string;
   source: "WhatsApp" | "Dashboard";

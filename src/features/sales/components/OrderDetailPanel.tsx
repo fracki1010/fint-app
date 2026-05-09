@@ -26,7 +26,8 @@ import { downloadOrderInvoicePdf } from "@features/sales/utils/invoice";
 import { getClientName, getClientPhone } from "@shared/utils/entity";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { TierBadge } from "@features/sales/components/TierBadge";
-import { PriceTier } from "@shared/types";
+import { PriceTier, PaymentMethod } from "@shared/types";
+import { getPaymentLabel, getPaymentIcon } from "@features/sales/utils/payment";
 import { VoucherList } from "@features/vouchers/components/VoucherList";
 import { VoucherActions } from "@features/vouchers/components/VoucherActions";
 import { useVouchers, useGenerateVouchers } from "@features/vouchers/hooks/useVouchers";
@@ -179,6 +180,23 @@ export function OrderDetailPanel({
                 <StatusBadge label={selectedOrder.salesStatus || "Pendiente"} />
                 <StatusBadge label={selectedOrder.paymentStatus || "Pendiente"} />
                 <StatusBadge label={selectedOrder.deliveryStatus || "Pendiente"} />
+                {(selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 0
+                  ? selectedOrder.paymentSplits
+                  : selectedOrder.paymentMethod
+                    ? [{ method: selectedOrder.paymentMethod, amount: 0 }]
+                    : []
+                ).map((split, i) => {
+                  const Icon = getPaymentIcon(split.method as PaymentMethod);
+                  return (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 rounded-full bg-content2/70 px-2.5 py-1 text-[10px] font-semibold text-default-600"
+                    >
+                      <Icon width={10} height={10} />
+                      {getPaymentLabel(split.method as PaymentMethod, true)}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </>
@@ -308,6 +326,38 @@ export function OrderDetailPanel({
                 )}
               </div>
             </div>
+
+            {/* Payment details */}
+            {((selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 0) || selectedOrder.paymentMethod) && (
+              <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-default-400">
+                  Pago{selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 1 ? "s" : ""}
+                </p>
+                <div className="space-y-1.5">
+                  {(selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 0
+                    ? selectedOrder.paymentSplits
+                    : selectedOrder.paymentMethod
+                      ? [{ method: selectedOrder.paymentMethod, amount: selectedOrder.totalAmount }]
+                      : []
+                  ).map((split, i) => {
+                    const Icon = getPaymentIcon(split.method as PaymentMethod);
+                    return (
+                      <div key={i} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <Icon width={14} height={14} />
+                          <span className="text-sm font-semibold text-foreground">
+                            {getPaymentLabel(split.method as PaymentMethod)}
+                          </span>
+                        </div>
+                        <span className="text-sm font-bold text-foreground">
+                          {split.amount > 0 ? formatCurrency(split.amount, currency) : "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Items */}
             <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">

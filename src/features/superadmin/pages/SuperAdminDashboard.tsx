@@ -26,8 +26,8 @@ export default function SuperAdminDashboard() {
       <SuperAdminLayout>
         <div className="flex h-96 items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            <p className="text-sm text-gray-400">Cargando dashboard...</p>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p className="text-sm text-default-400">Cargando dashboard...</p>
           </div>
         </div>
       </SuperAdminLayout>

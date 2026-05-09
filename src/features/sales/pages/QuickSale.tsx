@@ -96,11 +96,8 @@ export default function QuickSalePage() {
     tax,
     total,
     itemCount,
-    paymentMethod,
-    setPaymentMethod,
-    cashReceived,
-    setCashReceived,
-    change,
+    splits,
+    setSplits,
     currency,
     stockErrors,
     priceTier,
@@ -647,11 +644,8 @@ export default function QuickSalePage() {
       {/* Payment + total */}
       <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg space-y-3">
         <PaymentSummary
-          paymentMethod={paymentMethod}
-          onChangeMethod={setPaymentMethod}
-          cashReceived={cashReceived}
-          onCashChange={setCashReceived}
-          change={change}
+          splits={splits}
+          onSplitsChange={setSplits}
           subtotal={subtotal}
           tax={tax}
           total={total}
@@ -980,11 +974,8 @@ export default function QuickSalePage() {
             {/* Payment + total */}
             <div className="border-t border-divider/60 px-6 py-5 space-y-4 bg-background/80">
               <PaymentSummary
-                paymentMethod={paymentMethod}
-                onChangeMethod={setPaymentMethod}
-                cashReceived={cashReceived}
-                onCashChange={setCashReceived}
-                change={change}
+                splits={splits}
+                onSplitsChange={setSplits}
                 subtotal={subtotal}
                 tax={tax}
                 total={total}

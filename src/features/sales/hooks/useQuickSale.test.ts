@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildQuickSalePayload } from "@features/sales/hooks/useQuickSale";
 import { Product, Presentation, QuickSaleItem, PriceTiers } from "@shared/types";
+import type { PaymentSplit } from "@features/sales/components/PaymentSummary";
 
 function buildProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -24,6 +25,10 @@ function buildPresentation(overrides: Partial<Presentation> = {}): Presentation 
   };
 }
 
+function makeSplits(method: string, amount: number): PaymentSplit[] {
+  return [{ method: method as PaymentSplit["method"], amount }];
+}
+
 describe("buildQuickSalePayload", () => {
   it("incluye presentationId en el payload cuando el item tiene presentacion", () => {
     const product = buildProduct({ _id: "p-1", name: "Alimento", price: 10 });
@@ -36,8 +41,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 300,
-      paymentMethod: "cash",
-      cashReceived: 300,
+      splits: makeSplits("cash", 300),
     });
 
     expect(payload.items).toHaveLength(1);
@@ -54,8 +58,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 100,
-      paymentMethod: "cash",
-      cashReceived: 100,
+      splits: makeSplits("cash", 100),
     });
 
     expect(payload.items[0]).not.toHaveProperty("presentationId");
@@ -70,8 +73,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 75,
-      paymentMethod: "transfer",
-      cashReceived: 0,
+      splits: makeSplits("transfer", 75),
     });
 
     expect(payload.items[0].price).toBe(75);
@@ -86,8 +88,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 10,
-      paymentMethod: "cash",
-      cashReceived: 20,
+      splits: makeSplits("cash", 20),
     });
 
     expect(payload.notes).toBe("Pago rápido - Efectivo recibido: $20");
@@ -106,13 +107,31 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 370,
-      paymentMethod: "cash",
-      cashReceived: 400,
+      splits: makeSplits("cash", 400),
     });
 
     expect(payload.items).toHaveLength(2);
     expect(payload.items[0]).not.toHaveProperty("presentationId");
     expect(payload.items[1].presentationId).toBe("pres-b");
+  });
+
+  it("incluye paymentSplits en el payload", () => {
+    const product = buildProduct({ _id: "p-1", name: "Alimento", price: 10 });
+    const items: QuickSaleItem[] = [{ product, quantity: 1 }];
+    const splits: PaymentSplit[] = [
+      { method: "cash", amount: 500 },
+      { method: "transfer", amount: 500 },
+    ];
+
+    const payload = buildQuickSalePayload({
+      clientId: "client-1",
+      items,
+      total: 1000,
+      splits,
+    });
+
+    expect(payload.paymentSplits).toEqual(splits);
+    expect(payload.paymentMethod).toBe("cash");
   });
 
   it("usa precio de tier mayorista cuando se especifica", () => {
@@ -128,8 +147,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 160,
-      paymentMethod: "cash",
-      cashReceived: 200,
+      splits: makeSplits("cash", 200),
       priceTier: "wholesale",
     });
 
@@ -149,8 +167,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 60,
-      paymentMethod: "transfer",
-      cashReceived: 0,
+      splits: makeSplits("transfer", 60),
       priceTier: "distributor",
     });
 
@@ -168,8 +185,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 100,
-      paymentMethod: "cash",
-      cashReceived: 100,
+      splits: makeSplits("cash", 100),
       priceTier: "wholesale", // Tier not available
     });
 
@@ -184,8 +200,7 @@ describe("buildQuickSalePayload", () => {
       clientId: "client-1",
       items,
       total: 150,
-      paymentMethod: "cash",
-      cashReceived: 150,
+      splits: makeSplits("cash", 150),
       priceTier: "wholesale",
     });
 

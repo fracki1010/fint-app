@@ -105,23 +105,23 @@ export default function TenantCreate() {
     return (
       <SuperAdminLayout>
         <div className="mx-auto max-w-lg">
-          <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-6 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
-              <Check size={32} className="text-green-400" />
+          <div className="rounded-2xl border border-success/20 bg-success/5 p-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
+              <Check size={32} className="text-success" />
             </div>
-            <h2 className="text-xl font-bold text-white">¡Tenant Creado!</h2>
-            <p className="mt-2 text-sm text-gray-400">
+            <h2 className="text-xl font-bold text-foreground">¡Tenant Creado!</h2>
+            <p className="mt-2 text-sm text-default-400">
               El tenant ha sido creado exitosamente. Guarda estas credenciales:
             </p>
 
-            <div className="mt-6 space-y-3 rounded-xl border border-white/10 bg-content1 p-4 text-left">
+            <div className="mt-6 space-y-3 rounded-xl border border-divider bg-content1 p-4 text-left">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Email</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-default-500">Email</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-sm font-mono text-white">{createdCredentials.email}</p>
+                  <p className="text-sm font-mono text-foreground">{createdCredentials.email}</p>
                   <button
                     onClick={() => copyToClipboard(createdCredentials.email)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-default-400 hover:text-foreground"
                   >
                     <Copy size={14} />
                   </button>
@@ -129,12 +129,12 @@ export default function TenantCreate() {
               </div>
               {createdCredentials.tempPassword && (
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Contraseña Temporal</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-default-500">Contraseña Temporal</p>
                   <div className="mt-1 flex items-center gap-2">
-                    <p className="text-sm font-mono text-white">{createdCredentials.tempPassword}</p>
+                    <p className="text-sm font-mono text-foreground">{createdCredentials.tempPassword}</p>
                     <button
                       onClick={() => copyToClipboard(createdCredentials.tempPassword!)}
-                      className="text-gray-400 hover:text-white"
+                      className="text-default-400 hover:text-foreground"
                     >
                       <Copy size={14} />
                     </button>
@@ -161,13 +161,13 @@ export default function TenantCreate() {
                     notes: "",
                   });
                 }}
-                className="flex-1 rounded-xl bg-blue-500 py-3 text-sm font-bold text-white transition hover:bg-blue-600"
+                className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition hover:opacity-90"
               >
                 Crear Otro
               </button>
               <button
                 onClick={() => navigate("/superadmin/tenants")}
-                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+                className="flex-1 rounded-xl border border-divider bg-content2 py-3 text-sm font-bold text-foreground transition hover:bg-content3"
               >
                 Ver Lista
               </button>

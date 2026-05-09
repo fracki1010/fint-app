@@ -220,7 +220,7 @@ export default function SupplierAccountDetailPage() {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ["Fecha", "Tipo", "Monto", "Signo", "Metodo", "Referencia", "Notas"];
+    const headers = ["Fecha", "Tipo", "Monto", "Signo", "Metodo", "Referencia", "Notas", "Vencimiento", "Saldo Restante", "Estado"];
     const rows = filteredEntries.map(entry => [
       entry.date,
       ENTRY_TYPE_LABELS_EXPORT[entry.type],
@@ -229,6 +229,9 @@ export default function SupplierAccountDetailPage() {
       entry.paymentMethod || "",
       entry.reference || "",
       entry.notes || "",
+      entry.dueDate || "",
+      entry.remainingAmount != null ? entry.remainingAmount.toString() : "",
+      entry.status || "",
     ]);
     
     const csvContent = [headers.join(","), ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))].join("\n");
@@ -633,6 +636,29 @@ export default function SupplierAccountDetailPage() {
                             <span className="truncate max-w-[120px]">{entry.reference}</span>
                           </>
                         )}
+                        {/* Reconciliation status badge */}
+                        {entry.status && entry.status !== "cancelled" && (
+                          <>
+                            <span>·</span>
+                            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                              entry.status === "pending" ? "bg-warning/15 text-warning" :
+                              entry.status === "partial" ? "bg-primary/15 text-primary" :
+                              "bg-success/15 text-success"
+                            }`}>
+                              {entry.status === "pending" ? "Pendiente" :
+                               entry.status === "partial" ? "Parcial" :
+                               entry.status === "paid" ? "Pagado" : "Cancelado"}
+                            </span>
+                          </>
+                        )}
+                        {entry.remainingAmount != null && entry.remainingAmount > 0 && (
+                          <>
+                            <span>·</span>
+                            <span className="text-danger font-semibold">
+                              Resta: {formatCompactCurrency(entry.remainingAmount, currency)}
+                            </span>
+                          </>
+                        )}
                       </div>
                       {entry.notes && (
                         <p className="mt-1 text-[11px] text-default-400 line-clamp-1">{entry.notes}</p>
@@ -949,6 +975,63 @@ function EntryDetailModal({
               </div>
             )}
           </div>
+
+          {/* Reconciliation Fields */}
+          {(entry.dueDate || entry.remainingAmount != null || entry.status || (entry.allocations && entry.allocations.length > 0)) && (
+            <div className="rounded-xl border border-divider/10 bg-content2/50 px-4 py-3">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-default-500">
+                Conciliación
+              </p>
+              <div className="space-y-2">
+                {entry.dueDate && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-default-500">Vencimiento</span>
+                    <span className="text-sm font-semibold text-foreground">{formatDate(entry.dueDate)}</span>
+                  </div>
+                )}
+                {entry.remainingAmount != null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-default-500">Saldo pendiente</span>
+                    <span className={`text-sm font-bold ${entry.remainingAmount > 0 ? "text-danger" : "text-success"}`}>
+                      {formatCurrency(entry.remainingAmount, currency)}
+                    </span>
+                  </div>
+                )}
+                {entry.status && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-default-500">Estado</span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                      entry.status === "pending" ? "bg-warning/15 text-warning" :
+                      entry.status === "partial" ? "bg-primary/15 text-primary" :
+                      entry.status === "paid" ? "bg-success/15 text-success" :
+                      "bg-danger/15 text-danger"
+                    }`}>
+                      {entry.status === "pending" ? "Pendiente" :
+                       entry.status === "partial" ? "Parcial" :
+                       entry.status === "paid" ? "Pagado" : "Cancelado"}
+                    </span>
+                  </div>
+                )}
+                {entry.allocations && entry.allocations.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-sm text-default-500">Asignaciones</p>
+                    <div className="space-y-1">
+                      {entry.allocations.map((alloc, idx) => (
+                        <div key={idx} className="flex items-center justify-between rounded-lg bg-background/50 px-2.5 py-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-default-400">{formatDate(alloc.date)}</span>
+                          </div>
+                          <span className="text-xs font-bold text-success">
+                            -{formatCurrency(alloc.amount, currency)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Notes */}
           {entry.notes && (

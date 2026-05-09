@@ -48,6 +48,7 @@ export interface Presentation {
   price: number;
   equivalentQty: number;
   isActive?: boolean;
+  priceTiers?: PriceTiers;
 }
 
 export type PriceTier = "retail" | "wholesale" | "distributor" | "premium" | "especial";
@@ -188,6 +189,15 @@ export interface SupplierAccountEntry {
   notes: string;
   createdBy?: string | null;
   createdAt?: string;
+  // Reconciliation fields
+  dueDate?: string | null;
+  remainingAmount?: number | null;
+  status?: "pending" | "partial" | "paid" | "cancelled" | null;
+  allocations?: Array<{
+    entryId: string;
+    amount: number;
+    date: string;
+  }>;
 }
 
 export interface SupplierAccount {
@@ -409,27 +419,32 @@ export interface TeamMember {
   createdAt?: string;
 }
 
-// ── Recetas ───────────────────────────────────────────────────────────
+// ── Bill of Materials ────────────────────────────────────────────────
 
-export interface RecipeIngredient {
+export interface BomIngredient {
     /** @deprecated Use `product` instead */
   supply?: Supply | string;
   product?: Product | string;
   quantity: number;
 }
 
-export interface Recipe {
+export interface BillOfMaterial {
   _id: string;
   name: string;
   product?: Product | string | null;
   yieldQuantity: number;
-  ingredients: RecipeIngredient[];
+  ingredients: BomIngredient[];
   notes?: string;
   isActive: boolean;
   deletedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
+
+/** @deprecated Use BillOfMaterial instead */
+export type Recipe = BillOfMaterial;
+/** @deprecated Use BomIngredient instead */
+export type RecipeIngredient = BomIngredient;
 
 export type PaymentMethod =
   | "cash" | "card" | "mercadopago" | "transfer"
@@ -446,6 +461,8 @@ export interface QuickSaleItem {
 }
 
 export interface ProduceResult {
+  billOfMaterial: { _id: string; name: string };
+  /** @deprecated Use `billOfMaterial` instead */
   recipe: { _id: string; name: string };
   batchesProduced: number;
   unitsProduced: number;
@@ -454,7 +471,11 @@ export interface ProduceResult {
 
 export interface ProductionLog {
   _id: string;
+  billOfMaterial: string;
+  billOfMaterialName: string;
+  /** @deprecated Use `billOfMaterial` instead */
   recipe: string;
+  /** @deprecated Use `billOfMaterialName` instead */
   recipeName: string;
   batchesProduced: number;
   unitsProduced: number;
@@ -480,6 +501,34 @@ export const DEFAULT_TIER_PERCENTAGES: Record<PriceTier, number> = {
   premium: 120,
   especial: 90,
 };
+
+// ── Inventory Snapshots ─────────────────────────────────────────────────
+export interface InventorySnapshotItem {
+  productId: string;
+  productName: string;
+  sku: string;
+  stock: number;
+  costPrice: number;
+  stockValue: number;
+}
+
+export interface InventorySnapshot {
+  _id: string;
+  snapshotDate: string;
+  stockValue: number;
+  productCount: number;
+  items?: InventorySnapshotItem[];
+  triggeredBy: "manual" | "auto_close";
+  createdAt: string;
+}
+
+export interface InventorySnapshotListResponse {
+  snapshots: InventorySnapshot[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 // ── Bulk Import Types ─────────────────────────────────────────────────
 
@@ -615,6 +664,28 @@ export interface Quote {
   createdAt: string;
 }
 
+// ── Payment Orders (Órdenes de Pago) ─────────────────────────────────
+
+export interface PaymentOrderItem {
+  purchase: string;
+  amount: number;
+}
+
+export interface PaymentOrder {
+  _id: string;
+  supplier: { _id: string; name: string; taxId?: string } | string;
+  date: string;
+  paymentMethod: string;
+  reference: string;
+  notes: string;
+  status: "DRAFT" | "PAID" | "CANCELLED";
+  items: PaymentOrderItem[];
+  total: number;
+  paidAt?: string;
+  createdAt: string;
+  createdBy?: { _id: string; fullName: string };
+}
+
 export interface CreateQuoteRequest {
   client: string;
   date: string;
@@ -624,4 +695,32 @@ export interface CreateQuoteRequest {
   tax: number;
   total: number;
   notes?: string;
+}
+
+// ── IVA Reports (Libro IVA) ──────────────────────────────────────────
+
+export interface IvaReportPeriod {
+  period: string;
+  netAmount: number;
+  tax: number;
+  total: number;
+  count: number;
+}
+
+export interface IvaReportDetail {
+  date: string;
+  supplier?: { name: string; taxId?: string };
+  client?: { name: string; taxId?: string };
+  netAmount: number;
+  tax: number;
+  total: number;
+  purchaseId?: string;
+  orderId?: string;
+}
+
+export interface IvaReport {
+  periods: IvaReportPeriod[];
+  totals: { netAmount: number; tax: number; total: number };
+  details: IvaReportDetail[];
+  dateRange: { from: string; to: string };
 }

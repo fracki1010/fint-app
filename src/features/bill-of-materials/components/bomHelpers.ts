@@ -1,4 +1,4 @@
-import { Product, Recipe } from "@shared/types";
+import { Product, BillOfMaterial } from "@shared/types";
 
 export function getSupplyObj(
   s: unknown,
@@ -27,8 +27,8 @@ export function getProductObj(p: Product | string | null | undefined): Product |
   return null;
 }
 
-export function calcRecipeCost(recipe: Recipe) {
-  const batchCost = recipe.ingredients.reduce((acc, ing) => {
+export function calcBomCost(bom: BillOfMaterial) {
+  const batchCost = bom.ingredients.reduce((acc, ing) => {
     const p = getProductObj(ing.product);
     if (p && p.costPrice) {
       return acc + ing.quantity * p.costPrice;
@@ -39,7 +39,7 @@ export function calcRecipeCost(recipe: Recipe) {
     }
     return acc;
   }, 0);
-  const unitCost = recipe.yieldQuantity > 0 ? batchCost / recipe.yieldQuantity : 0;
+  const unitCost = bom.yieldQuantity > 0 ? batchCost / bom.yieldQuantity : 0;
   return { batchCost, unitCost };
 }
 

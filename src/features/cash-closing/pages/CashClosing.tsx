@@ -12,7 +12,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { Button } from '@heroui/button';
-import { Card, CardBody, CardHeader } from '@heroui/card';
+
 import { Chip } from '@heroui/chip';
 import { Modal, ModalContent, ModalBody } from '@heroui/modal';
 import {
@@ -28,9 +28,11 @@ import { CloseClosingModal } from '../components/CloseClosingModal';
 import { ZReportView } from '../components/ZReportView';
 import { formatCurrency } from '@shared/utils/currency';
 import { formatDate } from '@shared/utils/date';
+import { useAppToast } from '@features/notifications/components/AppToast';
 import { CashClosing } from '../types/cashClosing';
 
 export default function CashClosingPage() {
+  const { showToast } = useAppToast();
   // Hooks
   const { closing: currentClosing, hasOpenClosing, loading: loadingCurrent, refetch: refetchCurrent } = useCurrentClosing();
   const { closings, loading: loadingClosings, refetch: refetchClosings } = useClosings({ page: 1, limit: 10 });
@@ -88,14 +90,14 @@ export default function CashClosingPage() {
   };
 
   // Handlers
-  const handleOpen = async (notes?: string) => {
+  const handleOpen = async (data: { notes?: string; initialCash?: number }) => {
     try {
-      await openClosing({ notes });
+      await openClosing(data);
       setIsOpenModalOpen(false);
       refetchCurrent();
       refetchClosings();
     } catch (error) {
-      console.error('Error opening closing:', error);
+      showToast({ variant: "error", message: "Error al abrir cierre de caja. Intentá de nuevo." });
     }
   };
 
@@ -111,7 +113,7 @@ export default function CashClosingPage() {
       refetchCurrent();
       refetchClosings();
     } catch (error) {
-      console.error('Error closing closing:', error);
+      showToast({ variant: "error", message: "Error al cerrar cierre de caja. Verificá los montos e intentá de nuevo." });
     }
   };
 
@@ -168,9 +170,9 @@ export default function CashClosingPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Current Status Card */}
-        <Card>
-          <CardHeader>
-            <p className="text-lg font-semibold flex items-center gap-2">
+        <div className="app-panel rounded-xl p-4 lg:rounded-[28px] lg:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-kicker">
               {hasOpenClosing ? (
                 <Unlock className="w-5 h-5 text-success" />
               ) : (
@@ -178,8 +180,7 @@ export default function CashClosingPage() {
               )}
               Estado Actual
             </p>
-          </CardHeader>
-          <CardBody>
+          </div>
             {loadingCurrent ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-default-400" />
@@ -211,29 +212,25 @@ export default function CashClosingPage() {
                 </Button>
               </div>
             )}
-          </CardBody>
-        </Card>
+        </div>
 
         {/* Current Period Orders */}
         {hasOpenClosing && currentClosing && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-semibold flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Ventas del Período Actual
-                </p>
-                <Button 
-                  variant="light" 
-                  size="sm" 
-                  onClick={() => refetchCurrentPreview()}
-                  isLoading={loadingCurrentPreview}
-                >
-                  Actualizar
-                </Button>
-              </div>
-            </CardHeader>
-            <CardBody>
+          <div className="app-panel rounded-xl p-4 lg:rounded-[28px] lg:p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="section-kicker">
+                <FileText className="w-5 h-5" />
+                Ventas del Período Actual
+              </p>
+              <Button 
+                variant="light" 
+                size="sm" 
+                onClick={() => refetchCurrentPreview()}
+                isLoading={loadingCurrentPreview}
+              >
+                Actualizar
+              </Button>
+            </div>
               {loadingCurrentPreview ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-default-400" />
@@ -250,21 +247,21 @@ export default function CashClosingPage() {
                 <div className="space-y-4">
                   {/* Summary */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="p-3 bg-default-100 rounded-lg">
-                      <p className="text-xs text-default-500">Total Órdenes</p>
-                      <p className="text-xl font-bold">{currentPreview.summary.totalOrders}</p>
+                    <div className="stat-card p-3">
+                      <p className="stat-card-label">Total Órdenes</p>
+                      <p className="stat-card-value">{currentPreview.summary.totalOrders}</p>
                     </div>
-                    <div className="p-3 bg-default-100 rounded-lg">
-                      <p className="text-xs text-default-500">Total Ventas</p>
-                      <p className="text-xl font-bold">{formatCurrency(currentPreview.summary.totalSales)}</p>
+                    <div className="stat-card p-3">
+                      <p className="stat-card-label">Total Ventas</p>
+                      <p className="stat-card-value">{formatCurrency(currentPreview.summary.totalSales)}</p>
                     </div>
-                    <div className="p-3 bg-default-100 rounded-lg">
-                      <p className="text-xs text-default-500">Efectivo</p>
-                      <p className="text-xl font-bold">{formatCurrency(currentPreview.paymentBreakdown.cash.amount)}</p>
+                    <div className="stat-card p-3">
+                      <p className="stat-card-label">Efectivo</p>
+                      <p className="stat-card-value">{formatCurrency(currentPreview.paymentBreakdown.cash.amount)}</p>
                     </div>
-                    <div className="p-3 bg-default-100 rounded-lg">
-                      <p className="text-xs text-default-500">Tarjeta</p>
-                      <p className="text-xl font-bold">{formatCurrency(currentPreview.paymentBreakdown.card.amount)}</p>
+                    <div className="stat-card p-3">
+                      <p className="stat-card-label">Tarjeta</p>
+                      <p className="stat-card-value">{formatCurrency(currentPreview.paymentBreakdown.card.amount)}</p>
                     </div>
                   </div>
 
@@ -314,19 +311,17 @@ export default function CashClosingPage() {
                   </div>
                 </div>
               )}
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* Historical Closings */}
-        <Card>
-          <CardHeader>
-            <p className="text-lg font-semibold flex items-center gap-2">
+        <div className="app-panel rounded-xl p-4 lg:rounded-[28px] lg:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-kicker">
               <History className="w-5 h-5" />
               Historial de Cierres
             </p>
-          </CardHeader>
-          <CardBody>
+          </div>
             {loadingClosings ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-default-400" />
@@ -403,8 +398,7 @@ export default function CashClosingPage() {
                 </table>
               </div>
             )}
-          </CardBody>
-        </Card>
+        </div>
       </div>
 
       {/* Modals */}

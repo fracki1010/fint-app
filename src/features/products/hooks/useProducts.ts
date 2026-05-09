@@ -58,6 +58,7 @@ export function useProducts(options?: { enabled?: boolean }) {
   } = useQuery({
     queryKey: ["products"],
     enabled: options?.enabled ?? true,
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const response = await api.get<Product[]>("/products");
 

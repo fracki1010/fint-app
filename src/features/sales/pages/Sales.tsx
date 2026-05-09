@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ScanBarcode,
   Upload,
+  ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@heroui/button";
@@ -31,8 +32,12 @@ import { PaginationBar } from "@shared/components/PaginationBar";
 import { StatusBadge } from "@shared/components/StatusBadge";
 import { OrderDetailPanel } from "@features/sales/components/OrderDetailPanel";
 import { getCommercialStatus } from "@features/sales/utils/salesUtils";
+import { getPaymentLabel } from "@features/sales/utils/payment";
 
 const SALES_STATUS_OPTIONS: SalesStatus[] = ["Pendiente", "Confirmada", "Cancelada"];
+
+const PAYMENT_METHODS = ["cash", "card", "transfer", "mercadopago", "check", "other"] as const;
+const SOURCES = ["WhatsApp", "Dashboard"] as const;
 
 
 
@@ -60,6 +65,10 @@ export default function SalesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | SalesStatus>("all");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("");
+  const [deliveryFilter, setDeliveryFilter] = useState<string>("");
+  const [sourceFilter, setSourceFilter] = useState<string>("");
 
   // Date filters
   type DateFilter = "today" | "yesterday" | "7days" | "month" | "90days" | "custom";
@@ -115,9 +124,13 @@ export default function SalesPage() {
     }
 
     if (activeFilter !== "all") result = result.filter((o) => getCommercialStatus(o) === activeFilter);
+    if (paymentMethodFilter) result = result.filter((o) => o.paymentMethod === paymentMethodFilter);
+    if (paymentStatusFilter) result = result.filter((o) => o.paymentStatus === paymentStatusFilter);
+    if (deliveryFilter) result = result.filter((o) => o.deliveryStatus === deliveryFilter);
+    if (sourceFilter) result = result.filter((o) => o.source === sourceFilter);
     if (searchQuery) result = result.filter((o) => getClientName(o.client).toLowerCase().includes(searchQuery.toLowerCase()) || o._id.toLowerCase().includes(searchQuery.toLowerCase()));
     return result;
-  }, [safeOrders, searchQuery, activeFilter, dateFilter, customDateFrom, customDateTo]);
+  }, [safeOrders, searchQuery, activeFilter, dateFilter, customDateFrom, customDateTo, paymentMethodFilter, paymentStatusFilter, deliveryFilter, sourceFilter]);
 
   useEffect(() => {
     setDesktopPage(1);
@@ -161,11 +174,6 @@ export default function SalesPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
   };
-
-  const statuses = useMemo(
-    () => SALES_STATUS_OPTIONS.filter((s) => safeOrders.some((o) => getCommercialStatus(o) === s)),
-    [safeOrders],
-  );
 
   const totalSales = useMemo(() => safeOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0), [safeOrders]);
 
@@ -299,80 +307,89 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Date Filters */}
-      <div className="shrink-0 flex gap-1.5 overflow-x-auto no-scrollbar px-4 pt-3 lg:px-5">
-        {([
-          { key: "today", label: "Hoy" },
-          { key: "yesterday", label: "Ayer" },
-          { key: "7days", label: "7 días" },
-          { key: "month", label: "Mes" },
-          { key: "90days", label: "90 días" },
-          { key: "custom", label: "Otro" },
-        ] as { key: DateFilter; label: string }[]).map((f) => (
-          <button
-            key={f.key}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-              dateFilter === f.key
-                ? "bg-primary text-white shadow-md shadow-primary/25"
-                : "bg-content2/60 text-default-500 hover:bg-content2"
-            }`}
-            onClick={() => {
-              setDateFilter(f.key);
-              if (f.key === "custom") {
-                setShowCustomDatePicker(true);
-              } else {
-                setShowCustomDatePicker(false);
-              }
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Custom date picker */}
-      {showCustomDatePicker && (
-        <div className="shrink-0 flex items-center gap-2 px-4 py-2 lg:px-5">
-          <input
-            className="corp-input rounded-lg px-3 py-1.5 text-xs"
-            type="date"
-            value={customDateFrom}
-            onChange={(e) => setCustomDateFrom(e.target.value)}
-          />
-          <span className="text-xs text-default-400">hasta</span>
-          <input
-            className="corp-input rounded-lg px-3 py-1.5 text-xs"
-            type="date"
-            value={customDateTo}
-            onChange={(e) => setCustomDateTo(e.target.value)}
-          />
-          <button
-            className="rounded-lg bg-danger/10 px-3 py-1.5 text-xs font-bold text-danger hover:bg-danger/20 transition"
-            onClick={() => {
-              setCustomDateFrom("");
-              setCustomDateTo("");
-            }}
-          >
-            Limpiar
-          </button>
+      {/* Unified Filter Bar */}
+      <div className="shrink-0 space-y-2 px-4 pt-3 lg:px-5">
+        {/* Date pills */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+          {([
+            { key: "today", label: "Hoy" },
+            { key: "yesterday", label: "Ayer" },
+            { key: "7days", label: "7 días" },
+            { key: "month", label: "Mes" },
+            { key: "90days", label: "90 días" },
+            { key: "custom", label: "Otro" },
+          ] as { key: DateFilter; label: string }[]).map((f) => (
+            <button
+              key={f.key}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                dateFilter === f.key
+                  ? "bg-primary text-white shadow-md shadow-primary/25"
+                  : "bg-content2/60 text-default-500 hover:bg-content2"
+              }`}
+              onClick={() => {
+                setDateFilter(f.key);
+                if (f.key === "custom") setShowCustomDatePicker(true);
+                else setShowCustomDatePicker(false);
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
-      )}
 
-      {/* Status Filters */}
-      <div className="shrink-0 flex gap-2 overflow-x-auto no-scrollbar px-4 py-2 lg:px-5">
-        {(["all", ...statuses] as ("all" | SalesStatus)[]).map((f) => (
-          <button
-            key={f}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-              activeFilter === f
-                ? "bg-content1 border border-primary text-primary"
-                : "bg-content2/60 text-default-500 hover:bg-content2"
-            }`}
-            onClick={() => setActiveFilter(f)}
-          >
-            {f === "all" ? "Todas" : f}
-          </button>
-        ))}
+        {/* Custom date picker */}
+        {showCustomDatePicker && (
+          <div className="flex items-center gap-2">
+            <input className="corp-input rounded-lg px-3 py-1.5 text-xs w-36" type="date" value={customDateFrom} onChange={(e) => setCustomDateFrom(e.target.value)} />
+            <span className="text-xs text-default-400">hasta</span>
+            <input className="corp-input rounded-lg px-3 py-1.5 text-xs w-36" type="date" value={customDateTo} onChange={(e) => setCustomDateTo(e.target.value)} />
+            <button className="rounded-lg bg-danger/10 px-3 py-1.5 text-xs font-bold text-danger hover:bg-danger/20" onClick={() => { setCustomDateFrom(""); setCustomDateTo(""); }}>Limpiar</button>
+          </div>
+        )}
+
+        {/* Filter groups row */}
+        <div className="flex flex-wrap gap-1.5">
+          {/* Status */}
+          <FilterGroup label="Estado" value={activeFilter !== "all" ? activeFilter : null} onClear={() => setActiveFilter("all")}>
+            {(["all", ...SALES_STATUS_OPTIONS] as const).map((s) => (
+              <button key={s} className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${activeFilter === s ? "bg-primary/10 text-primary" : "text-default-500"}`} onClick={() => setActiveFilter(s)}>
+                {s === "all" ? "Todas" : s}
+              </button>
+            ))}
+          </FilterGroup>
+
+          {/* Payment Status */}
+          <FilterGroup label="Pago" value={paymentStatusFilter || null} onClear={() => setPaymentStatusFilter("")}>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${paymentStatusFilter === "Pagado" ? "bg-success/10 text-success" : "text-default-500"}`} onClick={() => setPaymentStatusFilter("Pagado")}>Pagado</button>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${paymentStatusFilter === "Pendiente" ? "bg-warning/10 text-warning" : "text-default-500"}`} onClick={() => setPaymentStatusFilter("Pendiente")}>Pendiente</button>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${paymentStatusFilter === "Parcial" ? "bg-primary/10 text-primary" : "text-default-500"}`} onClick={() => setPaymentStatusFilter("Parcial")}>Parcial</button>
+          </FilterGroup>
+
+          {/* Payment Method */}
+          <FilterGroup label="Método" value={paymentMethodFilter ? getPaymentLabel(paymentMethodFilter as any, true) : null} onClear={() => setPaymentMethodFilter("")}>
+            {PAYMENT_METHODS.map((m) => (
+              <button key={m} className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${paymentMethodFilter === m ? "bg-primary/10 text-primary" : "text-default-500"}`} onClick={() => setPaymentMethodFilter(m)}>
+                {getPaymentLabel(m, true)}
+              </button>
+            ))}
+          </FilterGroup>
+
+          {/* Delivery */}
+          <FilterGroup label="Entrega" value={deliveryFilter || null} onClear={() => setDeliveryFilter("")}>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${deliveryFilter === "Entregada" ? "bg-success/10 text-success" : "text-default-500"}`} onClick={() => setDeliveryFilter("Entregada")}>Entregada</button>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${deliveryFilter === "Preparando" ? "bg-primary/10 text-primary" : "text-default-500"}`} onClick={() => setDeliveryFilter("Preparando")}>Preparando</button>
+            <button className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${deliveryFilter === "Pendiente" ? "bg-warning/10 text-warning" : "text-default-500"}`} onClick={() => setDeliveryFilter("Pendiente")}>Pendiente</button>
+          </FilterGroup>
+
+          {/* Source */}
+          <FilterGroup label="Origen" value={sourceFilter || null} onClear={() => setSourceFilter("")}>
+            {SOURCES.map((s) => (
+              <button key={s} className={`px-3 py-1.5 text-xs font-bold text-left w-full rounded-lg hover:bg-content2 ${sourceFilter === s ? "bg-secondary/10 text-secondary" : "text-default-500"}`} onClick={() => setSourceFilter(s)}>
+                {s}
+              </button>
+            ))}
+          </FilterGroup>
+        </div>
       </div>
 
       {/* Order list */}
@@ -528,5 +545,55 @@ export default function SalesPage() {
         onClose={() => setIsImportModalOpen(false)}
       />
     </>
+  );
+}
+
+// ── FilterGroup (dropdown-like filter chip) ──────────────────────────
+
+function FilterGroup({
+  label,
+  value,
+  onClear,
+  children,
+}: {
+  label: string;
+  value: string | null;
+  onClear: () => void;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+          value
+            ? "bg-primary/10 text-primary border border-primary/20"
+            : "bg-content2/60 text-default-500 hover:bg-content2 border border-transparent"
+        }`}
+        onClick={() => setOpen(!open)}
+      >
+        {value || label}
+        {value ? (
+          <span className="ml-1 text-[10px]" onClick={(e) => { e.stopPropagation(); onClear(); }}>×</span>
+        ) : (
+          <ChevronDown size={12} />
+        )}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[140px] rounded-xl border border-divider/20 bg-content1 p-1.5 shadow-xl">
+          {children}
+        </div>
+      )}
+    </div>
   );
 }

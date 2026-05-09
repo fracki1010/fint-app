@@ -5,7 +5,6 @@ import {
   Search,
   UserPlus,
   Package,
-  FileText,
   ShoppingCart,
   Loader2,
   Plus,
@@ -22,11 +21,12 @@ import { useSettings } from "@features/settings/hooks/useSettings";
 import { useProductLookupManual } from "@features/products/hooks/useProductLookup";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
-import { Client, Product, Presentation, VoucherType } from "@shared/types";
+import { Client, Product, Presentation, VoucherType, PaymentMethod } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getErrorMessage } from "@shared/utils/errors";
+import { getPaymentLabel } from "@features/sales/utils/payment";
 import {
   canAddProductToCart,
   getAvailableStock,
@@ -54,6 +54,7 @@ export default function NewOperationPage() {
   const [productSearch, setProductSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
   const [notes, setNotes] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [selectedVoucherTypes, setSelectedVoucherTypes] = useState<VoucherType[]>([]);
@@ -220,7 +221,9 @@ export default function NewOperationPage() {
         totalAmount: total,
         status: settings?.defaultSalesStatus || "Pendiente",
         salesStatus: settings?.defaultSalesStatus || "Pendiente",
-        paymentStatus: settings?.defaultPaymentStatus || "Pendiente",
+        paymentStatus: paymentMethod === "cash" ? "Pagado" : (settings?.defaultPaymentStatus || "Pendiente"),
+        paymentMethod,
+        paymentSplits: [{ method: paymentMethod as PaymentMethod, amount: total }],
         deliveryStatus: settings?.defaultDeliveryStatus || "Pendiente",
         notes: notes || undefined,
         source: "Dashboard",
@@ -572,13 +575,36 @@ export default function NewOperationPage() {
         <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start lg:sticky lg:top-24 space-y-5">
           {/* Voucher Selection */}
           {cart.length > 0 && (
-            <div className="border-b border-divider/70 pb-5">
-              <VoucherSelector
-                selectedTypes={selectedVoucherTypes}
-                onChange={setSelectedVoucherTypes}
-                paymentStatus={settings?.defaultPaymentStatus || "Pendiente"}
-              />
-            </div>
+            <>
+              {/* Payment Method */}
+              <div className="pb-4 border-b border-divider/70">
+                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-default-500">
+                  Método de Pago
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
+                    <button
+                      key={m}
+                      className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                        paymentMethod === m
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
+                      }`}
+                      onClick={() => setPaymentMethod(m)}
+                    >
+                      {getPaymentLabel(m)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="border-b border-divider/70 pb-5 mt-4">
+                <VoucherSelector
+                  selectedTypes={selectedVoucherTypes}
+                  onChange={setSelectedVoucherTypes}
+                  paymentStatus={paymentMethod === "cash" ? "Pagado" : settings?.defaultPaymentStatus || "Pendiente"}
+                />
+              </div>
+            </>
           )}
 
           <div className="flex items-center justify-between text-sm">
@@ -605,10 +631,6 @@ export default function NewOperationPage() {
           </div>
 
           <div className="mt-5 hidden gap-3 lg:flex">
-            <button className="app-panel-soft flex w-28 flex-col items-center justify-center gap-1 rounded-2xl text-default-500">
-              <FileText size={18} />
-              <span className="text-[10px] font-semibold">Borrador</span>
-            </button>
             <button
               className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
               disabled={isCreating || cart.length === 0 || !selectedClient}
@@ -627,23 +649,39 @@ export default function NewOperationPage() {
         </section>
       </div>
 
-      {/* Mobile Voucher Selection */}
+      {/* Mobile Payment + Voucher Selection */}
       {cart.length > 0 && (
-        <div className="px-4 py-3 border-t border-divider/60 lg:hidden">
+        <div className="px-4 py-3 border-t border-divider/60 lg:hidden space-y-3">
+          <div>
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-default-500">
+              Método de Pago
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
+                <button
+                  key={m}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                    paymentMethod === m
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
+                  }`}
+                  onClick={() => setPaymentMethod(m)}
+                >
+                  {getPaymentLabel(m)}
+                </button>
+              ))}
+            </div>
+          </div>
           <VoucherSelector
             selectedTypes={selectedVoucherTypes}
             onChange={setSelectedVoucherTypes}
-            paymentStatus={settings?.defaultPaymentStatus || "Pendiente"}
+            paymentStatus={paymentMethod === "cash" ? "Pagado" : settings?.defaultPaymentStatus || "Pendiente"}
           />
         </div>
       )}
 
       <div className="bottom-sheet-surface fixed bottom-0 w-full max-w-md p-4 lg:hidden">
         <div className="flex gap-3">
-          <button className="app-panel-soft flex w-24 flex-col items-center justify-center gap-1 rounded-2xl text-default-500">
-            <FileText size={18} />
-            <span className="text-[10px] font-semibold">Borrador</span>
-          </button>
           <button
             className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
             disabled={isCreating || cart.length === 0 || !selectedClient}

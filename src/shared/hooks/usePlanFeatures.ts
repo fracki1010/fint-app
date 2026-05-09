@@ -4,6 +4,7 @@ import { useAuth } from "@features/auth/hooks/useAuth";
 export type Feature =
   | "financial_center"
   | "recipes"
+  | "bill_of_materials"
   | "advanced_reports"
   | "api_access"
   | "supplier_account"
@@ -15,11 +16,12 @@ export type Feature =
   | "quotes";
 
 const FEATURE_MATRIX: Record<string, Feature[]> = {
-  essential: [],
-  business: ["financial_center", "recipes", "supplier_account", "client_account", "team_management", "unlimited_products", "unlimited_orders", "banking", "quotes"],
+  essential: ["client_account", "supplier_account", "quotes"],
+  business: ["financial_center", "recipes", "bill_of_materials", "supplier_account", "client_account", "team_management", "unlimited_products", "unlimited_orders", "banking", "quotes"],
   enterprise: [
     "financial_center",
     "recipes",
+    "bill_of_materials",
     "advanced_reports",
     "api_access",
     "supplier_account",

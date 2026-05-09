@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Loader2, TrendingUp, TrendingDown, Minus, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@heroui/button";
-import { Card, CardBody, CardHeader } from "@heroui/card";
+
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
@@ -57,10 +57,11 @@ export default function CostCentersPage() {
       </div>
 
       {/* Centers List */}
-      <Card>
-        <CardHeader><p className="font-semibold">Centros ({centers.length})</p></CardHeader>
-        <CardBody>
-          {loading ? (
+      <div className="app-panel rounded-[28px] p-5">
+        <div>
+          <p className="section-kicker">Centros ({centers.length})</p>
+        </div>
+        {loading ? (
             <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
           ) : centers.length === 0 ? (
             <p className="text-default-500 text-center py-8">No hay centros de costo. Creá el primero.</p>
@@ -86,23 +87,19 @@ export default function CostCentersPage() {
               ))}
             </div>
           )}
-        </CardBody>
-      </Card>
+      </div>
 
       {/* Results Report */}
-      <Card>
-        <CardHeader>
+      <div className="app-panel rounded-[28px] p-5">
           <div className="flex items-center justify-between w-full">
-            <p className="font-semibold">Resultados por Centro</p>
+            <p className="section-kicker">Resultados por Centro</p>
             <div className="flex gap-2 items-center">
               <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-36" size="sm" />
               <span className="text-default-400">a</span>
               <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-36" size="sm" />
             </div>
           </div>
-        </CardHeader>
-        <CardBody>
-          {reportLoading ? (
+        {reportLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
           ) : !report || report.rows.length === 0 ? (
             <p className="text-default-500 text-center py-8">Sin datos para el período seleccionado</p>
@@ -152,8 +149,7 @@ export default function CostCentersPage() {
               </div>
             </div>
           )}
-        </CardBody>
-      </Card>
+      </div>
 
       {/* Create/Edit Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="sm">

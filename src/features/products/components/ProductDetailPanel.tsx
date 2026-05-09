@@ -24,7 +24,7 @@ import { useStockMovements } from "@features/products/hooks/useStockMovements";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getAvailableStock } from "@features/products/utils/stock";
 import { PriceTier } from "@shared/types";
-import { calculateMargin, getTierDisplayName } from "../utils/priceResolver";
+import { getTierDisplayName } from "../utils/priceResolver";
 
 const MOVEMENTS_PREVIEW_LIMIT = 8;
 
@@ -203,58 +203,60 @@ export function ProductDetailPanel({
                   </div>
                 </div>
 
-            {/* Tier Prices */}
-            {product.priceTiers && (
-              <div className="stat-card space-y-3">
-                <p className="text-sm font-bold text-foreground flex items-center gap-2">
+            {/* Tier Prices per Presentation */}
+            {product.presentations && product.presentations.length > 0 && product.priceTiers?.retail && (
+              <div className="stat-card space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-divider/20">
                   <DollarSign size={16} className="text-primary" />
-                  Precios por lista
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {(['retail', 'wholesale', 'distributor'] as PriceTier[]).map((tier) => {
-                    const price = product.priceTiers?.[tier];
-                    const hasPrice = price !== undefined && price > 0;
-                    const margin = product.costPrice ? calculateMargin(price || 0, product.costPrice) : 0;
-                    const isProfitable = margin > 0;
-
-                    return (
-                      <div
-                        key={tier}
-                        className={`rounded-xl border p-3 text-center ${
-                          hasPrice
-                            ? 'border-divider/40 bg-content2/30'
-                            : 'border-dashed border-divider/30 bg-content2/20'
-                        }`}
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-wider text-default-500 mb-1">
-                          {getTierDisplayName(tier)}
-                        </p>
-                        {hasPrice ? (
-                          <>
-                            <p className="text-lg font-bold text-foreground">
-                              {formatCompactCurrency(price, currency)}
-                            </p>
-                            {product.costPrice && product.costPrice > 0 && (
-                              <p className={`text-xs font-medium mt-1 ${isProfitable ? 'text-success' : 'text-danger'}`}>
-                                {isProfitable ? '+' : ''}{margin.toFixed(1)}% margen
-                              </p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-sm text-default-400 italic">No configurado</p>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <p className="text-sm font-bold text-foreground">Precios por lista</p>
+                  <span className="text-[10px] text-default-400 ml-auto">por presentación</span>
                 </div>
-                {/* Fallback to base price indicator */}
-                {(!product.priceTiers?.retail && product.price > 0) && (
-                  <div className="rounded-lg bg-content2/50 px-3 py-2 text-xs text-default-500">
-                    <span className="font-medium text-foreground">Precio base: </span>
-                    {formatCompactCurrency(product.price, currency)}
-                    <span className="ml-1">(usado como respaldo)</span>
-                  </div>
-                )}
+                {product.presentations.filter(p => p.isActive !== false).map((pres) => {
+                  const tiers = (['retail', 'wholesale', 'distributor'] as PriceTier[]).filter(t => product.priceTiers?.[t] && product.priceTiers[t]! > 0);
+                  if (tiers.length === 0 || pres.price <= 0) return null;
+                  return (
+                    <div key={pres._id} className="rounded-2xl border border-divider/30 bg-gradient-to-br from-content2/40 to-content2/10 p-4 space-y-3 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                          <Package size={13} className="text-primary" />
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{pres.name}</p>
+                        <span className="text-[10px] text-default-400 ml-auto">
+                          Base: {formatCompactCurrency(pres.price, currency)}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {tiers.map((tier) => {
+                          const ratio = product.priceTiers![tier]! / product.priceTiers!.retail!;
+                          const presTierPrice = pres.price * ratio;
+                          const tierColors: Record<string, string> = {
+                            retail: 'border-primary/20 bg-primary/5',
+                            wholesale: 'border-success/20 bg-success/5',
+                            distributor: 'border-warning/20 bg-warning/5',
+                          };
+                          const tierTextColors: Record<string, string> = {
+                            retail: 'text-primary',
+                            wholesale: 'text-success',
+                            distributor: 'text-warning',
+                          };
+                          return (
+                            <div key={tier} className={`rounded-xl border ${tierColors[tier]} p-3 text-center`}>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-default-400 mb-1">
+                                {getTierDisplayName(tier)}
+                              </p>
+                              <p className={`text-base font-bold ${tierTextColors[tier]}`}>
+                                {formatCompactCurrency(presTierPrice, currency)}
+                              </p>
+                              <p className="text-[10px] text-default-400 mt-0.5">
+                                {(ratio * 100).toFixed(0)}% del base
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

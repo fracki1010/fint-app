@@ -45,6 +45,7 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { PaginationBar } from "@shared/components/PaginationBar";
 import PurchaseFormItem, { LineItem } from "../components/PurchaseFormItem";
 import PurchaseDetailPanel from "../components/PurchaseDetailPanel";
+import { ConfirmModal } from "@shared/components/ConfirmModal";
 
 const STATUS_LABELS: Record<PurchaseStatus, string> = {
   DRAFT: "Borrador",
@@ -580,6 +581,8 @@ export default function PurchasesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | PurchaseStatus>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [confirmReceive, setConfirmReceive] = useState<{ open: boolean }>({ open: false });
+  const [confirmCancel, setConfirmCancel] = useState<{ open: boolean }>({ open: false });
 
   const selectedPurchase = detailPurchase || purchases.find((p) => p._id === purchaseId) || null;
 
@@ -675,10 +678,14 @@ export default function PurchasesPage() {
     }
   };
 
-  const handleReceive = async () => {
+  const handleReceive = () => {
     if (!purchaseId) return;
-    const confirmed = window.confirm("Al recibir la compra se actualizará el stock de insumos y productos. ¿Continuar?");
-    if (!confirmed) return;
+    setConfirmReceive({ open: true });
+  };
+
+  const handleReceiveConfirmed = async () => {
+    if (!purchaseId) return;
+    setConfirmReceive({ open: false });
     try {
       await receivePurchase(purchaseId);
       showToast({ variant: "success", message: "Compra recibida. Stock actualizado." });
@@ -687,10 +694,14 @@ export default function PurchasesPage() {
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (!purchaseId) return;
-    const confirmed = window.confirm("¿Cancelar esta orden de compra?");
-    if (!confirmed) return;
+    setConfirmCancel({ open: true });
+  };
+
+  const handleCancelConfirmed = async () => {
+    if (!purchaseId) return;
+    setConfirmCancel({ open: false });
     try {
       await cancelPurchase(purchaseId);
       showToast({ variant: "success", message: "Compra cancelada." });
@@ -713,21 +724,39 @@ export default function PurchasesPage() {
 
   if (purchaseId) {
     return (
-      <PurchaseDetailPanel
-        purchase={selectedPurchase}
-        loading={detailLoading}
-        currency={currency}
-        isHeaderCompact={isHeaderCompact}
-        isConfirming={isConfirming}
-        isReceiving={isReceiving}
-        isCancelling={isCancelling}
-        isPaying={payPurchaseMutation.isPending}
-        onBack={() => navigate("/purchases")}
-        onConfirm={handleConfirm}
-        onReceive={handleReceive}
-        onCancel={handleCancel}
-        onPay={handlePay}
-      />
+      <>
+        <PurchaseDetailPanel
+          purchase={selectedPurchase}
+          loading={detailLoading}
+          currency={currency}
+          isHeaderCompact={isHeaderCompact}
+          isConfirming={isConfirming}
+          isReceiving={isReceiving}
+          isCancelling={isCancelling}
+          isPaying={payPurchaseMutation.isPending}
+          onBack={() => navigate("/purchases")}
+          onConfirm={handleConfirm}
+          onReceive={handleReceive}
+          onCancel={handleCancel}
+          onPay={handlePay}
+        />
+        <ConfirmModal
+          open={confirmReceive.open}
+          title="Recibir compra"
+          message="Al recibir la compra se actualizará el stock de insumos y productos. ¿Continuar?"
+          variant="warning"
+          confirmLabel="Recibir"
+          onConfirm={handleReceiveConfirmed}
+          onCancel={() => setConfirmReceive({ open: false })}
+        />
+        <ConfirmModal
+          open={confirmCancel.open}
+          title="Cancelar orden de compra"
+          message="¿Cancelar esta orden de compra?"
+          onConfirm={handleCancelConfirmed}
+          onCancel={() => setConfirmCancel({ open: false })}
+        />
+      </>
     );
   }
 

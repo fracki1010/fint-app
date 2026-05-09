@@ -27,6 +27,21 @@ export interface CreateAccountEntryPayload {
   notes?: string;
 }
 
+export interface AllocatePaymentPayload {
+  amount: number;
+  date?: string;
+}
+
+export interface AllocationResult {
+  allocated: number;
+  unallocated: number;
+  allocations: Array<{
+    entryId: string;
+    amount: number;
+    date: string;
+  }>;
+}
+
 // ── useSupplierAccount ──────────────────────────────────────────────
 
 export function useSupplierAccount(supplierId?: string) {
@@ -87,6 +102,24 @@ export function useSupplierAccount(supplierId?: string) {
     },
   });
 
+  const allocatePaymentMutation = useMutation({
+    mutationFn: async (payload: AllocatePaymentPayload) => {
+      const response = await api.post<AllocationResult>(
+        `/suppliers/${supplierId}/account/allocate`,
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["supplier-account", supplierId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["supplier-statement", supplierId],
+      });
+    },
+  });
+
   return {
     data,
     entries: data?.entries || [],
@@ -96,8 +129,10 @@ export function useSupplierAccount(supplierId?: string) {
     refetch,
     createPayment: createPaymentMutation.mutateAsync,
     createEntry: createEntryMutation.mutateAsync,
+    allocatePayment: allocatePaymentMutation.mutateAsync,
     isCreatingPayment: createPaymentMutation.isPending,
     isCreatingEntry: createEntryMutation.isPending,
+    isAllocatingPayment: allocatePaymentMutation.isPending,
   };
 }
 

@@ -1,4 +1,5 @@
-import { DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { DollarSign, TrendingUp, AlertCircle, Package } from "lucide-react";
 import { PriceTiers, PriceTier } from "@shared/types";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { calculateMargin, getTierDisplayName } from "../utils/priceResolver";
@@ -16,6 +17,8 @@ interface ProductTierPriceInputProps {
   tierConfig?: Record<PriceTier, TierConfig>;
   onChange: (tier: PriceTier, value: string) => void;
   errors?: Partial<Record<PriceTier, string>>;
+  /** Presentations to use as reference for loading prices */
+  presentations?: Array<{ _id?: string; name: string; price?: number; equivalentQty: number; unitOfMeasure?: string; isActive?: boolean }>;
 }
 
 const DEFAULT_TIER_CONFIG: Record<PriceTier, TierConfig> = {
@@ -51,24 +54,81 @@ export function ProductTierPriceInput({
   tierConfig,
   onChange,
   errors,
+  presentations,
 }: ProductTierPriceInputProps) {
   const config = tierConfig || DEFAULT_TIER_CONFIG;
+  const [selectedPresIdx, setSelectedPresIdx] = useState<number | null>(null);
 
   const hasCostPrice = costPrice !== undefined && costPrice > 0;
+  const activePres = presentations?.filter(p => p.isActive !== false) || [];
+  const pres = selectedPresIdx !== null ? activePres[selectedPresIdx] : null;
+
+  // Convert base tier price → presentation price for display
+  // Same formula as QuickSale: presTierPrice = pres.price * (tierPrice / retailPrice)
+  const displayValue = (tier: PriceTier): string => {
+    if (!pres || !pres.price || pres.price <= 0 || !priceTiers?.retail) return priceTiers?.[tier]?.toString() || "";
+    const baseVal = priceTiers?.[tier];
+    if (baseVal == null) return "";
+    return (pres.price * (baseVal / priceTiers.retail)).toFixed(2);
+  };
+
+  // Convert entered presentation price → base tier price for saving
+  // Uses the same ratio as QuickSale: presTierPrice = pres.price * (tierPrice / retailPrice)
+  // So: baseTierPrice = enteredPresPrice * (retailPrice / pres.price)
+  const handleTierChange = (tier: PriceTier, rawValue: string) => {
+    if (!pres || !pres.price || pres.price <= 0 || !priceTiers?.retail) {
+      onChange(tier, rawValue);
+      return;
+    }
+    const numVal = parseFloat(rawValue);
+    if (isNaN(numVal) || rawValue === "") {
+      onChange(tier, "");
+    } else {
+      const conversionFactor = priceTiers.retail / pres.price;
+      onChange(tier, (numVal * conversionFactor).toFixed(2));
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-default-400">
-        <DollarSign size={14} />
-        Precios por lista
+      {/* Header + Presentation selector */}
+      <div className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-[0.16em] text-default-400">
+        <div className="flex items-center gap-2">
+          <DollarSign size={14} />
+          Precios por lista
+        </div>
+        {activePres.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-semibold text-default-400 uppercase tracking-wider">Cargar desde:</label>
+            <select
+              className="rounded-lg border border-divider/30 bg-content1 px-2.5 py-1.5 text-[11px] font-semibold text-foreground"
+              value={selectedPresIdx !== null ? selectedPresIdx : ""}
+              onChange={(e) => setSelectedPresIdx(e.target.value !== "" ? Number(e.target.value) : null)}
+            >
+              <option value="">Precio base</option>
+              {activePres.map((p, i) => (
+                <option key={p._id} value={i}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {pres && (
+        <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+          <Package size={14} className="text-primary" />
+          <span className="text-xs text-default-600">
+            Cargando precios para <strong className="text-foreground">{pres.name}</strong> — <span className="text-primary font-semibold">Precio base: {formatCompactCurrency(pres.price ?? 0, currency)}</span>
+          </span>
+        </div>
+      )}
 
       <div className="space-y-3 rounded-2xl border border-divider/30 bg-content1/30 p-4">
         {TIER_ORDER.map((tier) => {
           const tierConf = config[tier];
           if (!tierConf?.enabled) return null;
 
-          const value = priceTiers?.[tier]?.toString() || "";
+          const value = displayValue(tier);
           const price = parseFloat(value) || 0;
           const margin = hasCostPrice ? calculateMargin(price, costPrice) : 0;
           const isValid = !errors?.[tier];
@@ -101,8 +161,10 @@ export function ProductTierPriceInput({
                       onClick={() => {
                         const retailPrice = priceTiers?.retail;
                         if (retailPrice && retailPrice > 0) {
-                          const suggested = retailPrice * (tierConf.percentage! / 100);
-                          onChange(tier, suggested.toFixed(2));
+                          const suggested = pres && pres.price
+                            ? pres.price * (retailPrice / priceTiers.retail!) * (tierConf.percentage! / 100)
+                            : retailPrice * (tierConf.percentage! / 100);
+                          handleTierChange(tier, suggested.toFixed(2));
                         }
                       }}
                       title={`Auto-calcular: ${tierConf.percentage}% de Minorista`}
@@ -119,7 +181,7 @@ export function ProductTierPriceInput({
                       min="0"
                       step="0.01"
                       value={value}
-                      onChange={(e) => onChange(tier, e.target.value)}
+                      onChange={(e) => handleTierChange(tier, e.target.value)}
                       placeholder="0.00"
                       className={`corp-input w-full rounded-xl pl-6 pr-3 py-2.5 text-sm text-right ${
                         !isValid ? "border-danger" : ""

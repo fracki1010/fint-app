@@ -7,20 +7,26 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@herou
 interface OpenClosingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpen: (notes?: string) => void;
+  onOpen: (data: { notes?: string; initialCash?: number }) => void;
   isOpening: boolean;
 }
 
 export function OpenClosingModal({ isOpen, onClose, onOpen, isOpening }: OpenClosingModalProps) {
   const [notes, setNotes] = useState('');
+  const [initialCash, setInitialCash] = useState(0);
 
   const handleSubmit = () => {
-    onOpen(notes.trim() || undefined);
+    onOpen({
+      notes: notes.trim() || undefined,
+      initialCash: initialCash || undefined,
+    });
     setNotes('');
+    setInitialCash(0);
   };
 
   const handleClose = () => {
     setNotes('');
+    setInitialCash(0);
     onClose();
   };
 
@@ -36,6 +42,19 @@ export function OpenClosingModal({ isOpen, onClose, onOpen, isOpening }: OpenClo
             Abre un nuevo período de caja. Se contarán todas las ventas desde este momento hasta que cierres.
           </p>
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Efectivo inicial ($)
+              </label>
+              <Input
+                name="initialCash"
+                type="number"
+                placeholder="0.00"
+                value={String(initialCash)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInitialCash(Number(e.target.value))}
+                disabled={isOpening}
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notas (opcional)

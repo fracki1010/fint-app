@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Product, Presentation, PaymentMethod, QuickSaleItem, PriceTier, CreditStatus } from "@shared/types";
+import { Product, Presentation, QuickSaleItem, PriceTier, CreditStatus } from "@shared/types";
 import api from "@shared/api/axios";
 import { useSettings } from "@features/settings/hooks/useSettings";
 import { canAddProductToCart, getAvailableStock, validateCartStock } from "@features/products/utils/stock";
 import { resolveProductPrice } from "@features/products/utils/priceResolver";
+import type { PaymentSplit } from "@features/sales/components/PaymentSummary";
 
 interface UseQuickSaleOptions {
   clientId: string;
@@ -16,8 +17,7 @@ interface BuildQuickSalePayloadOptions {
   clientId: string;
   items: QuickSaleItem[];
   total: number;
-  paymentMethod: PaymentMethod;
-  cashReceived: number;
+  splits: PaymentSplit[];
   priceTier?: PriceTier;
 }
 
@@ -25,10 +25,14 @@ export function buildQuickSalePayload({
   clientId,
   items,
   total,
-  paymentMethod,
-  cashReceived,
+  splits,
   priceTier = "retail",
 }: BuildQuickSalePayloadOptions) {
+  const primaryMethod = splits[0]?.method || "cash";
+  const totalCash = splits
+    .filter((s) => s.method === "cash")
+    .reduce((sum, s) => sum + (s.amount || 0), 0);
+
   return {
     client: clientId,
     items: items.map((item) => ({
@@ -45,20 +49,20 @@ export function buildQuickSalePayload({
     status: "Confirmada",
     salesStatus: "Confirmada",
     paymentStatus: "Pagado",
-    paymentMethod,
+    paymentMethod: primaryMethod,
+    paymentSplits: splits,
     deliveryStatus: "Entregada",
     source: "Dashboard",
     notes:
-      paymentMethod === "cash" && cashReceived > 0
-        ? `Pago rápido - Efectivo recibido: $${cashReceived}`
-        : `Pago rápido - ${paymentMethod}`,
+      totalCash > 0
+        ? `Pago rápido - Efectivo recibido: $${totalCash}`
+        : `Pago rápido - ${primaryMethod}`,
   };
 }
 
 export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit = true }: UseQuickSaleOptions) {
   const [items, setItems] = useState<QuickSaleItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [cashReceived, setCashReceived] = useState<number>(0);
+  const [splits, setSplits] = useState<PaymentSplit[]>([]);
   const { settings } = useSettings();
   const queryClient = useQueryClient();
 
@@ -148,8 +152,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
 
   const clearCart = useCallback(() => {
     setItems([]);
-    setCashReceived(0);
-    setPaymentMethod("cash");
+    setSplits([]);
   }, []);
 
   const subtotal = useMemo(
@@ -169,10 +172,11 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     [items],
   );
 
-  const change = useMemo(
-    () => (paymentMethod === "cash" ? Math.max(0, cashReceived - total) : 0),
-    [paymentMethod, cashReceived, total],
+  const totalSplitAmount = useMemo(
+    () => splits.reduce((sum, s) => sum + (s.amount || 0), 0),
+    [splits],
   );
+  const remaining = total - totalSplitAmount;
 
   const createOrderMutation = useMutation({
     mutationFn: async (extraData?: { vouchersToGenerate?: import("@shared/types").VoucherType[] }) => {
@@ -180,8 +184,7 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
         clientId,
         items,
         total,
-        paymentMethod,
-        cashReceived,
+        splits,
         priceTier,
       });
       const response = await api.post("/orders", {
@@ -224,7 +227,8 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     items.length > 0 &&
     stockErrors.length === 0 &&
     !creditCheck.isBlocked &&
-    (paymentMethod !== "cash" || cashReceived >= total);
+    remaining <= 0 &&
+    splits.length > 0;
 
   return {
     items,
@@ -237,11 +241,9 @@ export function useQuickSale({ clientId, priceTier = "retail", checkCreditLimit 
     tax,
     total,
     itemCount,
-    paymentMethod,
-    setPaymentMethod,
-    cashReceived,
-    setCashReceived,
-    change,
+    splits,
+    setSplits,
+    remaining,
     currency,
     stockErrors,
     priceTier,

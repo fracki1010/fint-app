@@ -7,8 +7,11 @@ import {
   Layers3,
   X,
   ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@heroui/button";
 
 import {
   useInfiniteProducts,
@@ -31,6 +34,7 @@ import {
   emptyForm,
 } from "../components/ProductFormModal";
 import { ProductDetailPanel } from "../components/ProductDetailPanel";
+import ImportProductsModal from "../components/ImportProductsModal";
 
 function slugifyText(value: string) {
   return value
@@ -82,6 +86,9 @@ export default function ProductsPage() {
     ...emptyForm,
     unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure,
   });
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const safeProducts = useMemo(
     () => products.filter((p): p is Product => Boolean(p && typeof p === "object" && p._id)),
@@ -377,12 +384,23 @@ export default function ProductsPage() {
             <p className="section-kicker">Inventario</p>
             <h1 className="page-title">Catálogo</h1>
           </div>
-          <button
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105"
-            onClick={() => { resetForm(); setShowCreateModal(true); }}
-          >
-            <Plus size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="flat"
+              size="sm"
+              startContent={<FileSpreadsheet size={14} />}
+              onPress={() => setShowImportModal(true)}
+              className="hidden sm:flex"
+            >
+              Importar
+            </Button>
+            <button
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105"
+              onClick={() => { resetForm(); setShowCreateModal(true); }}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </div>
 
         {/* KPIs */}
@@ -588,14 +606,22 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* Mobile FAB */}
+      {/* Mobile FABs */}
       {!isDesktop && (
-        <button
-          className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition-transform hover:scale-105 active:scale-95"
-          onClick={() => { resetForm(); setShowCreateModal(true); }}
-        >
-          <Plus size={26} strokeWidth={2.5} />
-        </button>
+        <>
+          <button
+            className="fixed bottom-[170px] right-7 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-content2 text-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+            onClick={() => setShowImportModal(true)}
+          >
+            <FileSpreadsheet size={18} />
+          </button>
+          <button
+            className="fixed bottom-[100px] right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition-transform hover:scale-105 active:scale-95"
+            onClick={() => { resetForm(); setShowCreateModal(true); }}
+          >
+            <Plus size={26} strokeWidth={2.5} />
+          </button>
+        </>
       )}
     </div>
   );
@@ -648,6 +674,14 @@ export default function ProductsPage() {
           onUseSuggestedSku={() => handleFormChange("sku", suggestedSku)}
         />
       )}
+      <ImportProductsModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+          setShowImportModal(false);
+        }}
+      />
     </>
   );
 

@@ -5,6 +5,7 @@ import { usePlanFeatures, Feature } from "@shared/hooks/usePlanFeatures";
 const FEATURE_LABELS: Record<Feature, string> = {
   financial_center: "Centro Financiero",
   recipes: "Recetas / Producción",
+  bill_of_materials: "Lista de Materiales / Producción",
   advanced_reports: "Reportes Avanzados",
   api_access: "Acceso a API",
   supplier_account: "Cta. Corriente Proveedores",
@@ -19,6 +20,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
 const FEATURE_PLANS: Record<Feature, { plan: string; icon: React.ElementType }> = {
   financial_center: { plan: "Business", icon: Building2 },
   recipes: { plan: "Business", icon: Building2 },
+  bill_of_materials: { plan: "Business", icon: Building2 },
   advanced_reports: { plan: "Enterprise", icon: Crown },
   api_access: { plan: "Enterprise", icon: Crown },
   supplier_account: { plan: "Business", icon: Building2 },

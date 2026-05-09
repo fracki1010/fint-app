@@ -373,6 +373,7 @@ export function ProductFormModal({
               costPrice={parseFloat(formData.costPrice) || 0}
               currency={currency}
               tierConfig={tierConfig}
+              presentations={formData.presentations as any}
               onChange={(tier, value) => {
                 // Handle price tier changes through a custom field update
                 const newPriceTiers = { ...(formData.priceTiers || {}) };

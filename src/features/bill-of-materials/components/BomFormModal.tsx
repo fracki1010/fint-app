@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Plus, Loader2, X, ChefHat } from "lucide-react";
 
-import { Product, Recipe } from "@shared/types";
-import { getProductObj, getSupplyObj } from "./recipeHelpers";
+import { Product, BillOfMaterial } from "@shared/types";
+import { getProductObj, getSupplyObj } from "./bomHelpers";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ export type IngRow = { productId: string; quantity: string };
 
 export const emptyRow = (): IngRow => ({ productId: "", quantity: "" });
 
-export type RecipeFormState = {
+export type BomFormState = {
   name: string;
   productId: string;
   yieldQuantity: string;
@@ -18,7 +18,7 @@ export type RecipeFormState = {
   ingredients: IngRow[];
 };
 
-export const emptyForm = (): RecipeFormState => ({
+export const emptyForm = (): BomFormState => ({
   name: "",
   productId: "",
   yieldQuantity: "1",
@@ -26,14 +26,14 @@ export const emptyForm = (): RecipeFormState => ({
   ingredients: [emptyRow()],
 });
 
-export function recipeToForm(r: Recipe): RecipeFormState {
-  const prod = getProductObj(r.product);
+export function bomToForm(bom: BillOfMaterial): BomFormState {
+  const prod = getProductObj(bom.product);
   return {
-    name: r.name,
+    name: bom.name,
     productId: prod?._id || "",
-    yieldQuantity: String(r.yieldQuantity),
-    notes: r.notes || "",
-    ingredients: r.ingredients.map((ing) => {
+    yieldQuantity: String(bom.yieldQuantity),
+    notes: bom.notes || "",
+    ingredients: bom.ingredients.map((ing) => {
       const p = getProductObj(ing.product);
       if (p) return { productId: p._id, quantity: String(ing.quantity) };
       const s = getSupplyObj(ing.supply);
@@ -47,7 +47,7 @@ export function recipeToForm(r: Recipe): RecipeFormState {
 
 // ── Component ─────────────────────────────────────────────────────────
 
-export function RecipeForm({
+export function BomForm({
   mode,
   initial,
   products,
@@ -57,18 +57,18 @@ export function RecipeForm({
   onSubmit,
 }: {
   mode: "create" | "edit";
-  initial?: RecipeFormState;
+  initial?: BomFormState;
   products: Product[];
   isDesktop: boolean;
   submitting: boolean;
   onClose: () => void;
-  onSubmit: (f: RecipeFormState) => void;
+  onSubmit: (f: BomFormState) => void;
 }) {
-  const [form, setForm] = useState<RecipeFormState>(initial ?? emptyForm());
+  const [form, setForm] = useState<BomFormState>(initial ?? emptyForm());
 
   const rawMaterials = useMemo(() => products.filter((p) => p.type === "raw_material"), [products]);
 
-  const set = <K extends keyof RecipeFormState>(k: K, v: RecipeFormState[K]) =>
+  const set = <K extends keyof BomFormState>(k: K, v: BomFormState[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const setIng = (i: number, field: keyof IngRow, val: string) =>
@@ -101,10 +101,10 @@ export function RecipeForm({
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
         <div>
           <p className="text-base font-bold">
-            {mode === "create" ? "Nueva Receta" : "Editar Receta"}
+            {mode === "create" ? "Nueva Lista de Materiales" : "Editar Lista de Materiales"}
           </p>
           <p className="text-xs text-default-400">
-            {mode === "create" ? "Definí los ingredientes" : "Modificá la receta"}
+            {mode === "create" ? "Definí los ingredientes" : "Modificá la lista"}
           </p>
         </div>
         <button
@@ -227,7 +227,7 @@ export function RecipeForm({
           type="submit"
         >
           {submitting ? <Loader2 className="animate-spin" size={16} /> : <ChefHat size={16} />}
-          {mode === "create" ? "Crear Receta" : "Guardar Cambios"}
+          {mode === "create" ? "Crear Lista de Materiales" : "Guardar Cambios"}
         </button>
       </form>
     </div>

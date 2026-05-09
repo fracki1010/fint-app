@@ -1,30 +1,30 @@
 import { ChefHat, AlertCircle, ArrowRight } from "lucide-react";
 
-import { Recipe } from "@shared/types";
+import { BillOfMaterial } from "@shared/types";
 import { formatCompactCurrency } from "@shared/utils/currency";
-import { getProductObj, getSupplyObj, calcRecipeCost } from "./recipeHelpers";
+import { getProductObj, getSupplyObj, calcBomCost } from "./bomHelpers";
 
-interface RecipeListItemProps {
-  recipe: Recipe;
+interface BomListItemProps {
+  bom: BillOfMaterial;
   currency: string;
-  onClick: (recipe: Recipe) => void;
+  onClick: (bom: BillOfMaterial) => void;
 }
 
-export function RecipeListItem({ recipe, currency, onClick }: RecipeListItemProps) {
-  const prod = getProductObj(recipe.product);
-  const anyShortage = recipe.ingredients.some((ing) => {
+export function BomListItem({ bom, currency, onClick }: BomListItemProps) {
+  const prod = getProductObj(bom.product);
+  const anyShortage = bom.ingredients.some((ing) => {
     const p = getProductObj(ing.product);
     if (p) return p.stock < ing.quantity;
     const s = getSupplyObj(ing.supply);
     return s && s.currentStock < ing.quantity;
   });
-  const { batchCost, unitCost } = calcRecipeCost(recipe);
+  const { batchCost, unitCost } = calcBomCost(bom);
 
   return (
     <button
       className="flex flex-col gap-3 rounded-2xl border border-white/6 bg-content2 p-4 text-left transition hover:border-primary/30 hover:bg-primary/5 active:scale-[0.99]"
       type="button"
-      onClick={() => onClick(recipe)}
+      onClick={() => onClick(bom)}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15">
@@ -39,7 +39,7 @@ export function RecipeListItem({ recipe, currency, onClick }: RecipeListItemProp
       </div>
 
       <div>
-        <p className="font-bold text-foreground">{recipe.name}</p>
+        <p className="font-bold text-foreground">{bom.name}</p>
         {prod && (
           <p className="mt-0.5 flex items-center gap-1 text-xs text-default-400">
             <ArrowRight size={10} />
@@ -50,11 +50,11 @@ export function RecipeListItem({ recipe, currency, onClick }: RecipeListItemProp
 
       <div className="flex items-center gap-3 text-[11px] text-default-400">
         <span>
-          {recipe.ingredients.length} ingrediente
-          {recipe.ingredients.length !== 1 ? "s" : ""}
+          {bom.ingredients.length} ingrediente
+          {bom.ingredients.length !== 1 ? "s" : ""}
         </span>
         <span>·</span>
-        <span>Rinde {recipe.yieldQuantity} ud.</span>
+        <span>Rinde {bom.yieldQuantity} ud.</span>
       </div>
 
       {batchCost > 0 && (

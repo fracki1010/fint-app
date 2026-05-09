@@ -36,6 +36,7 @@ import { MetricCard } from "../components/MetricCard";
 import { EmptyState } from "../components/EmptyState";
 import { ClientFormModal, ClientFormState, emptyForm } from "../components/ClientFormModal";
 import { ClientDetailPanel } from "../components/ClientDetailPanel";
+import { ConfirmModal } from "@shared/components/ConfirmModal";
 
 // ── Tipos ───────────────────────────────────────────────────────────────
 
@@ -221,6 +222,7 @@ export default function ClientsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState<ClientFormState>(emptyForm);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean }>({ open: false });
 
   // Estados de filtros
   const [searchQuery, setSearchQuery] = useState("");
@@ -419,9 +421,14 @@ export default function ClientsPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!clientId || !selectedClient) return;
-    if (!window.confirm(`¿Desactivar a ${selectedClient.name}?`)) return;
+    setConfirmDelete({ open: true });
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!clientId || !selectedClient) return;
+    setConfirmDelete({ open: false });
     try {
       await deleteClient(clientId);
       navigate("/clients");
@@ -472,6 +479,13 @@ export default function ClientsPage() {
             onSubmit={handleUpdate}
           />
         )}
+        <ConfirmModal
+          open={confirmDelete.open}
+          title="Desactivar cliente"
+          message={`¿Desactivar a ${selectedClient?.name}?`}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setConfirmDelete({ open: false })}
+        />
       </div>
     );
   }
@@ -855,6 +869,13 @@ export default function ClientsPage() {
             onSubmit={handleUpdate}
           />
         )}
+        <ConfirmModal
+          open={confirmDelete.open}
+          title="Desactivar cliente"
+          message={`¿Desactivar a ${selectedClient?.name}?`}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setConfirmDelete({ open: false })}
+        />
       </>
     );
   }
@@ -874,6 +895,13 @@ export default function ClientsPage() {
           onSubmit={handleCreate}
         />
       )}
+      <ConfirmModal
+        open={confirmDelete.open}
+        title="Desactivar cliente"
+        message={`¿Desactivar a ${selectedClient?.name}?`}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDelete({ open: false })}
+      />
     </>
   );
 }

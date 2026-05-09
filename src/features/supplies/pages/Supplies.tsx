@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Layers3,
 } from "lucide-react";
+import { Alert } from "@heroui/alert";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useSupplies } from "@features/supplies/hooks/useSupplies";
@@ -20,6 +21,7 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { PaginationBar } from "@shared/components/PaginationBar";
 import SupplyFormModal, { SUPPLY_UNIT_OPTIONS, SupplyFormState, emptySupplyForm } from "../components/SupplyFormModal";
 import SupplyDetailPanel from "../components/SupplyDetailPanel";
+import { ConfirmModal } from "@shared/components/ConfirmModal";
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
@@ -40,6 +42,7 @@ export default function SuppliesPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "low_stock">("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean }>({ open: false });
   const [formData, setFormData] = useState<SupplyFormState>({ ...emptySupplyForm });
 
   const selectedSupply = useMemo(() => supplies.find((s) => s._id === supplyId) || null, [supplies, supplyId]);
@@ -127,10 +130,14 @@ export default function SuppliesPage() {
     }
   };
 
-  const handleDeleteSupply = async () => {
+  const handleDeleteSupply = () => {
     if (!supplyId || !selectedSupply) return;
-    const confirmed = window.confirm(`¿Querés desactivar el insumo "${selectedSupply.name}"?`);
-    if (!confirmed) return;
+    setConfirmDelete({ open: true });
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!supplyId || !selectedSupply) return;
+    setConfirmDelete({ open: false });
     try {
       await deleteSupply(supplyId);
       navigate("/supplies");
@@ -164,6 +171,13 @@ export default function SuppliesPage() {
             onSubmit={handleUpdateSupply}
           />
         )}
+        <ConfirmModal
+          open={confirmDelete.open}
+          title="Desactivar insumo"
+          message={`¿Querés desactivar el insumo "${selectedSupply?.name}"?`}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setConfirmDelete({ open: false })}
+        />
       </div>
     );
   }
@@ -172,6 +186,14 @@ export default function SuppliesPage() {
 
   const listPanel = (
     <div className="flex flex-col">
+      <div className="px-4 pt-4">
+        <Alert
+          color="warning"
+          variant="flat"
+          title="Función deprecada"
+          description="Los insumos han sido migrados a Productos. Usá Productos con tipo &apos;Materia prima&apos; para crear nuevos insumos."
+        />
+      </div>
       {/* Header */}
       <div className="page-header">
         <div className="flex items-center justify-between gap-4">
@@ -363,6 +385,13 @@ export default function SuppliesPage() {
           onSubmit={handleUpdateSupply}
         />
       )}
+      <ConfirmModal
+        open={confirmDelete.open}
+        title="Desactivar insumo"
+        message={`¿Querés desactivar el insumo "${selectedSupply?.name}"?`}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDelete({ open: false })}
+      />
     </>
   );
 

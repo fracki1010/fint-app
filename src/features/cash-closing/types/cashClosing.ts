@@ -42,6 +42,7 @@ export interface CashClosing {
   reopenedBy?: UserInfo;
   reopenReason?: string;
 
+  initialCash: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -97,6 +98,7 @@ export interface ZReport {
 // API Request/Response types
 export interface OpenClosingRequest {
   notes?: string;
+  initialCash?: number;
 }
 
 export interface OpenClosingResponse {

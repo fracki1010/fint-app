@@ -15,7 +15,7 @@ import {
   ArrowRightLeft,
 } from 'lucide-react';
 import { Button } from '@heroui/button';
-import { Card, CardBody, CardHeader } from '@heroui/card';
+
 import { Chip } from '@heroui/chip';
 import {
   Modal,
@@ -129,18 +129,18 @@ export default function BankAccountsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {accounts.map((account) => (
-              <Card
+              <div
                 key={account._id}
-                className={`relative ${!account.isActive ? 'opacity-60' : ''}`}
+                className={`app-panel rounded-[28px] p-5 relative ${!account.isActive ? 'opacity-60' : ''}`}
               >
-                <CardHeader className="flex items-start justify-between">
+                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <Building2 className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">{account.name}</p>
-                      <p className="text-sm text-default-500">{account.bank}</p>
+                      <p className="section-kicker">{account.name}</p>
+                      <p className="text-sm text-default-500 mt-1">{account.bank}</p>
                     </div>
                   </div>
                   <Dropdown>
@@ -187,35 +187,33 @@ export default function BankAccountsPage() {
                       </DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
-                </CardHeader>
-                <CardBody>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CreditCard className="w-4 h-4 text-default-400" />
-                      <span className="text-default-600">{account.accountNumber}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Chip size="sm" variant="flat">
-                        {getAccountTypeLabel(account.type)}
-                      </Chip>
-                      <Chip size="sm" variant="flat" color="primary">
-                        {account.currency}
-                      </Chip>
-                    </div>
-                    <div className="pt-2 border-t">
-                      <p className="text-xs text-default-500">Saldo Actual</p>
-                      <p className="text-xl font-bold text-foreground">
-                        {formatCurrency(account.currentBalance)}
-                      </p>
-                    </div>
-                    {!account.isActive && (
-                      <Chip size="sm" color="danger" variant="flat">
-                        Inactiva
-                      </Chip>
-                    )}
+                </div>
+                <div className="space-y-3 mt-5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CreditCard className="w-4 h-4 text-default-400" />
+                    <span className="text-default-600">{account.accountNumber}</span>
                   </div>
-                </CardBody>
-              </Card>
+                  <div className="flex items-center justify-between">
+                    <Chip size="sm" variant="flat">
+                      {getAccountTypeLabel(account.type)}
+                    </Chip>
+                    <Chip size="sm" variant="flat" color="primary">
+                      {account.currency}
+                    </Chip>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-default-500">Saldo Actual</p>
+                    <p className="text-xl font-bold text-foreground">
+                      {formatCurrency(account.currentBalance)}
+                    </p>
+                  </div>
+                  {!account.isActive && (
+                    <Chip size="sm" color="danger" variant="flat">
+                      Inactiva
+                    </Chip>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}

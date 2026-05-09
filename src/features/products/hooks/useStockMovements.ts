@@ -96,6 +96,7 @@ export function useStockMovements(
   } = useQuery({
     queryKey: ["stockMovements", filters],
     enabled: options?.enabled ?? true,
+    staleTime: 30_000,
     queryFn: async () => {
       const params = new URLSearchParams();
 

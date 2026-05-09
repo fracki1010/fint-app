@@ -58,17 +58,18 @@ export default function MobileLayout() {
     { path: "/cash-closing", label: "Cierre de Caja", icon: Lock },
     { path: "/clients", label: "Clientes", icon: Users },
     { path: "/products", label: "Productos", icon: ClipboardList },
-    { path: "/supplies", label: "Insumos", icon: Package },
+    { path: "/inventory", label: "Inventario", icon: Package },
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     { path: "/purchases", label: "Compras", icon: ShoppingCart },
     ...(hasFeature("quotes") ? [{ path: "/quotes", label: "Presupuestos", icon: FileText }] : []),
     { path: "/suppliers", label: "Proveedores", icon: Truck },
-    ...(hasFeature("recipes") ? [{ path: "/recipes", label: "Recetas", icon: ChefHat }] : []),
+    ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
   const accountingNav = [
     ...(hasFeature("client_account") ? [{ path: "/client-account", label: "Cta. Clientes", icon: CreditCard }] : []),
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 }] : []),
+    ...(hasFeature("supplier_account") ? [{ path: "/supplier-payments", label: "Órdenes de Pago", icon: DollarSign }] : []),
   ];
 
   const financialNav = [

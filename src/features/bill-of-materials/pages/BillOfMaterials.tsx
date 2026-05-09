@@ -11,19 +11,19 @@ import {
 } from "lucide-react";
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/drawer";
 
-import { useRecipes, useProductionLogs, CreateRecipePayload } from "@features/recipes/hooks/useRecipes";
+import { useBillOfMaterials, useProductionLogs, CreateBillOfMaterialPayload } from "@features/bill-of-materials/hooks/useBillOfMaterials";
 import { useProducts } from "@features/products/hooks/useProducts";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useMobileHeaderCompact } from "@shared/hooks/useMobileHeaderCompact";
 import { useSettings } from "@features/settings/hooks/useSettings";
-import { Recipe, ProductionLog } from "@shared/types";
+import { BillOfMaterial, ProductionLog } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatDateTime } from "@shared/utils/date";
 import { getErrorMessage } from "@shared/utils/errors";
 
-import { RecipeForm, emptyForm } from "../components/RecipeFormModal";
-import { RecipeDrawer } from "../components/RecipeDetailPanel";
-import { RecipeListItem } from "../components/RecipeListItem";
+import { BomForm, emptyForm } from "../components/BomFormModal";
+import { BomDrawer } from "../components/BomDetailPanel";
+import { BomListItem } from "../components/BomListItem";
 
 // ── Production log row ─────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ function ProductionLogRow({ log }: { log: ProductionLog }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-semibold">{log.recipeName}</span>
+          <span className="truncate text-sm font-semibold">{log.billOfMaterialName}</span>
           <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">
             {log.unitsProduced} ud.
           </span>
@@ -59,9 +59,9 @@ function ProductionLogRow({ log }: { log: ProductionLog }) {
 
 // ── Main page ─────────────────────────────────────────────────────────
 
-export default function RecipesPage() {
+export default function BillOfMaterialsPage() {
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Recipe | null>(null);
+  const [selected, setSelected] = useState<BillOfMaterial | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [pageView, setPageView] = useState<"recipes" | "history">("recipes");
@@ -72,19 +72,19 @@ export default function RecipesPage() {
   const currency = settings?.currency || "USD";
 
   const { showToast } = useAppToast();
-  const { recipes, loading, createRecipe, isCreating } = useRecipes();
+  const { billOfMaterials, loading, createBillOfMaterial, isCreating } = useBillOfMaterials();
   const { logs, loading: logsLoading } = useProductionLogs();
   const { products } = useProducts();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return recipes;
-    return recipes.filter((r) => r.name.toLowerCase().includes(q));
-  }, [recipes, search]);
+    if (!q) return billOfMaterials;
+    return billOfMaterials.filter((r) => r.name.toLowerCase().includes(q));
+  }, [billOfMaterials, search]);
 
   const handleCreate = async (form: ReturnType<typeof emptyForm>) => {
     try {
-      const payload: CreateRecipePayload = {
+      const payload: CreateBillOfMaterialPayload = {
         name: form.name.trim(),
         productId: form.productId || null,
         yieldQuantity: parseFloat(form.yieldQuantity) || 1,
@@ -93,11 +93,11 @@ export default function RecipesPage() {
           .filter((r) => r.productId && parseFloat(r.quantity) > 0)
           .map((r) => ({ product: r.productId, quantity: parseFloat(r.quantity) })),
       };
-      await createRecipe(payload);
-      showToast({ variant: "success", message: "Receta creada" });
+      await createBillOfMaterial(payload);
+      showToast({ variant: "success", message: "Lista de Materiales creada" });
       setCreateOpen(false);
     } catch (err) {
-      showToast({ variant: "error", message: getErrorMessage(err, "Error al crear receta") });
+      showToast({ variant: "error", message: getErrorMessage(err, "Error al crear lista de materiales") });
     }
   };
 
@@ -106,12 +106,12 @@ export default function RecipesPage() {
     setDrawerOpen(false);
   };
 
-  const handleUpdated = (updated: Recipe) => {
+  const handleUpdated = (updated: BillOfMaterial) => {
     if (selected?._id === updated._id) setSelected(updated);
   };
 
   const createDrawerContent = (
-    <RecipeForm
+    <BomForm
       isDesktop={isDesktop}
       mode="create"
       products={products}
@@ -129,10 +129,10 @@ export default function RecipesPage() {
       >
         <div className="flex items-center gap-3">
           <div className={`min-w-0 flex-1 ${isHeaderCompact ? "hidden" : "block"}`}>
-            <p className="text-lg font-bold lg:text-xl">Recetas</p>
+            <p className="text-lg font-bold lg:text-xl">Lista de Materiales</p>
             <p className="text-xs text-default-400">
               {pageView === "recipes"
-                ? `${recipes.length} receta${recipes.length !== 1 ? "s" : ""}`
+                ? `${billOfMaterials.length} lista${billOfMaterials.length !== 1 ? "s" : ""}`
                 : `${logs.length} produccion${logs.length !== 1 ? "es" : ""}`}
             </p>
           </div>
@@ -145,7 +145,7 @@ export default function RecipesPage() {
               onClick={() => setPageView("recipes")}
             >
               <ClipboardList size={13} />
-              <span className="hidden sm:inline">Recetas</span>
+              <span className="hidden sm:inline">Listas</span>
             </button>
             <button
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${pageView === "history" ? "bg-primary text-white" : "text-default-400 hover:text-foreground"}`}
@@ -163,7 +163,7 @@ export default function RecipesPage() {
                 <Search className="shrink-0 text-default-400" size={15} />
                 <input
                   className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-default-400 focus:outline-none"
-                  placeholder="Buscar receta..."
+                  placeholder="Buscar lista..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -211,7 +211,7 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {/* Recipes list */}
+      {/* BOM list */}
       {pageView === "recipes" && <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
         {loading ? (
           <div className="flex justify-center py-20">
@@ -221,7 +221,7 @@ export default function RecipesPage() {
           <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
             <ChefHat size={40} />
             <div>
-              <p className="font-semibold">Sin recetas</p>
+              <p className="font-semibold">Sin listas de materiales</p>
               <p className="text-xs">
                 {search ? "No hay coincidencias" : 'Creá la primera con el botón "Nueva"'}
               </p>
@@ -229,10 +229,10 @@ export default function RecipesPage() {
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((recipe) => (
-              <RecipeListItem
-                key={recipe._id}
-                recipe={recipe}
+            {filtered.map((bom) => (
+              <BomListItem
+                key={bom._id}
+                bom={bom}
                 currency={currency}
                 onClick={(r) => {
                   setSelected(r);
@@ -245,12 +245,12 @@ export default function RecipesPage() {
       </div>}
 
       {/* Detail / Produce / Edit drawer */}
-      <RecipeDrawer
+      <BomDrawer
         currency={currency}
         isDesktop={isDesktop}
         isOpen={drawerOpen}
         products={products}
-        recipe={selected}
+        bom={selected}
         onClose={() => setDrawerOpen(false)}
         onDeleted={handleDeleted}
         onUpdated={handleUpdated}
