@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Save, X, DollarSign, Calendar } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Loader2, Save, X } from "lucide-react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
-import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { useSuppliers } from "@features/suppliers/hooks/useSuppliers";
+import type { Supplier } from "@shared/types";
 import { usePurchases } from "@features/purchases/hooks/usePurchases";
 import { useCreatePaymentOrder, useApplyPaymentOrder } from "../hooks/usePaymentOrders";
 import { formatCurrency } from "@shared/utils/currency";
@@ -17,11 +17,10 @@ import { getErrorMessage } from "@shared/utils/errors";
 
 export default function PaymentOrderFormPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
   const { showToast } = useAppToast();
   const { suppliers, loading: suppliersLoading } = useSuppliers();
-  const { createPaymentOrder: createOrder, isCreating } = useCreatePaymentOrder();
-  const { applyPaymentOrder, isApplying } = useApplyPaymentOrder();
+  const { mutateAsync: createOrder, isPending: isCreating } = useCreatePaymentOrder();
+  const { mutateAsync: applyPaymentOrder, isPending: isApplying } = useApplyPaymentOrder();
 
   const [supplierId, setSupplierId] = useState("");
   const [supplierLabel, setSupplierLabel] = useState("");
@@ -34,8 +33,7 @@ export default function PaymentOrderFormPage() {
 
   // Fetch purchases for selected supplier
   const { purchases, loading: purchasesLoading } = usePurchases({
-    supplierId: supplierId || undefined,
-    status: "RECEIVED",
+    enabled: Boolean(supplierId),
   });
 
   // Filter pending purchases (not fully paid)
@@ -112,6 +110,7 @@ export default function PaymentOrderFormPage() {
             placeholder="Buscar proveedor..."
             inputValue={supplierLabel}
             isLoading={suppliersLoading}
+            items={suppliers}
             onInputChange={setSupplierLabel}
             onSelectionChange={(key) => {
               if (!key) return;
@@ -119,7 +118,7 @@ export default function PaymentOrderFormPage() {
               if (s) { setSupplierId(s._id); setSupplierLabel(s.name); setSelectedPurchases({}); }
             }}
           >
-            {(item) => <AutocompleteItem key={item._id}>{item.name}</AutocompleteItem>}
+            {(item: Supplier) => <AutocompleteItem key={item._id}>{item.name}</AutocompleteItem>}
           </Autocomplete>
         </div>
 

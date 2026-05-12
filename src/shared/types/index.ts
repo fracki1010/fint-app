@@ -46,6 +46,7 @@ export interface Presentation {
   name: string;
   unitOfMeasure: string;
   price: number;
+  cost?: number;
   equivalentQty: number;
   isActive?: boolean;
   priceTiers?: PriceTiers;
@@ -80,6 +81,7 @@ export interface Product {
   costLocked?: boolean;
   presentations?: Presentation[];
   matchedPresentation?: Presentation;
+  defaultPresentationId?: string;
   priceTiers?: PriceTiers;
   isActive?: boolean;
   deletedAt?: string | null;
@@ -134,11 +136,12 @@ export interface SupplyMovement {
 // ── Compras (Purchases) ─────────────────────────────────────────────
 
 export type PurchaseStatus = "DRAFT" | "CONFIRMED" | "RECEIVED" | "CANCELLED";
-export type PaymentCondition = "CASH" | "CREDIT";
+export type PaymentCondition = "CASH" | "CREDIT" | "CREDIT_15" | "CREDIT_30" | "CREDIT_45" | "CREDIT_60" | "CREDIT_90";
 
 export interface PurchaseItem {
   supply?: Supply | string;
   product?: Product | string;
+  presentationId?: string;
   quantity: number;
   unitCost: number;
   lineTotal: number;
@@ -161,9 +164,32 @@ export interface Purchase {
   total: number;
   notes: string;
   items: PurchaseItem[];
+  receiptIds?: string[];
   createdBy?: string | null;
   receivedAt?: string | null;
   cancelledAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReceiptItem {
+  product: string | Product;
+  presentationId?: string;
+  quantity: number;
+  remittedQty?: number;
+  differenceReason?: "falta" | "sobra" | "dañado" | "sustitución" | "otro" | "";
+  notes?: string;
+  unitCost: number;
+  lineTotal: number;
+}
+
+export interface Receipt {
+  _id: string;
+  purchase: string;
+  date: string;
+  notes?: string;
+  items: ReceiptItem[];
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -753,3 +753,76 @@ textarea:focus-visible {
 .dark .text-default-400 {
   color: rgb(156 163 175);
 }
+
+/* ── Fallback para navegadores sin color-mix() ────────────────────────────
+ * Tailwind CSS v4 usa color-mix() para backgrounds con opacidad.
+ * En navegadores sin soporte (Chrome <111, FF <110, Safari <16.2),
+ * el fallback produce colores sólidos (overlay negro, chips ilegibles).
+ * Estos overrides restauran semitransparencia real.                    */
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+  /* Overlay backdrop: semitransparente en vez de negro sólido */
+  .bg-overlay\/30 {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+  }
+  .bg-overlay\/50 {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Opacidades de surface (content1/2) */
+  .bg-content1\/50 { background-color: rgba(255, 255, 255, 0.5) !important; }
+  .bg-content1\/60 { background-color: rgba(255, 255, 255, 0.6) !important; }
+  .bg-content1\/70 { background-color: rgba(255, 255, 255, 0.7) !important; }
+  .bg-content1\/80 { background-color: rgba(255, 255, 255, 0.8) !important; }
+  .bg-content1\/90 { background-color: rgba(255, 255, 255, 0.9) !important; }
+  .bg-content1\/95 { background-color: rgba(255, 255, 255, 0.95) !important; }
+  .bg-content2\/30 { background-color: rgba(240, 236, 232, 0.3) !important; }
+  .bg-content2\/50 { background-color: rgba(240, 236, 232, 0.5) !important; }
+  .bg-content2\/70 { background-color: rgba(240, 236, 232, 0.7) !important; }
+  .bg-content2\/80 { background-color: rgba(240, 236, 232, 0.8) !important; }
+
+  .dark .bg-content1\/50 { background-color: rgba(20, 17, 14, 0.5) !important; }
+  .dark .bg-content1\/60 { background-color: rgba(20, 17, 14, 0.6) !important; }
+  .dark .bg-content1\/70 { background-color: rgba(20, 17, 14, 0.7) !important; }
+  .dark .bg-content1\/80 { background-color: rgba(20, 17, 14, 0.8) !important; }
+  .dark .bg-content1\/90 { background-color: rgba(20, 17, 14, 0.9) !important; }
+  .dark .bg-content1\/95 { background-color: rgba(20, 17, 14, 0.95) !important; }
+  .dark .bg-content2\/30 { background-color: rgba(28, 24, 20, 0.3) !important; }
+  .dark .bg-content2\/50 { background-color: rgba(28, 24, 20, 0.5) !important; }
+  .dark .bg-content2\/70 { background-color: rgba(28, 24, 20, 0.7) !important; }
+  .dark .bg-content2\/80 { background-color: rgba(28, 24, 20, 0.8) !important; }
+
+  /* Background/foreground utilidades */
+  .bg-background\/60 { background-color: rgba(248, 246, 244, 0.6) !important; }
+  .bg-background\/80 { background-color: rgba(248, 246, 244, 0.8) !important; }
+  .bg-background\/95 { background-color: rgba(248, 246, 244, 0.95) !important; }
+  .dark .bg-background\/60 { background-color: rgba(12, 9, 8, 0.6) !important; }
+  .dark .bg-background\/80 { background-color: rgba(12, 9, 8, 0.8) !important; }
+  .dark .bg-background\/95 { background-color: rgba(12, 9, 8, 0.95) !important; }
+
+  /* Opacidades de colores semánticos (chips, badges) */
+  .bg-primary\/10 { background-color: rgba(217, 119, 6, 0.1) !important; }
+  .bg-primary\/20 { background-color: rgba(217, 119, 6, 0.2) !important; }
+  .bg-success\/10 { background-color: rgba(5, 150, 105, 0.1) !important; }
+  .bg-success\/20 { background-color: rgba(5, 150, 105, 0.2) !important; }
+  .bg-danger\/10 { background-color: rgba(220, 38, 38, 0.1) !important; }
+  .bg-warning\/10 { background-color: rgba(217, 119, 6, 0.1) !important; }
+  .dark .bg-primary\/10 { background-color: rgba(245, 158, 11, 0.1) !important; }
+  .dark .bg-primary\/20 { background-color: rgba(245, 158, 11, 0.2) !important; }
+  .dark .bg-success\/10 { background-color: rgba(52, 211, 153, 0.1) !important; }
+  .dark .bg-success\/20 { background-color: rgba(52, 211, 153, 0.2) !important; }
+  .dark .bg-danger\/10 { background-color: rgba(248, 113, 113, 0.1) !important; }
+  .dark .bg-warning\/10 { background-color: rgba(251, 191, 36, 0.1) !important; }
+
+  /* Bordes con opacidad */
+  .border-divider\/10 { border-color: rgba(100, 70, 40, 0.1) !important; }
+  .border-divider\/12 { border-color: rgba(100, 70, 40, 0.12) !important; }
+  .border-divider\/20 { border-color: rgba(100, 70, 40, 0.2) !important; }
+  .border-divider\/30 { border-color: rgba(100, 70, 40, 0.3) !important; }
+  .border-divider\/60 { border-color: rgba(100, 70, 40, 0.6) !important; }
+  .dark .border-divider\/10 { border-color: rgba(220, 180, 140, 0.1) !important; }
+  .dark .border-divider\/12 { border-color: rgba(220, 180, 140, 0.12) !important; }
+  .dark .border-divider\/20 { border-color: rgba(220, 180, 140, 0.2) !important; }
+  .dark .border-divider\/30 { border-color: rgba(220, 180, 140, 0.3) !important; }
+  .dark .border-divider\/60 { border-color: rgba(220, 180, 140, 0.6) !important; }
+}

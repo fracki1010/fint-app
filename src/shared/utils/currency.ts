@@ -8,6 +8,17 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 
 const COMPACT_MAX_CHARS = 10;
 
+/** Global currency override — set via setGlobalCurrency() when settings load */
+let _currentCurrency: string | undefined;
+
+/**
+ * Set the default currency used by formatCurrency / formatCompactCurrency
+ * when no explicit currency argument is passed.
+ */
+export function setGlobalCurrency(currency: string) {
+  _currentCurrency = currency;
+}
+
 function toNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
 }
@@ -22,30 +33,36 @@ function isDesktopViewport() {
   return window.matchMedia("(min-width: 1024px)").matches;
 }
 
-export function formatCurrency(value: number, currency = "USD") {
+function resolveCurrency(currency?: string): string {
+  return currency || _currentCurrency || "USD";
+}
+
+export function formatCurrency(value: number, currency?: string) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
-    currency,
+    currency: resolveCurrency(currency),
     maximumFractionDigits: 2,
   }).format(toNumber(value));
 }
 
-export function formatCompactCurrency(value: number, currency = "USD") {
+export function formatCompactCurrency(value: number, currency?: string) {
+  const c = resolveCurrency(currency);
+
   if (isDesktopViewport()) {
-    return formatCurrency(value, currency);
+    return formatCurrency(value, c);
   }
 
   const numericValue = toNumber(value);
   const absValue = Math.abs(numericValue);
   const sign = numericValue < 0 ? "-" : "";
-  const symbol = CURRENCY_SYMBOLS[currency];
+  const symbol = CURRENCY_SYMBOLS[c];
   const fullBase = new Intl.NumberFormat("es-AR", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(absValue);
   const fullAmount = symbol
     ? `${sign}${symbol}${fullBase}`
-    : `${sign}${currency} ${fullBase}`;
+    : `${sign}${c} ${fullBase}`;
 
   if (fullAmount.length <= COMPACT_MAX_CHARS || absValue < 1000) {
     return fullAmount;
@@ -60,5 +77,5 @@ export function formatCompactCurrency(value: number, currency = "USD") {
 
   return symbol
     ? `${sign}${symbol}${compactAmount}`
-    : `${sign}${currency} ${compactAmount}`;
+    : `${sign}${c} ${compactAmount}`;
 }

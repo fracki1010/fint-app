@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#F8F6F4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0C0908" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,12 +32,14 @@
     <script>
       try {
         var s = JSON.parse(localStorage.getItem('theme-storage'));
-        var t = (s && s.state && s.state.theme) || 'dark';
+        var t = (s && s.state && s.state.theme);
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.classList.add(t);
         document.documentElement.style.colorScheme = t;
       } catch (e) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.colorScheme = 'dark';
+        var p = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.classList.add(p);
+        document.documentElement.style.colorScheme = p;
       }
     </script>
     <div id="root"></div>

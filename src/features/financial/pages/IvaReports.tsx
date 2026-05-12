@@ -169,11 +169,11 @@ function DetailTable({ details }: { details: IvaReportDetail[] }) {
   );
 
   return (
-    <Table aria-label="Detalle del período" removeWrapper size="sm">
+    <Table aria-label="Detalle del período" removeWrapper classNames={{ table: "text-xs" }}>
       <TableHeader>
         <TableColumn>FECHA</TableColumn>
         <TableColumn>RAZÓN SOCIAL</TableColumn>
-        {hasTaxId && <TableColumn>CUIT</TableColumn>}
+        <TableColumn>CUIT</TableColumn>
         <TableColumn align="end">NETO</TableColumn>
         <TableColumn align="end">IVA</TableColumn>
         <TableColumn align="end">TOTAL</TableColumn>
@@ -189,17 +189,13 @@ function DetailTable({ details }: { details: IvaReportDetail[] }) {
               <TableCell className="text-sm font-medium">
                 {entity?.name ?? "-"}
               </TableCell>
-              {hasTaxId && (
-                <TableCell className="font-mono text-xs text-default-500">
-                  {entity?.taxId ? (
-                    <Chip size="sm" variant="flat" color="default">
-                      {entity.taxId}
-                    </Chip>
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
-              )}
+              <TableCell className="font-mono text-xs text-default-500">
+                {hasTaxId && entity?.taxId ? (
+                  <Chip size="sm" variant="flat" color="default">
+                    {entity.taxId}
+                  </Chip>
+                ) : "-"}
+              </TableCell>
               <TableCell className="text-right font-mono text-xs tabular-nums">
                 {formatCurrency(detail.netAmount, "ARS")}
               </TableCell>

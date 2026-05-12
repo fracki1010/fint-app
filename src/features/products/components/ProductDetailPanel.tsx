@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Archive,
   ArrowDownLeft,
   ArrowUpRight,
-  Barcode,
   Box,
   DollarSign,
   Filter,
-  Hash,
   Layers3,
   Loader2,
   Package,
@@ -19,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import api from "@shared/api/axios";
 import { useProductDetail } from "@features/products/hooks/useProducts";
 import { useStockMovements } from "@features/products/hooks/useStockMovements";
 import { formatCompactCurrency } from "@shared/utils/currency";
@@ -48,6 +48,7 @@ export function ProductDetailPanel({
   const navigate = useNavigate();
   const [showAllMovements, setShowAllMovements] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "presentaciones">("general");
+  const [defaultPresId, setDefaultPresId] = useState<string | null>(null);
 
   // Movement filters
   const [showMovementFilters, setShowMovementFilters] = useState(false);
@@ -55,12 +56,47 @@ export function ProductDetailPanel({
   const [movementSearch, setMovementSearch] = useState("");
 
   const { product, loading: detailLoading, error: detailError } = useProductDetail(productId);
+  const queryClient = useQueryClient();
+
+  const activePres = useMemo(
+    () => product?.presentations?.filter(p => p.isActive !== false) || [],
+    [product],
+  );
+  const defaultPres = useMemo(
+    () => activePres.find(p => p._id === defaultPresId) || activePres[0] || null,
+    [activePres, defaultPresId],
+  );
+
+  const handleSetDefaultPres = useCallback(async (presId: string) => {
+    setDefaultPresId(presId);
+    if (!product) return;
+    try {
+      await api.put(`/products/${product._id}`, { defaultPresentationId: presId });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["product", product._id] });
+    } catch {
+      // Silently fail — the local state already updated
+    }
+  }, [product, queryClient]);
+
   const { movements, loading: movementsLoading } = useStockMovements(
     { product: productId, limit: 50, page: 1 },
     { enabled: Boolean(productId) },
   );
 
-  useEffect(() => { setShowAllMovements(false); setActiveTab("general"); }, [productId]);
+  useEffect(() => {
+    setShowAllMovements(false);
+    setActiveTab("general");
+    setDefaultPresId(null);
+  }, [productId]);
+
+  // Sync default presentation when product loads/changes
+  useEffect(() => {
+    if (product?.defaultPresentationId) {
+      setDefaultPresId(product.defaultPresentationId);
+    }
+  }, [product?.defaultPresentationId]);
 
   const movementSummary = useMemo(
     () => movements.reduce((acc, m) => { acc[m.type] = (acc[m.type] || 0) + 1; return acc; }, {} as Record<string, number>),
@@ -172,7 +208,7 @@ export function ProductDetailPanel({
             {activeTab === "general" ? (
               <>
                 {/* KPI row */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid ${defaultPres ? "grid-cols-3" : "grid-cols-3"} gap-3`}>
                   <div className="stat-card text-center">
                     <p className="stat-card-label flex items-center justify-center gap-1.5">
                       Costo
@@ -194,14 +230,53 @@ export function ProductDetailPanel({
                       </p>
                     )}
                   </div>
+                  <div className="stat-card text-center">
+                    <p className="stat-card-label flex items-center justify-center gap-1.5">
+                      {defaultPres ? `Precio (${defaultPres.name})` : "Precio base"}
+                    </p>
+                    <p className="stat-card-value mt-2">
+                      {defaultPres
+                        ? formatCompactCurrency(defaultPres.price, currency)
+                        : product.price > 0
+                          ? formatCompactCurrency(product.price, currency)
+                          : "—"}
+                    </p>
+                    {defaultPres && (
+                      <p className="stat-card-sub">{defaultPres.unitOfMeasure || defaultPres.name}</p>
+                    )}
+                  </div>
                   <div className={`stat-card text-center ${isOutOfStock ? "border-danger/30 bg-danger/5" : isLowStock ? "border-warning/30 bg-warning/5" : ""}`}>
                     <p className="stat-card-label">Stock</p>
                     <p className={`stat-card-value mt-2 ${isOutOfStock || isLowStock ? "text-danger" : ""}`}>
-                      {isOutOfStock ? "0" : product.stock}
+                      {isOutOfStock ? "0" : defaultPres ? getAvailableStock(product, defaultPres) : product.stock}
                     </p>
-                    <p className="stat-card-sub">{product.unitOfMeasure || "unidades"}</p>
+                    <p className="stat-card-sub">{defaultPres?.unitOfMeasure || product.unitOfMeasure || "unidades"}</p>
                   </div>
                 </div>
+
+                {/* Default presentation selector */}
+                {activePres.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-default-400 shrink-0">
+                      Presentación activa:
+                    </span>
+                    <div className="flex gap-1 flex-wrap">
+                      {activePres.map((pres) => (
+                        <button
+                          key={pres._id}
+                          className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                            defaultPres?._id === pres._id
+                              ? "bg-primary text-white shadow-sm"
+                              : "bg-content2/70 text-default-500 hover:bg-content2"
+                          }`}
+                          onClick={() => handleSetDefaultPres(pres._id)}
+                        >
+                          {pres.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
             {/* Tier Prices per Presentation */}
             {product.presentations && product.presentations.length > 0 && product.priceTiers?.retail && (
@@ -301,9 +376,9 @@ export function ProductDetailPanel({
               </div>
             </div>
 
-            {/* Presentations */}
+            {/* Presentations - compact summary */}
             {product.presentations && product.presentations.length > 0 && (
-              <div className="stat-card space-y-4">
+              <div className="stat-card space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Layers3 size={16} className="text-primary" />
@@ -312,102 +387,44 @@ export function ProductDetailPanel({
                   <span className="text-xs text-default-400">{product.presentations.length} formatos</span>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {product.presentations.map((pres) => {
                     const presStock = getAvailableStock(product, pres);
                     const isOut = presStock <= 0;
                     const isLow = presStock > 0 && presStock <= (product.minStock || 5);
                     
                     return (
-                      <div key={pres._id} className="rounded-xl border border-divider/40 bg-content2/30 p-4 space-y-3">
-                        {/* Header: Nombre y Precio */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <Package size={14} className="shrink-0 text-primary" />
-                              <p className="text-sm font-bold text-foreground">{pres.name}</p>
-                              {!pres.isActive && (
-                                <span className="rounded-full bg-default-100 px-2 py-0.5 text-[10px] font-bold text-default-500">
-                                  INACTIVA
-                                </span>
-                              )}
-                            </div>
-                            <p className="mt-1 text-xs text-default-500">
-                              {pres.equivalentQty} {pres.unitOfMeasure || pres.name || "u."} por presentación
-                            </p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-lg font-bold text-primary">{formatCompactCurrency(pres.price, currency)}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Info Grid */}
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex items-center gap-1.5 text-default-500">
-                            <Hash size={12} className="shrink-0" />
-                            <span>SKU: <span className="font-mono text-foreground">{pres.sku || "—"}</span></span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-default-500">
-                            <Barcode size={12} className="shrink-0" />
-                            <span>Barra: <span className="font-mono text-foreground">{pres.barcode || "—"}</span></span>
-                          </div>
-                        </div>
-                        
-                        {/* Stock Badge */}
-                        <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          isOut 
-                            ? 'bg-danger/15 text-danger' 
-                            : isLow 
-                              ? 'bg-warning/15 text-warning' 
-                              : 'bg-success/15 text-success'
-                        }`}>
-                          <Box size={12} />
-                          {isOut ? "Sin stock" : `${presStock} ${pres.unitOfMeasure || product.unitOfMeasure || "disp."}`}
-                        </div>
-                        
-                        {/* Margen si hay costo */}
-                        {product.costPrice && product.costPrice > 0 && (
-                          <div className="rounded-lg bg-content3/30 px-3 py-2 text-xs space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-default-500">Costo unitario:</span>
-                              <span className="font-semibold">{formatCompactCurrency(product.costPrice * pres.equivalentQty, currency)}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-default-500">Ganancia:</span>
-                              <span className="font-semibold text-success">
-                                {formatCompactCurrency(pres.price - (product.costPrice * pres.equivalentQty), currency)}
-                                {' '}
-                                <span className="text-[10px]">
-                                  ({(((pres.price - (product.costPrice * pres.equivalentQty)) / pres.price) * 100).toFixed(0)}%)
-                                </span>
+                      <div key={pres._id} className="flex items-center justify-between rounded-xl border border-divider/30 bg-content2/20 p-3 gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Package size={14} className="shrink-0 text-primary" />
+                            <p className="text-sm font-semibold text-foreground truncate">{pres.name}</p>
+                            {!pres.isActive && (
+                              <span className="rounded-full bg-default-100 px-1.5 py-0.5 text-[9px] font-bold text-default-500 shrink-0">
+                                INACTIVA
                               </span>
-                            </div>
+                            )}
                           </div>
-                        )}
+                          <p className="text-[10px] text-default-400 mt-0.5">
+                            {pres.equivalentQty} {pres.unitOfMeasure || "u."} · {pres.sku ? `SKU: ${pres.sku}` : "Sin SKU"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <p className="text-sm font-bold text-primary">{formatCompactCurrency(pres.price, currency)}</p>
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                            isOut 
+                              ? 'bg-danger/15 text-danger' 
+                              : isLow 
+                                ? 'bg-warning/15 text-warning' 
+                                : 'bg-success/15 text-success'
+                          }`}>
+                            <Box size={10} />
+                            {isOut ? "0" : presStock}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Margin info if cost available */}
-            {product.costPrice != null && product.costPrice > 0 && product.price > 0 && (
-              <div className="stat-card">
-                <p className="text-sm font-bold text-foreground mb-3">Margen</p>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="stat-card-label">Ganancia por unidad</p>
-                    <p className="mt-1 text-lg font-bold text-success">
-                      {formatCompactCurrency(product.price - product.costPrice, currency)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="stat-card-label">Margen bruto</p>
-                    <p className="mt-1 text-lg font-bold text-success">
-                      {(((product.price - product.costPrice) / product.price) * 100).toFixed(1)}%
-                    </p>
-                  </div>
                 </div>
               </div>
             )}

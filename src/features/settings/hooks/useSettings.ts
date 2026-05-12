@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
 import { useThemeStore } from "@shared/stores/themeStore";
+import { setGlobalCurrency } from "@shared/utils/currency";
 import type { PriceTierConfig } from "@shared/types";
 
 export interface Setting {
@@ -84,6 +85,12 @@ export function useSettings() {
       setTheme(settings.theme);
     }
   }, [settings?.theme, setTheme, theme]);
+
+  useEffect(() => {
+    if (settings?.currency) {
+      setGlobalCurrency(settings.currency);
+    }
+  }, [settings?.currency]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (updateData: Partial<Setting>) => {

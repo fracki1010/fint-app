@@ -70,7 +70,12 @@ const STATUS_DOTS: Record<PurchaseStatus, string> = {
 
 const PAYMENT_LABELS: Record<PaymentCondition, string> = {
   CASH: "Contado",
-  CREDIT: "Crédito 30d",
+  CREDIT: "Crédito",
+  CREDIT_15: "Crédito 15d",
+  CREDIT_30: "Crédito 30d",
+  CREDIT_45: "Crédito 45d",
+  CREDIT_60: "Crédito 60d",
+  CREDIT_90: "Crédito 90d",
 };
 
 const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -389,7 +394,11 @@ function CreatePurchaseModal({
               }
             >
               <SelectItem key="CASH">Contado</SelectItem>
-              <SelectItem key="CREDIT">Crédito</SelectItem>
+              <SelectItem key="CREDIT_15">Crédito 15 días</SelectItem>
+              <SelectItem key="CREDIT_30">Crédito 30 días</SelectItem>
+              <SelectItem key="CREDIT_45">Crédito 45 días</SelectItem>
+              <SelectItem key="CREDIT_60">Crédito 60 días</SelectItem>
+              <SelectItem key="CREDIT_90">Crédito 90 días</SelectItem>
             </Select>
           </label>
         </div>

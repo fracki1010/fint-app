@@ -123,6 +123,7 @@ export default function ProductsPage() {
           name: p.name,
           unitOfMeasure: p.unitOfMeasure || "unidad",
           price: p.price?.toString() || "",
+          cost: p.cost?.toString() || "",
           equivalentQty: p.equivalentQty?.toString() || "1",
           isActive: p.isActive !== false,
         })),
@@ -197,16 +198,6 @@ export default function ProductsPage() {
     return buildSuggestedSku(formData.name, formData.categories, remainingSkus);
   }, [existingSkus, formData.categories, formData.name, selectedProduct?.sku]);
 
-  const suggestedPrices = useMemo(() => {
-    const cost = Number(formData.costPrice || 0);
-    if (!cost) return [];
-    return [
-      { label: "Margen 30%", value: (cost / 0.7).toFixed(2) },
-      { label: "Margen 40%", value: (cost / 0.6).toFixed(2) },
-      { label: "Margen 50%", value: (cost / 0.5).toFixed(2) },
-    ];
-  }, [formData.costPrice]);
-
   const lowStockCount = safeProducts.filter(
     (p) => p.stock <= (p.minStock || settings?.lowStockThreshold || 5),
   ).length;
@@ -238,6 +229,18 @@ export default function ProductsPage() {
       }));
       return;
     }
+    // When base price changes, sync to retail tier
+    if (field === "price") {
+      setFormData((prev) => ({
+        ...prev,
+        price: value,
+        priceTiers: {
+          ...prev.priceTiers,
+          retail: value === "" ? undefined : Number(value),
+        },
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -260,6 +263,7 @@ export default function ProductsPage() {
       name: p.name.trim(),
       unitOfMeasure: p.unitOfMeasure || "unidad",
       price: Number(p.price || 0),
+      cost: p.cost ? Number(p.cost) : undefined,
       equivalentQty: Number(p.equivalentQty || 1),
       isActive: p.isActive,
     })) as Product["presentations"],
@@ -271,10 +275,17 @@ export default function ProductsPage() {
       showToast({ variant: "warning", message: "Completa al menos el nombre." });
       return;
     }
-    const invalidPresentation = formData.presentations.find((p) => !p.name.trim());
-    if (invalidPresentation) {
-      showToast({ variant: "warning", message: "Todas las presentaciones deben tener un nombre." });
-      return;
+    if (formData.presentations.length > 0) {
+      const invalidPresentation = formData.presentations.find((p) => !p.name.trim());
+      if (invalidPresentation) {
+        showToast({ variant: "warning", message: "Todas las presentaciones deben tener un nombre." });
+        return;
+      }
+      const hasPrice = formData.presentations.some((p) => p.isActive !== false && Number(p.price) > 0);
+      if (!hasPrice) {
+        showToast({ variant: "warning", message: "Al menos un formato de venta activo debe tener precio." });
+        return;
+      }
     }
     try {
       await createProduct(buildPayload());
@@ -323,17 +334,42 @@ export default function ProductsPage() {
   const handleRemoveCategory = (category: string) =>
     setFormData((prev) => ({ ...prev, categories: prev.categories.filter((item) => item !== category) }));
 
+  // Derive base price and cost from the first active presentation with valid data
+  const deriveBaseFromPresentations = (presentations: PresentationFormState[]) => {
+    const activeWithData = presentations.filter(
+      (p) => p.isActive !== false && Number(p.price) > 0 && Number(p.equivalentQty) > 0,
+    );
+    if (activeWithData.length === 0) return {};
+    const p = activeWithData[0];
+    const derivedPrice = Number(p.price) / Number(p.equivalentQty);
+    const update: Record<string, string> = { price: String(Math.round(derivedPrice * 100) / 100) };
+    if (p.cost && Number(p.cost) > 0) {
+      const derivedCost = Number(p.cost) / Number(p.equivalentQty);
+      update.costPrice = String(Math.round(derivedCost * 100) / 100);
+    }
+    return update;
+  };
+
   const handleAddPresentation = () =>
-    setFormData((prev) => ({ ...prev, presentations: [...prev.presentations, emptyPresentation()] }));
+    setFormData((prev) => {
+      const nextPresentations = [...prev.presentations, emptyPresentation()];
+      const derived = deriveBaseFromPresentations(nextPresentations);
+      return { ...prev, presentations: nextPresentations, ...derived };
+    });
 
   const handleUpdatePresentation = (index: number, field: keyof PresentationFormState, value: string | boolean) =>
-    setFormData((prev) => ({
-      ...prev,
-      presentations: prev.presentations.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
-    }));
+    setFormData((prev) => {
+      const nextPresentations = prev.presentations.map((p, i) => (i === index ? { ...p, [field]: value } : p));
+      const derived = deriveBaseFromPresentations(nextPresentations);
+      return { ...prev, presentations: nextPresentations, ...derived };
+    });
 
   const handleRemovePresentation = (index: number) =>
-    setFormData((prev) => ({ ...prev, presentations: prev.presentations.filter((_, i) => i !== index) }));
+    setFormData((prev) => {
+      const nextPresentations = prev.presentations.filter((_, i) => i !== index);
+      const derived = deriveBaseFromPresentations(nextPresentations);
+      return { ...prev, presentations: nextPresentations, ...derived };
+    });
 
   // Mobile: full-screen detail
   if (!isDesktop && productId) {
@@ -355,11 +391,11 @@ export default function ProductsPage() {
             isDesktop={false}
             mode="edit"
             submitting={isUpdating}
-            suggestedPrices={suggestedPrices}
+
             suggestedSku={suggestedSku}
             onAddCategory={handleAddCategory}
             onAddPresentation={handleAddPresentation}
-            onApplySuggestedPrice={(value) => handleFormChange("price", value)}
+
             onChange={handleFormChange}
             onClose={() => setShowEditModal(false)}
             onRemoveCategory={handleRemoveCategory}
@@ -478,8 +514,18 @@ export default function ProductsPage() {
         ) : filteredProducts.length > 0 ? (
           <>
             {(isDesktop ? desktopItems : filteredProducts).map((product) => {
-              const isLow = product.stock <= (product.minStock || settings?.lowStockThreshold || 5);
-              const isOut = product.stock <= 0;
+              const defaultPres = product.presentations
+                ?.find(p => p._id === product.defaultPresentationId && p.isActive !== false)
+                || product.presentations?.find(p => p.isActive !== false)
+                || null;
+              const displayPrice = defaultPres ? defaultPres.price : (product.price || 0);
+              const displayCost = defaultPres && product.costPrice != null
+                ? product.costPrice * (defaultPres.equivalentQty || 1)
+                : product.costPrice;
+              const displayStock = defaultPres ? getAvailableStock(product, defaultPres) : product.stock;
+              const displayUnit = defaultPres?.unitOfMeasure || product.unitOfMeasure || "u.";
+              const isLow = displayStock <= (product.minStock || settings?.lowStockThreshold || 5);
+              const isOut = displayStock <= 0;
               const productCats =
                 product.categories && product.categories.length > 0
                   ? product.categories
@@ -514,7 +560,7 @@ export default function ProductsPage() {
                     {/* Stock visible on mobile inline */}
                     {!isDesktop && (
                       <p className={`mt-1 text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
-                        {isOut ? "Sin stock" : `${product.stock} ${product.unitOfMeasure || "u."}`}
+                        {isOut ? "Sin stock" : `${displayStock} ${displayUnit}`}
                       </p>
                     )}
                     {/* Presentation stock summary */}
@@ -540,7 +586,7 @@ export default function ProductsPage() {
                   {isDesktop && (
                     <div className="hidden lg:block shrink-0 w-28 text-right">
                       <p className={`text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
-                        {isOut ? "Sin stock" : `${product.stock} ${product.unitOfMeasure || "u."}`}
+                        {isOut ? "Sin stock" : `${displayStock} ${displayUnit}`}
                       </p>
                       {isLow && !isOut && <p className="text-[10px] text-warning">Stock bajo</p>}
                     </div>
@@ -551,7 +597,7 @@ export default function ProductsPage() {
                     <div className="hidden lg:block shrink-0 w-24 text-right">
                       <p className="text-[10px] uppercase tracking-wide text-default-400">Costo</p>
                       <p className="text-xs font-semibold text-default-500">
-                        {product.costPrice != null ? formatCompactCurrency(product.costPrice, currency) : "—"}
+                        {displayCost != null ? formatCompactCurrency(displayCost, currency) : "—"}
                       </p>
                     </div>
                   )}
@@ -559,10 +605,10 @@ export default function ProductsPage() {
                   {/* Price + margin */}
                   <div className="shrink-0 text-right">
                     {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Precio</p>}
-                    <p className="text-sm font-bold text-foreground">{formatCompactCurrency(product.price, currency)}</p>
-                    {isDesktop && product.costPrice != null && product.costPrice > 0 && product.price > 0 && (
+                    <p className="text-sm font-bold text-foreground">{formatCompactCurrency(displayPrice, currency)}</p>
+                    {isDesktop && displayCost != null && displayCost > 0 && displayPrice > 0 && (
                       <p className="text-[10px] text-success">
-                        {(((product.price - product.costPrice) / product.price) * 100).toFixed(0)}% mg
+                        {(((displayPrice - displayCost) / displayPrice) * 100).toFixed(0)}% mg
                       </p>
                     )}
                   </div>
@@ -638,11 +684,13 @@ export default function ProductsPage() {
           isDesktop={isDesktop}
           mode="create"
           submitting={isCreating}
-          suggestedPrices={suggestedPrices}
+
+
           suggestedSku={suggestedSku}
           onAddCategory={handleAddCategory}
           onAddPresentation={handleAddPresentation}
-          onApplySuggestedPrice={(value) => handleFormChange("price", value)}
+
+
           onChange={handleFormChange}
           onClose={() => { setShowCreateModal(false); resetForm(); }}
           onRemoveCategory={handleRemoveCategory}
@@ -660,11 +708,13 @@ export default function ProductsPage() {
           isDesktop={isDesktop}
           mode="edit"
           submitting={isUpdating}
-          suggestedPrices={suggestedPrices}
+
+
           suggestedSku={suggestedSku}
           onAddCategory={handleAddCategory}
           onAddPresentation={handleAddPresentation}
-          onApplySuggestedPrice={(value) => handleFormChange("price", value)}
+
+
           onChange={handleFormChange}
           onClose={() => setShowEditModal(false)}
           onRemoveCategory={handleRemoveCategory}

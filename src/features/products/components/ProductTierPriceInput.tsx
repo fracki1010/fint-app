@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DollarSign, TrendingUp, AlertCircle, Package } from "lucide-react";
 import { PriceTiers, PriceTier } from "@shared/types";
 import { formatCompactCurrency } from "@shared/utils/currency";
@@ -62,6 +62,24 @@ export function ProductTierPriceInput({
   const hasCostPrice = costPrice !== undefined && costPrice > 0;
   const activePres = presentations?.filter(p => p.isActive !== false) || [];
   const pres = selectedPresIdx !== null ? activePres[selectedPresIdx] : null;
+
+  // ── Auto-replicar retail → otros tiers por porcentaje ──
+  useEffect(() => {
+    const retail = priceTiers?.retail;
+    if (!retail || retail <= 0) return;
+
+    TIER_ORDER.forEach((tier) => {
+      if (tier === "retail") return;
+      const tierConf = config[tier];
+      if (!tierConf?.enabled || !tierConf.percentage) return;
+      // Solo auto-completar si está vacío (no sobreescribir manuales)
+      const current = priceTiers?.[tier];
+      if (current != null && current > 0) return;
+      const suggested = retail * (tierConf.percentage / 100);
+      onChange(tier, suggested.toFixed(2));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceTiers?.retail]);
 
   // Convert base tier price → presentation price for display
   // Same formula as QuickSale: presTierPrice = pres.price * (tierPrice / retailPrice)

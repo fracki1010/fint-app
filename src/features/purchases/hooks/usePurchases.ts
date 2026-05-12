@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@shared/api/axios";
-import { Purchase, PaymentMethod } from "@shared/types";
+import { Purchase, PaymentCondition, PaymentMethod } from "@shared/types";
 
 export interface PayPurchaseData {
   amount: number;
@@ -52,7 +52,7 @@ export function buildPurchaseItemsPayload(items: LineItemInput[]): CreatePurchas
 export interface CreatePurchasePayload {
   supplierId: string;
   date: string;
-  paymentCondition: "CASH" | "CREDIT";
+  paymentCondition: PaymentCondition;
   subtotal: number;
   tax: number;
   total: number;

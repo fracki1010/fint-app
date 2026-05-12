@@ -9,6 +9,7 @@ import {
   Building2,
   Bell,
   Cog,
+  FileText,
   Settings as SettingsIcon,
 } from "lucide-react";
 

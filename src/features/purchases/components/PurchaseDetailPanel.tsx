@@ -1,30 +1,33 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import {
-  Loader2,
-  ShoppingBag,
   ArrowUpRight,
   Building2,
   Calendar,
-  Receipt,
-  PackageCheck,
   FileText,
-  Download,
   Clock,
+  PackageCheck,
+  ShoppingBag,
+  Download,
   BadgeCheck,
   Truck,
   Ban,
+  Receipt,
+  X,
   CheckCircle2,
   XCircle,
   DollarSign,
-  X,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Purchase, PurchaseStatus, PaymentCondition, PaymentStatus } from "@shared/types";
 import { formatCurrency } from "@shared/utils/currency";
 import { formatDateShort } from "@shared/utils/date";
+import api from "@shared/api/axios";
 import type { PayPurchaseData } from "@features/purchases/hooks/usePurchases";
+import { useReceipts, useCreateReceipt } from "@features/purchases/hooks/useReceipts";
+import ReceiveModal from "./ReceiveModal";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -37,7 +40,12 @@ const STATUS_LABELS: Record<PurchaseStatus, string> = {
 
 const PAYMENT_LABELS: Record<PaymentCondition, string> = {
   CASH: "Contado",
-  CREDIT: "Crédito 30d",
+  CREDIT: "Crédito",
+  CREDIT_15: "Crédito 15d",
+  CREDIT_30: "Crédito 30d",
+  CREDIT_45: "Crédito 45d",
+  CREDIT_60: "Crédito 60d",
+  CREDIT_90: "Crédito 90d",
 };
 
 const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -120,16 +128,47 @@ export default function PurchaseDetailPanel({
   currency,
   isHeaderCompact,
   isConfirming,
-  isReceiving,
+  isReceiving: _isReceiving,
   isCancelling,
   isPaying,
   onBack,
   onConfirm,
-  onReceive,
+  onReceive: _onReceive,
   onCancel,
   onPay,
 }: PurchaseDetailPanelProps) {
   const [showPayModal, setShowPayModal] = useState(false);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+
+  const { data: receipts = [] } = useReceipts(selectedPurchase?._id);
+  const createReceipt = useCreateReceipt();
+
+  const handleCreateReceipt = async (data: Parameters<typeof createReceipt.mutateAsync>[0]["data"]) => {
+    if (!selectedPurchase) return;
+    await createReceipt.mutateAsync({
+      purchaseId: selectedPurchase._id,
+      data,
+    });
+  };
+
+  // Compute reception status from receipts
+  const receptionTotals = useMemo(() => {
+    if (!selectedPurchase || receipts.length === 0) return null;
+    const receivedMap = new Map<string, number>();
+    for (const r of receipts) {
+      for (const item of r.items) {
+        const pid = typeof item.product === "string" ? item.product : item.product?._id || "";
+        receivedMap.set(pid, (receivedMap.get(pid) || 0) + item.quantity);
+      }
+    }
+    const allFullyReceived = selectedPurchase.items.every((item) => {
+      const pid = typeof item.product === "string" ? item.product : item.product?._id || "";
+      return (receivedMap.get(pid) || 0) >= item.quantity;
+    });
+    return { receivedMap, allFullyReceived };
+  }, [selectedPurchase, receipts]);
+
+  const isFullyReceived = receptionTotals?.allFullyReceived ?? false;
 
   const remaining = selectedPurchase
     ? Math.max(0, selectedPurchase.total - (selectedPurchase.paidAmount || 0))
@@ -218,11 +257,22 @@ export default function PurchaseDetailPanel({
               </Chip>
             )}
             {(status === "CONFIRMED" || status === "RECEIVED") && (
-              <Button size="sm" variant="light" className="ml-auto" onPress={() => {
-                const link = document.createElement("a");
-                link.href = `/api/purchases/${selectedPurchase._id}/pdf`;
-                link.download = `compra_${selectedPurchase._id}.pdf`;
-                link.click();
+              <Button size="sm" variant="light" className="ml-auto" onPress={async () => {
+                try {
+                  const response = await api.get(`/purchases/${selectedPurchase._id}/pdf`, {
+                    responseType: "blob",
+                  });
+                  const url = URL.createObjectURL(response.data);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `compra_${selectedPurchase._id}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                } catch {
+                  // Error silencioso
+                }
               }} startContent={<Download size={14} />}>
                 PDF
               </Button>
@@ -372,6 +422,47 @@ export default function PurchaseDetailPanel({
             </div>
           )}
 
+          {/* Remitos */}
+          {receipts.length > 0 && (
+            <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-5">
+              <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
+                <PackageCheck size={13} />
+                Remitos ({receipts.length})
+              </h3>
+              <div className="mt-3 space-y-3">
+                {receipts.slice(0, 3).map((receipt) => (
+                  <div key={receipt._id} className="rounded-xl border border-divider/20 bg-content2/30 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-foreground">
+                        {formatDateShort(receipt.date)} · <span className="text-default-500">{receipt.items.length} item{receipt.items.length !== 1 ? "s" : ""}</span>
+                      </p>
+                      <span className="text-xs font-bold text-success">
+                        {formatCurrency(receipt.items.reduce((s, i) => s + i.lineTotal, 0), currency)}
+                      </span>
+                    </div>
+                    {receipt.notes && (
+                      <p className="text-[11px] text-default-500">{receipt.notes}</p>
+                    )}
+                    <div className="space-y-1">
+                      {receipt.items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-[11px]">
+                          <span className="text-default-500">
+                            {typeof item.product === "object" ? item.product?.name || "Producto" : "Producto"}
+                            <span className="text-default-400"> × {item.quantity}</span>
+                          </span>
+                          <span className="font-medium text-foreground">{formatCurrency(item.lineTotal, currency)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {receipts.length > 3 && (
+                  <p className="text-xs text-center text-default-500">+{receipts.length - 3} remitos más</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Timeline history */}
           <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40 p-5">
             <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
@@ -461,15 +552,21 @@ export default function PurchaseDetailPanel({
                 </Button>
               </>
             )}
-            {status === "CONFIRMED" && (
+            {status === "CONFIRMED" && !isFullyReceived && (
               <>
-                <Button color="success" className="flex-1" isLoading={isReceiving} onPress={onReceive} startContent={isReceiving ? null : <PackageCheck size={18} />}>
-                  Recibir
+                <Button color="success" className="flex-1" onPress={() => setShowReceiveModal(true)} startContent={<PackageCheck size={18} />}>
+                  {receipts.length > 0 ? "Agregar remito" : "Recibir"}
                 </Button>
                 <Button color="danger" variant="flat" className="flex-1" isLoading={isCancelling} onPress={onCancel} startContent={isCancelling ? null : <XCircle size={18} />}>
                   Cancelar
                 </Button>
               </>
+            )}
+            {status === "CONFIRMED" && isFullyReceived && (
+              <div className="flex-1 rounded-2xl border border-divider/20 bg-emerald-500/10 px-4 py-3.5 text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <PackageCheck size={14} className="inline mr-1" />
+                Completamente recibido
+              </div>
             )}
             {(status === "CONFIRMED" || status === "RECEIVED") && selectedPurchase?.paymentStatus !== "PAID" && (
               <Button color="secondary" className="flex-1" isDisabled={isPaying} onPress={() => { setPayData({ amount: remaining, paymentMethod: "transfer" }); setShowPayModal(true); }} startContent={<DollarSign size={18} />}>
@@ -601,6 +698,19 @@ export default function PurchaseDetailPanel({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Receive Modal ──────────────────────────────────────── */}
+      {showReceiveModal && selectedPurchase && (
+        <ReceiveModal
+          isOpen={showReceiveModal}
+          purchase={selectedPurchase}
+          alreadyReceived={receptionTotals?.receivedMap ?? null}
+          currency={currency}
+          isDesktop={true}
+          onClose={() => setShowReceiveModal(false)}
+          onSubmit={handleCreateReceipt}
+        />
       )}
     </div>
   );
