@@ -11,7 +11,6 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { useTenantPlan, useChangePlan, AvailablePlan } from "@features/superadmin/hooks/useTenantPlan";
 import { Feature } from "@shared/hooks/usePlanFeatures";
 import { useCreatePaymentPreference } from "@features/sales/hooks/useCreatePaymentPreference";
-import { useMercadoPago } from "@features/sales/hooks/useMercadoPago";
 
 const FEATURE_LABELS: Record<Feature, string> = {
   financial_center: "Centro Financiero",
@@ -226,7 +225,6 @@ export default function CompanyPage() {
   const { plan, availablePlans, loading: planLoading, error: planError } = useTenantPlan();
   const changePlanMutation = useChangePlan();
   const createPreference = useCreatePaymentPreference();
-  const { openCheckout } = useMercadoPago();
   const [formData, setFormData] = useState<Partial<Setting>>({});
   const [selectedPlan, setSelectedPlan] = useState<AvailablePlan | null>(null);
 
@@ -531,13 +529,13 @@ export default function CompanyPage() {
             createPreference.mutate(selectedPlan.id, {
               onSuccess: (data) => {
                 if (data.initPoint) {
-                  // Abrir Checkout Pro
-                  openCheckout(data.preferenceId);
+                  window.open(data.initPoint, "_blank", "noopener,noreferrer");
                 }
                 setSelectedPlan(null);
               },
               onError: (err: any) => {
                 showToast({ variant: "error", message: getErrorMessage(err, "Error al iniciar el pago") });
+                setSelectedPlan(null);
               },
             });
             return;

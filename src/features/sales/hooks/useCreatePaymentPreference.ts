@@ -11,7 +11,8 @@ export function useCreatePaymentPreference() {
   return useMutation({
     mutationFn: async (plan: string) => {
       const response = await api.post("/payments/create-preference", { plan });
-      return response.data as CreatePreferenceResponse;
+      // The backend wraps data in { success: true, data: { ... } }
+      return (response.data?.data || response.data) as CreatePreferenceResponse;
     },
   });
 }
