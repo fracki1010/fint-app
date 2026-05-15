@@ -97,8 +97,7 @@ export default function MobileLayout() {
   ];
 
   const hideBottomBar =
-    ["/new-operation"].includes(location.pathname) ||
-    location.pathname.startsWith("/financial");
+    ["/new-operation"].includes(location.pathname);
 
   useEffect(() => {
     if (mainRef.current) {

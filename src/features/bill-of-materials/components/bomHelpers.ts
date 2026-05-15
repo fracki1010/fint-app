@@ -30,12 +30,11 @@ export function getProductObj(p: Product | string | null | undefined): Product |
 export function calcBomCost(bom: BillOfMaterial) {
   const batchCost = bom.ingredients.reduce((acc, ing) => {
     const p = getProductObj(ing.product);
-    if (p && p.costPrice) {
-      return acc + ing.quantity * p.costPrice;
-    }
-    const s = getSupplyObj(ing.supply);
-    if (s && s.referenceCost) {
-      return acc + ing.quantity * s.referenceCost;
+    if (p) {
+      const pres = ing.presentationId ? p.presentations?.find((pr) => pr._id === ing.presentationId) : undefined;
+      // Use presentation's own cost if available, otherwise base costPrice
+      const effectiveCost = pres?.cost ?? p.costPrice ?? 0;
+      return acc + ing.quantity * effectiveCost;
     }
     return acc;
   }, 0);

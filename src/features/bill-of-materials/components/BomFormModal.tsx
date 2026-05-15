@@ -213,15 +213,23 @@ export function BomForm({
             )}
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-default-500">RINDE (unidades)</label>
-            <input
-              className={inputCls}
-              min="0"
-              step="0.01"
-              type="number"
-              value={form.yieldQuantity}
-              onChange={(e) => set("yieldQuantity", e.target.value)}
-            />
+            <label className="text-xs font-semibold text-default-500">RINDE</label>
+            <div className="flex items-center gap-2">
+              <input
+                className="flex-1 rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground font-mono text-right focus:outline-none focus:ring-2 focus:ring-primary/40"
+                min="0" step="0.01" type="number"
+                value={form.yieldQuantity}
+                onChange={(e) => set("yieldQuantity", e.target.value)}
+              />
+              {(() => {
+                if (form.presentationId) {
+                  const pr = productPres.find((p) => p._id === form.presentationId);
+                  if (pr?.unitOfMeasure) return <span className="text-xs text-default-400 w-8">{pr.unitOfMeasure}</span>;
+                }
+                if (selectedProduct?.unitOfMeasure) return <span className="text-xs text-default-400 w-8">{selectedProduct.unitOfMeasure}</span>;
+                return <span className="text-xs text-default-400 w-8">ud.</span>;
+              })()}
+            </div>
           </div>
         </div>
 
@@ -240,38 +248,47 @@ export function BomForm({
           </div>
 
           {form.ingredients.map((row, i) => {
-            const ingProduct = ingProducts.get(row.productId);
-            const ingPres = ingProduct?.presentations?.filter((p) => p.isActive !== false) || [];
-            return (
-              <div key={i} className="rounded-xl border border-divider/20 bg-content2/20 p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <Autocomplete
-                      aria-label="Ingrediente"
-                      classNames={{ base: "w-full", listboxWrapper: "bg-content1" }}
-                      defaultItems={rawMaterials}
-                      inputValue={ingProduct?.name || ""}
-                      placeholder="Buscar materia prima..."
-                      size="sm"
-                      variant="bordered"
-                      onSelectionChange={(key) => setIng(i, "productId", String(key || ""))}
-                    >
-                      {(p) => (
-                        <AutocompleteItem key={p._id} textValue={p.name}>
-                          <div className="flex items-center justify-between gap-3">
-                            <span>{p.name}</span>
-                            <span className="shrink-0 text-[11px] text-default-400">{p.sku ? p.sku : ""}</span>
-                          </div>
-                        </AutocompleteItem>
-                      )}
-                    </Autocomplete>
-                  </div>
-                  <input
-                    className="w-24 shrink-0 rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    min="0" placeholder="Cant." step="0.01" type="number"
-                    value={row.quantity}
-                    onChange={(e) => setIng(i, "quantity", e.target.value)}
-                  />
+             const ingProduct = ingProducts.get(row.productId);
+             const ingPres = ingProduct?.presentations?.filter((p) => p.isActive !== false) || [];
+             // Determine the unit label: presentation unit if selected, otherwise product base unit
+             const ingUnit = row.presentationId
+               ? ingPres.find((p) => p._id === row.presentationId)?.unitOfMeasure
+               : ingProduct?.unitOfMeasure;
+             return (
+               <div key={i} className="rounded-xl border border-divider/20 bg-content2/20 p-3 space-y-2">
+                 <div className="flex items-center gap-2">
+                   <div className="flex-1">
+                     <Autocomplete
+                       aria-label="Ingrediente"
+                       classNames={{ base: "w-full", listboxWrapper: "bg-content1" }}
+                       defaultItems={rawMaterials}
+                       inputValue={ingProduct?.name || ""}
+                       placeholder="Buscar materia prima..."
+                       size="sm"
+                       variant="bordered"
+                       onSelectionChange={(key) => setIng(i, "productId", String(key || ""))}
+                     >
+                       {(p) => (
+                         <AutocompleteItem key={p._id} textValue={p.name}>
+                           <div className="flex items-center justify-between gap-3">
+                             <span>{p.name}</span>
+                             <span className="shrink-0 text-[11px] text-default-400">{p.sku ? p.sku : ""}</span>
+                           </div>
+                         </AutocompleteItem>
+                       )}
+                     </Autocomplete>
+                   </div>
+                   <div className="flex items-center gap-1.5 shrink-0">
+                     <input
+                       className="w-20 rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground text-right font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+                       min="0" placeholder="0" step="0.01" type="number"
+                       value={row.quantity}
+                       onChange={(e) => setIng(i, "quantity", e.target.value)}
+                     />
+                     {ingUnit && (
+                       <span className="text-xs text-default-400 w-8">{ingUnit}</span>
+                     )}
+                   </div>
                   {form.ingredients.length > 1 && (
                     <button
                       className="shrink-0 rounded-lg p-1.5 text-danger/60 transition hover:bg-danger/10 hover:text-danger"

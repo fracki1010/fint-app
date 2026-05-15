@@ -36,7 +36,7 @@ function ProductionLogRow({ log }: { log: ProductionLog }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-semibold">{log.billOfMaterialName}</span>
+          <span className="truncate text-sm font-semibold">{log.recipeName || log.billOfMaterialName || "Producción"}</span>
           <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">
             {log.unitsProduced} ud.
           </span>

@@ -223,7 +223,11 @@ export function BomDrawer({
         notes: form.notes,
         ingredients: form.ingredients
           .filter((r) => r.productId && parseFloat(r.quantity) > 0)
-          .map((r) => ({ product: r.productId, quantity: parseFloat(r.quantity) })),
+          .map((r) => ({
+            product: r.productId,
+            presentationId: r.presentationId || null,
+            quantity: parseFloat(r.quantity),
+          })),
       };
       const updated = await updateBillOfMaterial({ id: bom._id, data: payload });
       showToast({ variant: "success", message: "Lista de Materiales actualizada" });
@@ -337,41 +341,73 @@ export function BomDrawer({
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-default-400">
             Ingredientes ({bom.ingredients.length})
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {bom.ingredients.map((ing, i) => {
               const p = getProductObj(ing.product);
-              const s = getSupplyObj(ing.supply);
-              const name = p?.name || s?.name || "Insumo";
-              const stock = p?.stock ?? s?.currentStock ?? 0;
-              const unit = p?.unitOfMeasure || s?.unit || "";
-              const cost = p?.costPrice ?? s?.referenceCost ?? 0;
-              const stockOk = stock >= ing.quantity;
+              const name = p?.name || "Insumo";
+              const sku = p?.sku || "";
+              const stock = p?.stock ?? 0;
+              const unit = p?.unitOfMeasure || "";
+              const needed = ing.quantity;
+              const stockOk = stock >= needed;
+              const stockPct = stock > 0 ? Math.min(100, Math.round((stock / needed) * 100)) : 0;
+              const pres = ing.presentationId ? p?.presentations?.find((pr) => pr._id === ing.presentationId) : undefined;
+              const effectiveCost = pres?.cost ?? p?.costPrice ?? 0;
+              const totalCost = needed * effectiveCost;
+
               return (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/6 bg-content2 px-4 py-3"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Package size={14} className="shrink-0 text-default-400" />
-                    <span className="truncate text-sm font-medium">{name}</span>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-0.5">
-                    <span className="text-sm font-bold text-foreground">
-                      {ing.quantity} {unit}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      {cost > 0 ? (
-                        <span className="text-[11px] text-default-400">
-                          {formatCompactCurrency(ing.quantity * cost, currency)}
-                        </span>
-                      ) : null}
-                      {(p || s) && (
-                        <span
-                          className={`text-[11px] font-semibold ${stockOk ? "text-success" : "text-danger"}`}
-                        >
-                          ({stock} disp.)
-                        </span>
+                <div key={i} className="rounded-xl border border-divider/20 bg-content2/30 p-4 space-y-3">
+                  {/* Top: name + SKU */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Package size={15} className="shrink-0 text-primary" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{name}</p>
+                        {sku && <p className="text-[10px] text-default-400 font-mono">{sku}</p>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-foreground">{needed} {pres?.unitOfMeasure || unit}</p>
+                      {pres && (
+                        <p className="text-[10px] text-default-400">
+                          = {needed} × {pres.equivalentQty} {unit} c/u
+                        </p>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Cost + Stock row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-content3/40 px-3 py-2">
+                      <p className="text-[10px] text-default-400 font-semibold uppercase tracking-wider">Costo</p>
+                      {effectiveCost > 0 ? (
+                        <>
+                          <p className="text-sm font-bold text-primary">
+                            {formatCompactCurrency(totalCost, currency)}
+                          </p>
+                          <p className="text-[10px] text-default-400">
+                            {formatCompactCurrency(effectiveCost, currency)} / {pres?.unitOfMeasure || unit}
+                            {pres ? ` (${pres.name})` : ""}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-default-400">—</p>
+                      )}
+                    </div>
+                    <div className="rounded-lg bg-content3/40 px-3 py-2">
+                      <p className="text-[10px] text-default-400 font-semibold uppercase tracking-wider">Stock</p>
+                      <p className={`text-sm font-bold ${stockOk ? "text-success" : stock > 0 ? "text-warning" : "text-danger"}`}>
+                        {stock} {pres?.unitOfMeasure || unit}
+                      </p>
+                      <div className="mt-1 h-1.5 w-full rounded-full bg-content3/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${stockOk ? "bg-success" : stock > 0 ? "bg-warning" : "bg-danger"}`}
+                          style={{ width: `${Math.min(100, stockPct)}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-default-400 mt-0.5">
+                        {stock >= needed ? "Suficiente" : `Faltan ${(needed - stock).toLocaleString("es-AR")} ${pres?.unitOfMeasure || unit}`}
+                      </p>
                     </div>
                   </div>
                 </div>
