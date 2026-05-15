@@ -1,18 +1,21 @@
 import { useMemo, useState } from "react";
 import { Plus, Loader2, X, ChefHat } from "lucide-react";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Select, SelectItem } from "@heroui/select";
 
 import { Product, BillOfMaterial } from "@shared/types";
 import { getProductObj, getSupplyObj } from "./bomHelpers";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
-export type IngRow = { productId: string; quantity: string };
+export type IngRow = { productId: string; presentationId: string; quantity: string };
 
-export const emptyRow = (): IngRow => ({ productId: "", quantity: "" });
+export const emptyRow = (): IngRow => ({ productId: "", presentationId: "", quantity: "" });
 
 export type BomFormState = {
   name: string;
   productId: string;
+  presentationId: string;
   yieldQuantity: string;
   notes: string;
   ingredients: IngRow[];
@@ -21,6 +24,7 @@ export type BomFormState = {
 export const emptyForm = (): BomFormState => ({
   name: "",
   productId: "",
+  presentationId: "",
   yieldQuantity: "1",
   notes: "",
   ingredients: [emptyRow()],
@@ -31,14 +35,16 @@ export function bomToForm(bom: BillOfMaterial): BomFormState {
   return {
     name: bom.name,
     productId: prod?._id || "",
+    presentationId: bom.presentationId || "",
     yieldQuantity: String(bom.yieldQuantity),
     notes: bom.notes || "",
     ingredients: bom.ingredients.map((ing) => {
       const p = getProductObj(ing.product);
-      if (p) return { productId: p._id, quantity: String(ing.quantity) };
+      if (p) return { productId: p._id, presentationId: ing.presentationId || "", quantity: String(ing.quantity) };
       const s = getSupplyObj(ing.supply);
       return {
         productId: String(s?._id ?? (typeof ing.supply === "string" ? ing.supply : "")),
+        presentationId: ing.presentationId || "",
         quantity: String(ing.quantity),
       };
     }),
@@ -67,6 +73,20 @@ export function BomForm({
   const [form, setForm] = useState<BomFormState>(initial ?? emptyForm());
 
   const rawMaterials = useMemo(() => products.filter((p) => p.type === "raw_material"), [products]);
+  const finishedProducts = useMemo(() => products.filter((p) => p.type === "finished" || p.type === "both"), [products]);
+
+  // Presentations for the selected finished product
+  const selectedProduct = useMemo(() => products.find((p) => p._id === form.productId), [products, form.productId]);
+  const productPres = useMemo(
+    () => selectedProduct?.presentations?.filter((p) => p.isActive !== false) || [],
+    [selectedProduct],
+  );
+
+  // Memoize ingredient products for presentation lookups
+  const ingProducts = useMemo(
+    () => new Map(form.ingredients.map((ing) => [ing.productId, products.find((p) => p._id === ing.productId)])),
+    [form.ingredients, products],
+  );
 
   const set = <K extends keyof BomFormState>(k: K, v: BomFormState[K]) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -75,6 +95,8 @@ export function BomForm({
     setForm((p) => {
       const rows = [...p.ingredients];
       rows[i] = { ...rows[i], [field]: val };
+      // Reset presentation when product changes
+      if (field === "productId") rows[i].presentationId = "";
       return { ...p, ingredients: rows };
     });
 
@@ -94,7 +116,17 @@ export function BomForm({
   const isValid =
     form.name.trim() &&
     form.ingredients.length > 0 &&
-    form.ingredients.every((r) => r.productId && parseFloat(r.quantity) > 0);
+    form.ingredients.every((r) => r.productId && parseFloat(r.quantity) > 0) && (() => {
+      // If a finished product with presentations is selected, a presentation must be chosen
+      if (form.productId && productPres.length > 0 && !form.presentationId) return false;
+      // For ingredients with presentations, a presentation must be chosen
+      for (const ing of form.ingredients) {
+        const p = ingProducts.get(ing.productId);
+        const activePres = p?.presentations?.filter((pr) => pr.isActive !== false) || [];
+        if (ing.productId && activePres.length > 0 && !ing.presentationId) return false;
+      }
+      return true;
+    })();
 
   return (
     <div className={`flex flex-col ${isDesktop ? "w-[520px]" : "h-full"} bg-content1`}>
@@ -133,18 +165,52 @@ export function BomForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-default-500">PRODUCTO FINAL</label>
-            <select
-              className={inputCls}
-              value={form.productId}
-              onChange={(e) => set("productId", e.target.value)}
+            <Autocomplete
+              aria-label="Producto final"
+              classNames={{ base: "w-full", listboxWrapper: "bg-content1" }}
+              defaultItems={finishedProducts}
+              inputValue={selectedProduct?.name || ""}
+              placeholder="Buscar producto terminado..."
+              size="sm"
+              variant="bordered"
+              onSelectionChange={(key) => {
+                set("productId", String(key || ""));
+                set("presentationId", "");
+              }}
             >
-              <option value="">Sin vincular</option>
-              {products.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              {(p) => (
+                <AutocompleteItem key={p._id} textValue={p.name}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{p.name}</span>
+                    <span className="shrink-0 text-[11px] text-default-400">{p.sku ? p.sku : ""}</span>
+                  </div>
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+            {productPres.length > 0 && (
+              <div className="mt-1.5">
+                <Select
+                  aria-label="Presentación"
+                  placeholder="Seleccionar presentación..."
+                  classNames={{
+                    base: "w-full",
+                    trigger: "min-h-[36px] rounded-lg border-divider/20 bg-content2/40 px-3 text-xs text-foreground",
+                    value: "text-foreground font-medium",
+                    popoverContent: "bg-content1 text-foreground",
+                  }}
+                  selectedKeys={form.presentationId ? [form.presentationId] : []}
+                  size="sm"
+                  variant="bordered"
+                  onSelectionChange={(keys) => set("presentationId", Array.from(keys)[0] as string || "")}
+                >
+                  {productPres.map((pr) => (
+                    <SelectItem key={pr._id} textValue={pr.name}>
+                      <span>{pr.name}</span>
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-default-500">RINDE (unidades)</label>
@@ -173,40 +239,73 @@ export function BomForm({
             </button>
           </div>
 
-          {form.ingredients.map((row, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <select
-                className={`${inputCls} flex-1`}
-                value={row.productId}
-                onChange={(e) => setIng(i, "productId", e.target.value)}
-              >
-                <option value="">Seleccionar insumo...</option>
-                {rawMaterials.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} ({p.unitOfMeasure || "unidad"})
-                  </option>
-                ))}
-              </select>
-              <input
-                className="w-24 shrink-0 rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                min="0"
-                placeholder="Cant."
-                step="0.01"
-                type="number"
-                value={row.quantity}
-                onChange={(e) => setIng(i, "quantity", e.target.value)}
-              />
-              {form.ingredients.length > 1 && (
-                <button
-                  className="shrink-0 rounded-lg p-1.5 text-danger/60 transition hover:bg-danger/10 hover:text-danger"
-                  type="button"
-                  onClick={() => removeRow(i)}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          ))}
+          {form.ingredients.map((row, i) => {
+            const ingProduct = ingProducts.get(row.productId);
+            const ingPres = ingProduct?.presentations?.filter((p) => p.isActive !== false) || [];
+            return (
+              <div key={i} className="rounded-xl border border-divider/20 bg-content2/20 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Autocomplete
+                      aria-label="Ingrediente"
+                      classNames={{ base: "w-full", listboxWrapper: "bg-content1" }}
+                      defaultItems={rawMaterials}
+                      inputValue={ingProduct?.name || ""}
+                      placeholder="Buscar materia prima..."
+                      size="sm"
+                      variant="bordered"
+                      onSelectionChange={(key) => setIng(i, "productId", String(key || ""))}
+                    >
+                      {(p) => (
+                        <AutocompleteItem key={p._id} textValue={p.name}>
+                          <div className="flex items-center justify-between gap-3">
+                            <span>{p.name}</span>
+                            <span className="shrink-0 text-[11px] text-default-400">{p.sku ? p.sku : ""}</span>
+                          </div>
+                        </AutocompleteItem>
+                      )}
+                    </Autocomplete>
+                  </div>
+                  <input
+                    className="w-24 shrink-0 rounded-xl border border-white/10 bg-content2 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    min="0" placeholder="Cant." step="0.01" type="number"
+                    value={row.quantity}
+                    onChange={(e) => setIng(i, "quantity", e.target.value)}
+                  />
+                  {form.ingredients.length > 1 && (
+                    <button
+                      className="shrink-0 rounded-lg p-1.5 text-danger/60 transition hover:bg-danger/10 hover:text-danger"
+                      type="button" onClick={() => removeRow(i)}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                {ingPres.length > 0 && (
+                  <Select
+                    aria-label="Presentación del ingrediente"
+                    placeholder="Seleccionar presentación..."
+                    classNames={{
+                      base: "w-full",
+                      trigger: "min-h-[34px] rounded-lg border-divider/20 bg-content2/40 px-3 text-xs text-foreground",
+                      value: "text-foreground font-medium",
+                      popoverContent: "bg-content1 text-foreground",
+                    }}
+                    selectedKeys={row.presentationId ? [row.presentationId] : []}
+                    size="sm"
+                    variant="bordered"
+                    onSelectionChange={(keys) => setIng(i, "presentationId", Array.from(keys)[0] as string || "")}
+                  >
+                    {ingPres.map((pr) => (
+                      <SelectItem key={pr._id} textValue={pr.name}>
+                        <span>{pr.name}</span>
+                      </SelectItem>
+                    ))}
+                  </Select>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Notes */}

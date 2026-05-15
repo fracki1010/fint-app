@@ -127,7 +127,7 @@ export function ProductDetailPanel({
           </button>
         )}
         <div className="min-w-0 flex-1">
-          <p className="section-kicker">Ficha de Producto</p>
+          <p className="section-kicker">Ficha de Artículo</p>
           <h1 className="page-title truncate">{product?.name || "Cargando..."}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -200,7 +200,7 @@ export function ProductDetailPanel({
                   }`}
                   onClick={() => setActiveTab("presentaciones")}
                 >
-                  Presentaciones ({product.presentations.length})
+                  Unidades alternativas ({product.presentations.length})
                 </button>
               </div>
             )}
@@ -232,11 +232,13 @@ export function ProductDetailPanel({
                   </div>
                   <div className="stat-card text-center">
                     <p className="stat-card-label flex items-center justify-center gap-1.5">
-                      {defaultPres ? `Precio (${defaultPres.name})` : "Precio base"}
+                      {defaultPres ? `${product.type === "raw_material" ? "Costo" : "Precio"} (${defaultPres.name})` : "Precio base"}
                     </p>
                     <p className="stat-card-value mt-2">
                       {defaultPres
-                        ? formatCompactCurrency(defaultPres.price, currency)
+                        ? product.type === "raw_material"
+                          ? formatCompactCurrency(defaultPres.cost || 0, currency)
+                          : formatCompactCurrency(defaultPres.price, currency)
                         : product.price > 0
                           ? formatCompactCurrency(product.price, currency)
                           : "—"}
@@ -258,7 +260,7 @@ export function ProductDetailPanel({
                 {activePres.length > 1 && (
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-default-400 shrink-0">
-                      Presentación activa:
+                      Unidad activa:
                     </span>
                     <div className="flex gap-1 flex-wrap">
                       {activePres.map((pres) => (
@@ -382,9 +384,9 @@ export function ProductDetailPanel({
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Layers3 size={16} className="text-primary" />
-                    Presentaciones
+                    Unidades alternativas
                   </p>
-                  <span className="text-xs text-default-400">{product.presentations.length} formatos</span>
+                  <span className="text-xs text-default-400">{product.presentations.length} uds.</span>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -410,7 +412,9 @@ export function ProductDetailPanel({
                           </p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
-                          <p className="text-sm font-bold text-primary">{formatCompactCurrency(pres.price, currency)}</p>
+                          <p className="text-sm font-bold text-primary">
+                            {formatCompactCurrency(product.type === "raw_material" ? (pres.cost || 0) : pres.price, currency)}
+                          </p>
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
                             isOut 
                               ? 'bg-danger/15 text-danger' 

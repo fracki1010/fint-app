@@ -451,6 +451,7 @@ export interface BomIngredient {
     /** @deprecated Use `product` instead */
   supply?: Supply | string;
   product?: Product | string;
+  presentationId?: string;
   quantity: number;
 }
 
@@ -458,6 +459,7 @@ export interface BillOfMaterial {
   _id: string;
   name: string;
   product?: Product | string | null;
+  presentationId?: string;
   yieldQuantity: number;
   ingredients: BomIngredient[];
   notes?: string;

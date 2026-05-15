@@ -23,10 +23,8 @@ export interface CreatePurchaseItemPayload {
 // ── Pure helpers ─────────────────────────────────────────────────────
 
 export type LineItemInput = {
-  itemKind: "supply" | "product";
-  supplyId: string;
   productId: string;
-  presentationId: string;
+  presentationId?: string;
   quantity: string;
   unitCost: string;
 };
@@ -36,12 +34,10 @@ export function buildPurchaseItemsPayload(items: LineItemInput[]): CreatePurchas
     .filter((it) => {
       const qty = Number(it.quantity || 0);
       const cost = Number(it.unitCost || 0);
-      const id = it.supplyId || it.productId;
-      return id && qty > 0 && cost >= 0;
+      return it.productId && qty > 0 && cost >= 0;
     })
     .map((it) => ({
-      // All items go as productItemId since supplies are now Products (type=raw_material)
-      productItemId: it.supplyId || it.productId,
+      productItemId: it.productId,
       ...(it.presentationId ? { presentationId: it.presentationId } : {}),
       quantity: Number(it.quantity),
       unitCost: Number(it.unitCost),

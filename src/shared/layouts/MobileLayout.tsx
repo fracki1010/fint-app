@@ -12,7 +12,6 @@ import {
   Users,
   Settings,
   ChartNoAxesCombined,
-  LineChart,
   Package,
   ArrowRightLeft,
   ShoppingCart,
@@ -57,7 +56,7 @@ export default function MobileLayout() {
     { path: "/sales", label: "Ventas", icon: ReceiptText },
     { path: "/cash-closing", label: "Cierre de Caja", icon: Lock },
     { path: "/clients", label: "Clientes", icon: Users },
-    { path: "/products", label: "Productos", icon: ClipboardList },
+    { path: "/products", label: "Artículos", icon: ClipboardList },
     { path: "/inventory", label: "Inventario", icon: Package },
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     { path: "/purchases", label: "Compras", icon: ShoppingCart },
@@ -76,7 +75,6 @@ export default function MobileLayout() {
     { path: "/financial/dashboard", label: "Panel Financiero", icon: LayoutGrid },
     { path: "/financial/accounting", label: "Contabilidad", icon: ReceiptText },
     { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
-    { path: "/financial/projections", label: "Proyecciones", icon: LineChart },
     { path: "/financial/treasury", label: "Tesorería", icon: DollarSign },
     { path: "/financial/cost-centers", label: "Centros de Costo", icon: Building2 },
     { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },
@@ -92,7 +90,7 @@ export default function MobileLayout() {
 
   const mobileBottomTabs = [
     { path: "/", label: "INICIO", icon: LayoutGrid },
-    { path: "/products", label: "PRODUCTOS", icon: ClipboardList },
+    { path: "/products", label: "ARTÍCULOS", icon: ClipboardList },
     { path: "/sales", label: "VENTAS", icon: ReceiptText },
     { path: "/clients", label: "CLIENTES", icon: Users },
     { path: null, label: "MÁS", icon: MoreHorizontal },

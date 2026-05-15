@@ -31,7 +31,6 @@ import {
   buildPurchaseItemsPayload,
 } from "@features/purchases/hooks/usePurchases";
 import type { PayPurchaseData } from "@features/purchases/hooks/usePurchases";
-import { useSupplies } from "@features/supplies/hooks/useSupplies";
 import { useProducts } from "@features/products/hooks/useProducts";
 import { useSuppliers } from "@features/suppliers/hooks/useSuppliers";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
@@ -43,7 +42,7 @@ import { formatCompactCurrency, formatCurrency } from "@shared/utils/currency";
 import { formatDateShort } from "@shared/utils/date";
 import { getErrorMessage } from "@shared/utils/errors";
 import { PaginationBar } from "@shared/components/PaginationBar";
-import PurchaseFormItem, { LineItem } from "../components/PurchaseFormItem";
+import PurchaseFormItem, { LineItem, emptyLineItem } from "../components/PurchaseFormItem";
 import PurchaseDetailPanel from "../components/PurchaseDetailPanel";
 import { ConfirmModal } from "@shared/components/ConfirmModal";
 
@@ -157,21 +156,7 @@ const emptyForm: PurchaseFormState = {
   items: [emptyLineItem()],
 };
 
-function emptyLineItem(): LineItem {
-  return {
-    itemKind: "supply",
-    supplyId: "",
-    supplyName: "",
-    productId: "",
-    productName: "",
-    presentationId: "",
-    presentationName: "",
-    purchaseUnit: "",
-    purchaseEquivalentQty: "1",
-    quantity: "",
-    unitCost: "",
-  };
-}
+// emptyLineItem imported from PurchaseFormItem
 
 function CreatePurchaseModal({
   isDesktop,
@@ -179,7 +164,6 @@ function CreatePurchaseModal({
   onSubmit,
   submitting,
   suppliers,
-  supplies,
   products,
   currency,
   showToast,
@@ -189,7 +173,6 @@ function CreatePurchaseModal({
   onSubmit: (form: PurchaseFormState) => void;
   submitting: boolean;
   suppliers: Array<{ _id: string; name: string; company?: string }>;
-  supplies: Array<{ _id: string; name: string; sku?: string | null; referenceCost: number; unit: string }>;
   products: Array<{ _id: string; name: string; sku?: string; barcode?: string; type?: string; costPrice?: number; stock?: number; purchaseUnit?: string; purchaseEquivalentQty?: number; unitOfMeasure?: string; presentations?: Array<{ _id: string; name: string; unitOfMeasure: string; equivalentQty: number; price: number; isActive?: boolean }> }>;
   currency: string;
   showToast: (opts: { variant: "success" | "error" | "warning" | "info"; message: string }) => void;
@@ -210,41 +193,17 @@ function CreatePurchaseModal({
   } = useBarcodeScanner({
     onScan: (code: string) => {
       const upper = code.toUpperCase();
-      const supply = supplies.find((s) => s.sku && s.sku.toUpperCase() === upper);
-      if (supply) {
-        setForm((prev) => {
-          const items = [...prev.items];
-          const emptyIdx = items.findIndex((it) => it.itemKind === "supply" && !it.supplyId);
-          const idx = emptyIdx >= 0 ? emptyIdx : items.length;
-          if (emptyIdx < 0) {
-            items.push(emptyLineItem());
-          }
-          items[idx] = {
-            ...items[idx],
-            itemKind: "supply",
-            supplyId: supply._id,
-            supplyName: supply.name,
-            quantity: "1",
-            unitCost: String(supply.referenceCost || 0),
-          };
-          return { ...prev, items };
-        });
-        showToast({ variant: "success", message: `Insumo agregado: ${supply.name}` });
-        setShowScanner(false);
-        return;
-      }
       const product = products.find((p) => (p.sku && p.sku.toUpperCase() === upper) || (p.barcode && p.barcode.toUpperCase() === upper));
       if (product) {
         setForm((prev) => {
           const items = [...prev.items];
-          const emptyIdx = items.findIndex((it) => it.itemKind === "product" && !it.productId);
+          const emptyIdx = items.findIndex((it) => !it.productId);
           const idx = emptyIdx >= 0 ? emptyIdx : items.length;
           if (emptyIdx < 0) {
             items.push(emptyLineItem());
           }
           items[idx] = {
             ...items[idx],
-            itemKind: "product",
             productId: product._id,
             productName: product.name,
             purchaseUnit: product.purchaseUnit || "",
@@ -272,25 +231,6 @@ function CreatePurchaseModal({
     setForm((prev) => {
       const items = [...prev.items];
       items[idx] = { ...items[idx], [field]: value };
-      return { ...prev, items };
-    });
-  };
-
-  const setItemKind = (idx: number, kind: "supply" | "product") => {
-    setForm((prev) => {
-      const items = [...prev.items];
-      items[idx] = {
-        ...items[idx],
-        itemKind: kind,
-        supplyId: kind === "product" ? "" : items[idx].supplyId,
-        supplyName: kind === "product" ? "" : items[idx].supplyName,
-        productId: kind === "supply" ? "" : items[idx].productId,
-        productName: kind === "supply" ? "" : items[idx].productName,
-        presentationId: kind === "supply" ? "" : items[idx].presentationId,
-        presentationName: kind === "supply" ? "" : items[idx].presentationName,
-        purchaseUnit: kind === "supply" ? "" : items[idx].purchaseUnit,
-        purchaseEquivalentQty: kind === "supply" ? "1" : items[idx].purchaseEquivalentQty,
-      };
       return { ...prev, items };
     });
   };
@@ -434,11 +374,9 @@ function CreatePurchaseModal({
                 item={item}
                 index={idx}
                 itemsLength={form.items.length}
-                supplies={supplies}
                 products={products}
                 currency={currency}
                 updateItem={updateItem}
-                setItemKind={setItemKind}
                 removeItem={removeLine}
               />
             ))}
@@ -581,7 +519,6 @@ export default function PurchasesPage() {
 
   const { purchase: detailPurchase, loading: detailLoading } = usePurchaseDetail(purchaseId);
   const payPurchaseMutation = usePayPurchase();
-  const { supplies } = useSupplies();
   const { products } = useProducts();
   const { suppliers } = useSuppliers();
 
@@ -1172,7 +1109,6 @@ export default function PurchasesPage() {
           products={products}
           submitting={isCreating}
           suppliers={suppliers}
-          supplies={supplies}
           showToast={showToast}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreate}

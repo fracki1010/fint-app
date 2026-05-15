@@ -87,11 +87,16 @@ export default function BillOfMaterialsPage() {
       const payload: CreateBillOfMaterialPayload = {
         name: form.name.trim(),
         productId: form.productId || null,
+        presentationId: form.presentationId || null,
         yieldQuantity: parseFloat(form.yieldQuantity) || 1,
         notes: form.notes,
         ingredients: form.ingredients
           .filter((r) => r.productId && parseFloat(r.quantity) > 0)
-          .map((r) => ({ product: r.productId, quantity: parseFloat(r.quantity) })),
+          .map((r) => ({
+            product: r.productId,
+            presentationId: r.presentationId || null,
+            quantity: parseFloat(r.quantity),
+          })),
       };
       await createBillOfMaterial(payload);
       showToast({ variant: "success", message: "Lista de Materiales creada" });

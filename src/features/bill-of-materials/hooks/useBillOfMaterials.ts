@@ -5,12 +5,14 @@ import { BillOfMaterial, ProduceResult, ProductionLog } from "@shared/types";
 
 export interface BomIngredientPayload {
   product: string;
+  presentationId?: string | null;
   quantity: number;
 }
 
 export interface CreateBillOfMaterialPayload {
   name: string;
   productId?: string | null;
+  presentationId?: string | null;
   yieldQuantity?: number;
   ingredients?: BomIngredientPayload[];
   notes?: string;
@@ -19,6 +21,7 @@ export interface CreateBillOfMaterialPayload {
 export interface UpdateBillOfMaterialPayload {
   name?: string;
   productId?: string | null;
+  presentationId?: string | null;
   yieldQuantity?: number;
   ingredients?: BomIngredientPayload[];
   notes?: string;

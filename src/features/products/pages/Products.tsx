@@ -45,9 +45,30 @@ function slugifyText(value: string) {
     .toUpperCase();
 }
 
+/**
+ * Genera un acrónimo inteligente a partir del nombre.
+ * Toma la primera letra de cada palabra, o las primeras 3 letras si es una sola palabra.
+ * Ej: "Alimento Balanceado Premium" → "ABP", "Harina" → "HAR"
+ */
+function buildNameAcronym(name: string, maxLen = 5): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "ITEM";
+  if (words.length === 1) {
+    // Palabra única: primeras N letras
+    return slugifyText(words[0]).replace(/-/g, "").slice(0, maxLen) || "ITEM";
+  }
+  // Múltiples palabras: primera letra de cada una
+  const acronym = words
+    .filter((w) => w.length > 1 || w === words[0]) // skip artículos (pero incluir primera palabra)
+    .map((w) => slugifyText(w)[0])
+    .join("")
+    .slice(0, maxLen);
+  return acronym || "ITEM";
+}
+
 function buildSuggestedSku(name: string, categories: string[], existingSkus: string[]) {
   const categoryPrefix = slugifyText(categories[0] || "GEN").slice(0, 3) || "GEN";
-  const namePrefix = slugifyText(name).replace(/-/g, "").slice(0, 5) || "ITEM";
+  const namePrefix = buildNameAcronym(name, 5);
   const base = `${categoryPrefix}-${namePrefix}`;
 
   let candidate = base;
@@ -108,14 +129,10 @@ export default function ProductsPage() {
         costPrice: selectedProduct.costPrice?.toString() || "",
         stock: selectedProduct.stock?.toString() || "0",
         minStock: selectedProduct.minStock?.toString() || "0",
-        categories:
-          selectedProduct.categories && selectedProduct.categories.length > 0
-            ? selectedProduct.categories
-            : selectedProduct.category
-              ? [selectedProduct.category]
-              : [],
         categoryInput: "",
         unitOfMeasure: selectedProduct.unitOfMeasure || "unidad",
+        categories: selectedProduct.categories || [],
+        type: selectedProduct.type || "finished",
         presentations: (selectedProduct.presentations || []).map((p) => ({
           _id: p._id,
           sku: p.sku || "",
@@ -256,6 +273,7 @@ export default function ProductsPage() {
     category: formData.categories[0] || undefined,
     categories: formData.categories,
     unitOfMeasure: formData.unitOfMeasure || "unidad",
+    type: formData.type || undefined,
     presentations: formData.presentations.map((p) => ({
       ...(p._id ? { _id: p._id } : {}),
       sku: p.sku || undefined,
@@ -275,7 +293,7 @@ export default function ProductsPage() {
       showToast({ variant: "warning", message: "Completa al menos el nombre." });
       return;
     }
-    if (formData.presentations.length > 0) {
+    if (formData.type !== "raw_material" && formData.presentations.length > 0) {
       const invalidPresentation = formData.presentations.find((p) => !p.name.trim());
       if (invalidPresentation) {
         showToast({ variant: "warning", message: "Todas las presentaciones deben tener un nombre." });
@@ -291,7 +309,7 @@ export default function ProductsPage() {
       await createProduct(buildPayload());
       resetForm();
       setShowCreateModal(false);
-      showToast({ variant: "success", message: "Producto creado correctamente." });
+      showToast({ variant: "success", message: "Artículo creado correctamente." });
     } catch (error) {
       showToast({ variant: "error", message: getErrorMessage(error, "No se pudo crear el producto.") });
     }
@@ -418,7 +436,7 @@ export default function ProductsPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="section-kicker">Inventario</p>
-            <h1 className="page-title">Catálogo</h1>
+            <h1 className="page-title">Catálogo de artículos</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -518,10 +536,17 @@ export default function ProductsPage() {
                 ?.find(p => p._id === product.defaultPresentationId && p.isActive !== false)
                 || product.presentations?.find(p => p.isActive !== false)
                 || null;
-              const displayPrice = defaultPres ? defaultPres.price : (product.price || 0);
-              const displayCost = defaultPres && product.costPrice != null
-                ? product.costPrice * (defaultPres.equivalentQty || 1)
-                : product.costPrice;
+              const isRawMaterial = product.type === "raw_material";
+              const displayPrice = defaultPres
+                ? isRawMaterial
+                  ? (defaultPres.cost || 0)
+                  : defaultPres.price
+                : (product.price || 0);
+              const displayCost = isRawMaterial
+                ? (defaultPres?.cost || null)
+                : (defaultPres && product.costPrice != null
+                  ? product.costPrice * (defaultPres.equivalentQty || 1)
+                  : undefined);
               const displayStock = defaultPres ? getAvailableStock(product, defaultPres) : product.stock;
               const displayUnit = defaultPres?.unitOfMeasure || product.unitOfMeasure || "u.";
               const isLow = displayStock <= (product.minStock || settings?.lowStockThreshold || 5);
