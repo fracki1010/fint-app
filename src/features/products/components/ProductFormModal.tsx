@@ -133,7 +133,7 @@ export function ProductFormModal({
   onChange,
   onAddCategory,
   onRemoveCategory,
-  existingCategories: _existingCategories,
+  existingCategories,
   suggestedSku,
   onUseSuggestedSku,
   onClose,
@@ -362,11 +362,35 @@ export function ProductFormModal({
                   value={formData.categoryInput}
                   onChange={(e) => onChange("categoryInput", e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); onAddCategory(); } }}
+                  list="category-suggestions"
                 />
+                <datalist id="category-suggestions">
+                  {existingCategories.filter(c => !formData.categories.includes(c)).map((cat) => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
                 <button className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground" type="button" onClick={onAddCategory}>
                   +
                 </button>
               </div>
+              {/* Existing categories as quick-add chips */}
+              {existingCategories.length > 0 && formData.categories.length < existingCategories.length && (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {existingCategories
+                    .filter(cat => !formData.categories.includes(cat))
+                    .slice(0, 8)
+                    .map((cat) => (
+                      <button
+                        key={cat}
+                        className="inline-flex items-center gap-1 rounded-full border border-divider/30 px-2.5 py-1 text-[11px] font-medium text-default-500 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
+                        type="button"
+                        onClick={() => { onChange("categoryInput", cat); setTimeout(() => onAddCategory(), 0); }}
+                      >
+                        + {cat}
+                      </button>
+                    ))}
+                </div>
+              )}
               {formData.categories.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {formData.categories.map((cat) => (
@@ -456,11 +480,53 @@ export function ProductFormModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Stock inicial</span>
-                <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.stock} onChange={(e) => onChange("stock", e.target.value)} />
+                <div className="flex gap-2">
+                  <input className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.stock} onChange={(e) => onChange("stock", e.target.value)} />
+                  {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                    <select
+                      className="corp-input w-24 shrink-0 rounded-xl border-divider/25 bg-content1 px-2 py-2.5 text-xs text-default-500"
+                      value="base"
+                      onChange={(e) => {
+                        if (e.target.value === "base") return;
+                        const pres = formData.presentations.find(p => p._id === e.target.value || p.name === e.target.value);
+                        if (pres && Number(formData.stock) > 0) {
+                          const baseQty = Number(formData.stock) * Number(pres.equivalentQty || 1);
+                          onChange("stock", String(Math.round(baseQty * 100) / 100));
+                        }
+                      }}
+                    >
+                      <option value="base">{formData.unitOfMeasure || "ud"}</option>
+                      {formData.presentations.filter(p => p.isActive !== false).map((p) => (
+                        <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </label>
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Stock mínimo</span>
-                <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.minStock} onChange={(e) => onChange("minStock", e.target.value)} />
+                <div className="flex gap-2">
+                  <input className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.minStock} onChange={(e) => onChange("minStock", e.target.value)} />
+                  {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                    <select
+                      className="corp-input w-24 shrink-0 rounded-xl border-divider/25 bg-content1 px-2 py-2.5 text-xs text-default-500"
+                      value="base"
+                      onChange={(e) => {
+                        if (e.target.value === "base") return;
+                        const pres = formData.presentations.find(p => p._id === e.target.value || p.name === e.target.value);
+                        if (pres && Number(formData.minStock) > 0) {
+                          const baseQty = Number(formData.minStock) * Number(pres.equivalentQty || 1);
+                          onChange("minStock", String(Math.round(baseQty * 100) / 100));
+                        }
+                      }}
+                    >
+                      <option value="base">{formData.unitOfMeasure || "ud"}</option>
+                      {formData.presentations.filter(p => p.isActive !== false).map((p) => (
+                        <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </label>
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Unidad base</span>
