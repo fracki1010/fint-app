@@ -9,6 +9,8 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -17,7 +19,11 @@ import {
   FinancialLoadingState,
 } from "@features/financial/components/FinancialState";
 import { useTreasuryCashFlow, useTreasuryOverview } from "@features/financial/hooks/useTreasury";
+import { useCashMovements, useCreateCashMovement, useDeleteCashMovement } from "@features/financial/hooks/useCashMovements";
 import { formatCurrency } from "@shared/utils/currency";
+import { useAppToast } from "@features/notifications/components/AppToast";
+import { getErrorMessage } from "@shared/utils/errors";
+import CashMovementForm from "@features/financial/components/CashMovementForm";
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 
@@ -149,6 +155,11 @@ export default function TreasuryDashboard() {
 
   const overview = useTreasuryOverview(from, to);
   const cashFlow = useTreasuryCashFlow(from, to, "month");
+  const { data: cashMovements, isLoading: movLoading } = useCashMovements({ from, to, limit: 10 });
+  const createMovement = useCreateCashMovement();
+  const deleteMovement = useDeleteCashMovement();
+  const { showToast } = useAppToast();
+  const [showMovForm, setShowMovForm] = useState(false);
 
   const handleFromChange = (value: string) => {
     setFromInput(value);
@@ -461,6 +472,108 @@ export default function TreasuryDashboard() {
           </article>
         </>
       )}
+
+      {/* ── Movimientos manuales ─────────────────────────── */}
+      <article className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="financial-section-title">Movimientos de caja</h2>
+            <p className="financial-section-subtitle">Gastos e ingresos no asociados a compras/ventas</p>
+          </div>
+          <button
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-primary/90"
+            type="button"
+            onClick={() => setShowMovForm(true)}
+          >
+            <Plus size={14} />
+            Nuevo movimiento
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-divider/15 bg-gradient-to-br from-content1 to-content2/40">
+          {movLoading ? (
+            <div className="py-8 text-center text-sm text-default-400">Cargando...</div>
+          ) : !cashMovements?.movements?.length ? (
+            <div className="py-8 text-center">
+              <Wallet size={24} className="mx-auto mb-2 text-default-300" />
+              <p className="text-sm text-default-500">Sin movimientos manuales</p>
+              <p className="mt-1 text-xs text-default-400">Registrá gastos como sueldos, servicios, etc.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-divider/10">
+              {cashMovements.movements.map((mov) => (
+                <div key={mov._id} className="flex items-center gap-3 px-4 py-3 hover:bg-content2/30 transition-colors group">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    mov.type === "expense" ? "bg-danger/10 text-danger" : "bg-success/10 text-success"
+                  }`}>
+                    {mov.type === "expense" ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground capitalize">{mov.category}</p>
+                      {mov.description && (
+                        <span className="truncate text-xs text-default-400">· {mov.description}</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-default-400">{mov.date}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-bold ${mov.type === "expense" ? "text-danger" : "text-success"}`}>
+                      {mov.type === "expense" ? "−" : "+"}{formatCurrency(mov.amount, "ARS")}
+                    </p>
+                  </div>
+                  <button
+                    className="shrink-0 rounded-lg p-1.5 text-default-400 opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger/10 transition"
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("¿Eliminar este movimiento?")) {
+                        deleteMovement.mutate(mov._id, {
+                          onError: (err) => showToast({ variant: "error", message: getErrorMessage(err, "Error al eliminar") }),
+                        });
+                      }
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {cashMovements && cashMovements.total > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl bg-content2/40 px-4 py-3 text-center">
+              <p className="text-[11px] text-default-400 font-semibold uppercase tracking-wider">Total ingresos</p>
+              <p className="text-lg font-bold text-success">{formatCurrency(cashMovements.incomeTotal, "ARS")}</p>
+            </div>
+            <div className="rounded-xl bg-content2/40 px-4 py-3 text-center">
+              <p className="text-[11px] text-default-400 font-semibold uppercase tracking-wider">Total egresos</p>
+              <p className="text-lg font-bold text-danger">{formatCurrency(cashMovements.expenseTotal, "ARS")}</p>
+            </div>
+            <div className="rounded-xl bg-content2/40 px-4 py-3 text-center">
+              <p className="text-[11px] text-default-400 font-semibold uppercase tracking-wider">Balance</p>
+              <p className={`text-lg font-bold ${cashMovements.balance >= 0 ? "text-primary" : "text-danger"}`}>
+                {formatCurrency(cashMovements.balance, "ARS")}
+              </p>
+            </div>
+          </div>
+        )}
+      </article>
+
+      {/* ── Cash Movement Form ── */}
+      <CashMovementForm
+        isOpen={showMovForm}
+        isDesktop={true}
+        submitting={createMovement.isPending}
+        onClose={() => setShowMovForm(false)}
+        onSubmit={(data) => {
+          createMovement.mutate(data, {
+            onSuccess: () => { setShowMovForm(false); showToast({ variant: "success", message: "Movimiento registrado" }); },
+            onError: (err) => showToast({ variant: "error", message: getErrorMessage(err, "Error al crear movimiento") }),
+          });
+        }}
+      />
     </section>
   );
 }

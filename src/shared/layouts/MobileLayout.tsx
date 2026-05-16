@@ -24,6 +24,7 @@ import {
   Building2,
   Shield,
   DollarSign,
+  Wallet,
   X,
   CheckCheck,
   Sun,
@@ -76,6 +77,7 @@ export default function MobileLayout() {
     { path: "/financial/accounting", label: "Contabilidad", icon: ReceiptText },
     { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
     { path: "/financial/treasury", label: "Tesorería", icon: DollarSign },
+    { path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet },
     { path: "/financial/cost-centers", label: "Centros de Costo", icon: Building2 },
     { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },
   ];

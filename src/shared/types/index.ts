@@ -497,6 +497,48 @@ export interface ProduceResult {
   ingredientsUsed: number;
 }
 
+// ── Tesorería / Movimientos de Caja ────────────────────────
+
+export type CashMovementType = "income" | "expense";
+
+export const CASH_CATEGORIES = [
+  "sueldos",
+  "servicios",
+  "honorarios",
+  "retiro",
+  "impuestos",
+  "alquiler",
+  "fletes",
+  "insumos_oficina",
+  "varios",
+  "deposito",
+  "transferencia_entre_cuentas",
+] as const;
+
+export type CashCategory = (typeof CASH_CATEGORIES)[number];
+
+export interface CashMovement {
+  _id: string;
+  date: string;
+  type: CashMovementType;
+  category: CashCategory;
+  amount: number;
+  description?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CashMovementResponse {
+  movements: CashMovement[];
+  total: number;
+  incomeTotal: number;
+  expenseTotal: number;
+  balance: number;
+  page: number;
+  pages: number;
+}
+
 export interface ProductionLog {
   _id: string;
   billOfMaterial: string;
