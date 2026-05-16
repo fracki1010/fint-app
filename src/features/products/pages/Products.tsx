@@ -548,9 +548,11 @@ export default function ProductsPage() {
                   ? product.costPrice * (defaultPres.equivalentQty || 1)
                   : undefined);
               const displayStock = defaultPres ? getAvailableStock(product, defaultPres) : product.stock;
+              // Compare stock in base units for alerts, display in presentation units
+              const stockForAlert = product.stock;
+              const isLow = stockForAlert <= (product.minStock || settings?.lowStockThreshold || 5);
+              const isOut = stockForAlert <= 0;
               const displayUnit = defaultPres?.unitOfMeasure || product.unitOfMeasure || "u.";
-              const isLow = displayStock <= (product.minStock || settings?.lowStockThreshold || 5);
-              const isOut = displayStock <= 0;
               const productCats =
                 product.categories && product.categories.length > 0
                   ? product.categories
