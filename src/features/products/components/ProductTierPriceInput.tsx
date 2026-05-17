@@ -18,15 +18,15 @@ interface ProductTierPriceInputProps {
   onChange: (tier: PriceTier, value: string) => void;
   errors?: Partial<Record<PriceTier, string>>;
   /** Presentations to use as reference for loading prices */
-  presentations?: Array<{ _id?: string; name: string; price?: number; equivalentQty: number; unitOfMeasure?: string; isActive?: boolean }>;
+  presentations?: Array<{ _id?: string; name: string; price?: number; cost?: number; equivalentQty: number; unitOfMeasure?: string; isActive?: boolean }>;
 }
 
 const DEFAULT_TIER_CONFIG: Record<PriceTier, TierConfig> = {
-  retail: { name: "Minorista", enabled: true, percentage: 100 },
-  wholesale: { name: "Mayorista", enabled: true, percentage: 85 },
-  distributor: { name: "Distribuidor", enabled: true, percentage: 75 },
-  premium: { name: "Premium", enabled: true, percentage: 120 },
-  especial: { name: "Especial", enabled: true, percentage: 90 },
+  retail: { name: "Lista 1", enabled: true, percentage: 100 },
+  wholesale: { name: "Lista 2", enabled: true, percentage: 85 },
+  distributor: { name: "Lista 3", enabled: true, percentage: 75 },
+  premium: { name: "Lista 4", enabled: true, percentage: 120 },
+  especial: { name: "Lista 5", enabled: true, percentage: 90 },
 };
 
 const TIER_ORDER: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
@@ -148,7 +148,9 @@ export function ProductTierPriceInput({
 
           const value = displayValue(tier);
           const price = parseFloat(value) || 0;
-          const margin = hasCostPrice ? calculateMargin(price, costPrice) : 0;
+          // Use presentation cost if available, otherwise base costPrice
+          const effectiveCost = pres ? (pres.cost || costPrice * (pres.equivalentQty || 1)) : costPrice;
+          const margin = hasCostPrice ? calculateMargin(price, effectiveCost) : 0;
           const isValid = !errors?.[tier];
           const isProfitable = margin > 0;
 
@@ -235,11 +237,11 @@ export function ProductTierPriceInput({
               )}
 
               {/* Warning for below cost */}
-              {hasCostPrice && price > 0 && price < costPrice && (
+              {hasCostPrice && price > 0 && price < effectiveCost && (
                 <div className="flex items-center gap-2 rounded-lg bg-danger/10 px-3 py-2 text-danger">
                   <AlertCircle size={14} />
                   <span className="text-xs font-medium">
-                    Precio menor al costo ({formatCompactCurrency(costPrice, currency)})
+                    Precio menor al costo ({formatCompactCurrency(effectiveCost, currency)})
                   </span>
                 </div>
               )}

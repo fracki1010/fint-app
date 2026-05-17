@@ -433,6 +433,10 @@ export default function TreasuryDashboard() {
             <div className="flex items-center gap-3">
               <Banknote className="financial-icon text-default-500" />
               <h2 className="financial-section-title">Cuentas Bancarias</h2>
+              <a href="/banking" className="ml-auto text-xs font-bold text-primary hover:text-primary/80 transition flex items-center gap-1">
+                <Plus size={14} />
+                Nueva
+              </a>
             </div>
 
             <div className="mt-4 space-y-2">

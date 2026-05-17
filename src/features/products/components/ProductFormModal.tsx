@@ -166,6 +166,7 @@ export function ProductFormModal({
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scanningPresentationIndex, setScanningPresentationIndex] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"etiqueta" | "precios" | "inventario" | "unidades">("etiqueta");
 
   const {
     state: barcodeState,
@@ -251,6 +252,31 @@ export function ProductFormModal({
         </div>
       </div>
 
+      {/* ── Tabs ── */}
+      <div className="border-b border-divider/10 px-5 sm:px-7">
+        <div className="flex gap-1">
+          {[
+            { id: "etiqueta" as const, label: "Etiqueta" },
+            { id: "precios" as const, label: "Precios" },
+            { id: "inventario" as const, label: "Inventario" },
+            { id: "unidades" as const, label: "U. Alternativas" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={`px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] ${
+                activeTab === tab.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-default-400 hover:text-foreground"
+              }`}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Scrollable body ── */}
       <div
         ref={formScrollRef}
@@ -258,6 +284,7 @@ export function ProductFormModal({
         style={{ paddingBottom: `calc(1.5rem + ${keyboardInset}px)` }}
       >
         {/* ═══════ ETIQUETA DEL PRODUCTO ═══════ */}
+        {activeTab === "etiqueta" && (
         <div className="space-y-5">
           <div className="flex items-center gap-2.5">
             <div className="h-px flex-1 bg-divider/20" />
@@ -409,8 +436,10 @@ export function ProductFormModal({
             </div>
           </div>
         </div>
+      )}
 
         {/* ═══════ PRECIOS ═══════ */}
+        {activeTab === "precios" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="h-px flex-1 bg-divider/20" />
@@ -419,34 +448,19 @@ export function ProductFormModal({
           </div>
 
           <div className="rounded-2xl border border-divider/20 bg-gradient-to-br from-content1 to-content2/20 p-5 shadow-sm space-y-4">
+            {formData.presentations.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="text-sm font-medium text-default-500">Creá una unidad alternativa primero</p>
+                <p className="mt-1 text-xs text-default-400">Andá a la pestaña "U. Alternativas" y agregá al menos un formato</p>
+              </div>
+            ) : (
+            <>
             <label className="block">
               <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Costo</span>
               <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" step="0.01" type="number" value={formData.costPrice} onChange={(e) => onChange("costPrice", e.target.value)} />
               <p className="mt-1 text-[11px] text-default-400">
-                {formData.type === "raw_material" ? "Costo de la materia prima" : "Para calcular margen de ganancia"}
+                {formData.type === "raw_material" ? "Costo de la materia prima" : "Para calcular margen"}
               </p>
-              {/* Cost calculations when there are presentations with prices */}
-              {formData.type !== "raw_material" && formData.costPrice && Number(formData.costPrice) > 0 && formData.presentations.length > 0 && (
-                <div className="mt-3 space-y-1.5 rounded-lg bg-primary/5 border border-primary/15 p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-default-400">Márgenes estimados</p>
-                  {formData.presentations.filter(p => p.isActive !== false && Number(p.price) > 0).map((pres, i) => {
-                    const costTotal = Number(formData.costPrice) * Number(pres.equivalentQty || 1);
-                    const price = Number(pres.price);
-                    const margin = ((price - costTotal) / price) * 100;
-                    return (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <span className="text-default-500">{pres.name || `Formato ${i + 1}`}</span>
-                        <span className={margin > 0 ? "font-bold text-success" : "font-bold text-danger"}>
-                          {margin.toFixed(1)}%
-                          <span className="ml-1.5 text-[10px] font-normal text-default-400">
-                            ({formatCompactCurrency(costTotal, currency)} csto · {formatCompactCurrency(price - costTotal, currency)} gan)
-                          </span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </label>
 
             <ProductTierPriceInput
@@ -465,10 +479,14 @@ export function ProductFormModal({
                 onChange(`priceTier_${tier}` as keyof ProductFormState, value);
               }}
             />
+            </>
+          )}
           </div>
-        </div>
+      </div>
+      )}
 
         {/* ═══════ INVENTARIO ═══════ */}
+        {activeTab === "inventario" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="h-px flex-1 bg-divider/20" />
@@ -477,56 +495,66 @@ export function ProductFormModal({
           </div>
 
           <div className="rounded-2xl border border-divider/20 bg-gradient-to-br from-content1 to-content2/20 p-5 shadow-sm">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {formData.presentations.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="text-sm font-medium text-default-500">Creá una unidad alternativa primero</p>
+                <p className="mt-1 text-xs text-default-400">Andá a la pestaña "U. Alternativas" y agregá al menos un formato</p>
+              </div>
+            ) : (
+            <div className="space-y-4">
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Stock inicial</span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <input className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.stock} onChange={(e) => onChange("stock", e.target.value)} />
-                  {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                  {formData.presentations.filter(p => p.isActive !== false).length > 0 ? (
                     <select
-                      className="corp-input w-24 shrink-0 rounded-xl border-divider/25 bg-content1 px-2 py-2.5 text-xs text-default-500"
+                      className="corp-input w-32 shrink-0 rounded-xl border-divider/25 bg-content1 px-3 py-2.5 text-xs text-default-500"
                       value="base"
                       onChange={(e) => {
                         if (e.target.value === "base") return;
                         const pres = formData.presentations.find(p => p._id === e.target.value || p.name === e.target.value);
                         if (pres && Number(formData.stock) > 0) {
-                          const baseQty = Number(formData.stock) * Number(pres.equivalentQty || 1);
-                          onChange("stock", String(Math.round(baseQty * 100) / 100));
+                          const eq = Number(pres.equivalentQty || 1);
+                          onChange("stock", String(Math.round(Number(formData.stock) * eq * 100) / 100));
                         }
                       }}
                     >
-                      <option value="base">{formData.unitOfMeasure || "ud"}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
                     </select>
-                  )}
+                  ) : null}
                 </div>
+                {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                  <p className="mt-1 text-[10px] text-default-400">Stock en unidades de la presentación seleccionada</p>
+                )}
               </label>
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Stock mínimo</span>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <input className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-mono" min="0" type="number" value={formData.minStock} onChange={(e) => onChange("minStock", e.target.value)} />
-                  {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                  {formData.presentations.filter(p => p.isActive !== false).length > 0 ? (
                     <select
-                      className="corp-input w-24 shrink-0 rounded-xl border-divider/25 bg-content1 px-2 py-2.5 text-xs text-default-500"
+                      className="corp-input w-32 shrink-0 rounded-xl border-divider/25 bg-content1 px-3 py-2.5 text-xs text-default-500"
                       value="base"
                       onChange={(e) => {
                         if (e.target.value === "base") return;
                         const pres = formData.presentations.find(p => p._id === e.target.value || p.name === e.target.value);
                         if (pres && Number(formData.minStock) > 0) {
-                          const baseQty = Number(formData.minStock) * Number(pres.equivalentQty || 1);
-                          onChange("minStock", String(Math.round(baseQty * 100) / 100));
+                          const eq = Number(pres.equivalentQty || 1);
+                          onChange("minStock", String(Math.round(Number(formData.minStock) * eq * 100) / 100));
                         }
                       }}
                     >
-                      <option value="base">{formData.unitOfMeasure || "ud"}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
                     </select>
-                  )}
+                  ) : null}
                 </div>
+                {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
+                  <p className="mt-1 text-[10px] text-default-400">Stock mínimo en unidades de la presentación</p>
+                )}
               </label>
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Unidad base</span>
@@ -549,10 +577,13 @@ export function ProductFormModal({
                 </Select>
               </label>
             </div>
+            )}
           </div>
-        </div>
+      </div>
+      )}
 
         {/* ═══════ UNIDADES ALTERNATIVAS ═══════ */}
+        {activeTab === "unidades" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="h-px flex-1 bg-divider/20" />
@@ -669,16 +700,56 @@ export function ProductFormModal({
                     </div>
                   </div>
 
-                  {/* Precio de venta, Costo, Contenido y Unidad */}
+                  {/* Costo, Precio de venta, Contenido y Unidad */}
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-default-500">Precio de venta</label>
-                        <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0" step="0.01" placeholder="Ej: 50000" type="number" value={pres.price} onChange={(e) => onUpdatePresentation(idx, "price", e.target.value)} />
-                      </div>
-                      <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-default-500">Costo de este formato</label>
                         <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0" step="0.01" placeholder="Ej: 35000" type="number" value={pres.cost} onChange={(e) => onUpdatePresentation(idx, "cost", e.target.value)} />
+                        {pres.cost && Number(pres.cost) > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <input
+                                className="corp-input w-24 rounded-lg border-divider/25 bg-content1 px-3 py-2 text-sm font-mono text-right"
+                                min="0" max="500" step="0.001" type="number" placeholder="30"
+                                value={(() => {
+                                  const c = Number(pres.cost);
+                                  const p = Number(pres.price);
+                                  if (c > 0 && p > 0) return Math.round(((p - c) / c) * 1000) / 10;
+                                  return "";
+                                })()}
+                                onChange={(e) => {
+                                  const m = Number(e.target.value);
+                                  const c = Number(pres.cost);
+                                  if (m > 0 && c > 0) {
+                                    onUpdatePresentation(idx, "price", String(Math.round(c * (1 + m / 100) * 100) / 100));
+                                  }
+                                }}
+                              />
+                              <span className="text-xs text-default-400">% Markup (× costo)</span>
+                            </div>
+                            {(() => {
+                              const c = Number(pres.cost);
+                              const p = Number(pres.price);
+                              if (c > 0 && p > 0) {
+                                const markup = ((p - c) / c) * 100;
+                                const margin = ((p - c) / p) * 100;
+                                return (
+                                  <p className="text-[11px] text-default-500">
+                                    <span className="font-semibold text-foreground">{markup.toFixed(1)}%</span> <span className="text-default-400">Markup</span>
+                                    <span className="mx-1.5 text-default-300">·</span>
+                                    <span className={`font-semibold ${margin >= 0 ? "text-success" : "text-danger"}`}>{margin.toFixed(1)}%</span> <span className="text-default-400">Margen</span>
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-default-500">Precio de venta</label>
+                        <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0" step="0.01" placeholder="Ej: 50000" type="number" value={pres.price} onChange={(e) => onUpdatePresentation(idx, "price", e.target.value)} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -808,6 +879,7 @@ export function ProductFormModal({
             })()}
           </div>
         </div>
+      )}
       </div>
 
       {/* ── Barcode Scanner (overlay) ── */}
