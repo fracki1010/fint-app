@@ -132,11 +132,11 @@ export function getTierDisplayName(
   }
 
   const defaultNames: Record<PriceTier, string> = {
-    retail: "Minorista",
-    wholesale: "Mayorista",
-    distributor: "Distribuidor",
-    premium: "Premium",
-    especial: "Especial",
+    retail: "Lista 1",
+    wholesale: "Lista 2",
+    distributor: "Lista 3",
+    premium: "Lista 4",
+    especial: "Lista 5",
   };
 
   return defaultNames[tier] || tier;

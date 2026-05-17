@@ -24,16 +24,10 @@ import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planLabels: Record<string, string> = {
   app_base: "App Base",
-  essential: "Essential",
-  business: "Business",
-  enterprise: "Enterprise",
 };
 
 const planColors: Record<string, string> = {
   app_base: "bg-default-200/50 text-default-500 border-default-200/50",
-  essential: "bg-default-200/50 text-default-500 border-default-200/50",
-  business: "bg-primary/15 text-primary border-primary/20",
-  enterprise: "bg-purple-500/15 text-purple-400 border-purple-500/20",
 };
 
 const statusColors: Record<string, string> = {
