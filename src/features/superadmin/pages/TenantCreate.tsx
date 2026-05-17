@@ -14,25 +14,11 @@ import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const plans = [
   {
-    id: "essential",
-    name: "Essential",
-    price: 2,
-    description: "Para kioscos y negocios pequeños",
-    features: ["3 usuarios", "200 productos", "500 ventas/mes", "Soporte email"],
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: 3,
-    description: "Para PyMEs en crecimiento",
-    features: ["10 usuarios", "Productos ilimitados", "Ventas ilimitadas", "Centro financiero"],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: 8,
-    description: "Para empresas grandes",
-    features: ["Usuarios ilimitados", "Todo ilimitado", "Soporte 24/7", "API access"],
+    id: "app_base",
+    name: "App Base",
+    price: 200,
+    description: "Base operativa para todo negocio",
+    features: ["1 usuario", "200 productos", "500 ventas/mes", "Soporte email", "Cta. cte. clientes/proveedores", "Presupuestos", "Conciliación bancaria"],
   },
 ];
 
@@ -46,7 +32,8 @@ export default function TenantCreate() {
     adminEmail: "",
     adminName: "",
     adminPhone: "",
-    plan: "business",
+    plan: "app_base",
+    complements: [] as string[],
     passwordType: "auto",
     customPassword: "",
     sendWelcomeEmail: false,
@@ -68,6 +55,7 @@ export default function TenantCreate() {
         adminName: data.adminName,
         adminPhone: data.adminPhone,
         plan: data.plan,
+        complements: data.complements,
         passwordType: data.passwordType,
         customPassword: data.passwordType === "custom" ? data.customPassword : undefined,
         sendWelcomeEmail: data.sendWelcomeEmail,
@@ -153,7 +141,8 @@ export default function TenantCreate() {
                     adminEmail: "",
                     adminName: "",
                     adminPhone: "",
-                    plan: "business",
+                    plan: "app_base",
+                    complements: [],
                     passwordType: "auto",
                     customPassword: "",
                     sendWelcomeEmail: false,
@@ -264,7 +253,7 @@ export default function TenantCreate() {
           {/* Plan Selection */}
           <div className="rounded-2xl border border-divider bg-content1 p-6">
             <h2 className="text-lg font-bold text-foreground">Plan</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid gap-4 sm:grid-cols-1">
               {plans.map((plan) => (
                 <button
                   key={plan.id}
