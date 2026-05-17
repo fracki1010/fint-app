@@ -95,6 +95,7 @@ export const APP_BASE = {
     "supplier_account",
     "quotes",
     "banking",
+    "financial_center",
   ],
   limits: {
     maxUsers: 1,
