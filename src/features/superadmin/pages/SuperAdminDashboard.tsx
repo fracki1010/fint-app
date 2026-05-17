@@ -4,15 +4,11 @@ import { useSuperAdminAnalytics, useTenants } from "@features/superadmin/hooks/u
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planColors: Record<string, string> = {
-  essential: "bg-default-200/50 text-default-500",
-  business: "bg-primary/15 text-primary",
-  enterprise: "bg-purple-500/15 text-purple-400",
+  app_base: "bg-default-200/50 text-default-500",
 };
 
 const planLabels: Record<string, string> = {
-  essential: "Essential",
-  business: "Business",
-  enterprise: "Enterprise",
+  app_base: "App Base",
 };
 
 export default function SuperAdminDashboard() {
@@ -138,7 +134,7 @@ export default function SuperAdminDashboard() {
                     </div>
                     <div className="mt-1 h-2 w-full rounded-full bg-content2">
                       <div
-                        className={`h-2 rounded-full ${plan === "essential" ? "bg-default-400" : plan === "business" ? "bg-primary" : "bg-purple-500"}`}
+                        className={`h-2 rounded-full ${plan === "app_base" ? "bg-default-400" : "bg-primary"}`}
                         style={{ width: `${data.percentage}%` }}
                       />
                     </div>

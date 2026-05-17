@@ -3,7 +3,8 @@ export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectu
 export interface TenantInfo {
   _id: string;
   name: string;
-  plan: "essential" | "business" | "enterprise";
+  plan: string;
+  complements: string[];
   status: string;
   limits: {
     maxUsers: number;

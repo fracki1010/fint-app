@@ -3,6 +3,7 @@ import api from "@shared/api/axios";
 
 export interface TenantPlanInfo {
   current: string;
+  complements: string[];
   status: string;
   limits: {
     maxUsers: number;
@@ -26,24 +27,26 @@ export interface TenantPlanInfo {
   trialEndsAt?: string;
 }
 
-export interface AvailablePlan {
+export interface AvailableComplement {
   id: string;
   name: string;
   price: number;
-  maxUsers: number;
-  maxProducts: number;
-  maxOrdersPerMonth: number;
   features: string[];
-  isCurrent: boolean;
+  limits?: {
+    maxUsers?: number;
+    maxProducts?: number;
+    maxOrdersPerMonth?: number;
+  };
 }
 
 function normalizePlanInfo(plan: any): TenantPlanInfo | undefined {
   if (!plan) return undefined;
   return {
-    current: plan.current || "essential",
+    current: plan.current || "app_base",
+    complements: plan.complements || [],
     status: plan.status || "active",
     limits: {
-      maxUsers: plan.limits?.maxUsers ?? 3,
+      maxUsers: plan.limits?.maxUsers ?? 1,
       maxProducts: plan.limits?.maxProducts ?? 200,
       maxOrdersPerMonth: plan.limits?.maxOrdersPerMonth ?? 500,
     },
@@ -75,18 +78,18 @@ export function useTenantPlan() {
 
   return {
     plan: normalizePlanInfo(data?.plan),
-    availablePlans: (data?.availablePlans as AvailablePlan[]) || [],
+    availableComplements: (data?.availableComplements as AvailableComplement[]) || [],
     loading: isLoading,
     error: isError ? (error?.message || "Error al cargar el plan") : null,
   };
 }
 
-export function useChangePlan() {
+export function useActivateComplements() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (plan: string) => {
-      const response = await api.post("/tenant/change-plan", { plan });
+    mutationFn: async (complements: string[]) => {
+      const response = await api.post("/tenant/activate-complements", { complements });
       return response.data;
     },
     onSuccess: () => {

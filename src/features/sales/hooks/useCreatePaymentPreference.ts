@@ -9,8 +9,8 @@ export interface CreatePreferenceResponse {
 
 export function useCreatePaymentPreference() {
   return useMutation({
-    mutationFn: async (plan: string) => {
-      const response = await api.post("/payments/create-preference", { plan });
+    mutationFn: async (complements: string[]) => {
+      const response = await api.post("/payments/create-preference", { complements });
       // The backend wraps data in { success: true, data: { ... } }
       return (response.data?.data || response.data) as CreatePreferenceResponse;
     },

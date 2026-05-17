@@ -22,6 +22,7 @@ import {
   UserCog,
   LogOut,
   Building2,
+  Landmark,
   Shield,
   DollarSign,
   Wallet,
@@ -31,7 +32,6 @@ import {
   Moon,
   MoreHorizontal,
   Lock,
-  FileText,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-5.svg";
@@ -54,30 +54,40 @@ export default function MobileLayout() {
 
   const operationNav = [
     { path: "/", label: "Inicio", icon: LayoutGrid },
-    { path: "/sales", label: "Ventas", icon: ReceiptText },
-    { path: "/cash-closing", label: "Cierre de Caja", icon: Lock },
-    { path: "/clients", label: "Clientes", icon: Users },
-    { path: "/products", label: "Artículos", icon: ClipboardList },
-    { path: "/inventory", label: "Inventario", icon: Package },
-    { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
-    { path: "/purchases", label: "Compras", icon: ShoppingCart },
-    ...(hasFeature("quotes") ? [{ path: "/quotes", label: "Presupuestos", icon: FileText }] : []),
-    { path: "/suppliers", label: "Proveedores", icon: Truck },
-    ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
-  const accountingNav = [
-    ...(hasFeature("client_account") ? [{ path: "/client-account", label: "Cta. Clientes", icon: CreditCard }] : []),
+  // ── Accordion groups for Essential-style layout ──
+  const comprasNav = [
+    { path: "/purchases", label: "Órdenes de Compra", icon: ShoppingCart },
+    { path: "/suppliers", label: "Proveedores", icon: Truck },
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 }] : []),
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-payments", label: "Órdenes de Pago", icon: DollarSign }] : []),
   ];
 
-  const financialNav = [
+  const ventasNav = [
+    { path: "/sales", label: "General", icon: ReceiptText },
+    { path: "/clients", label: "Clientes", icon: Users },
+    ...(hasFeature("client_account") ? [{ path: "/client-account", label: "Cta. Clientes", icon: CreditCard }] : []),
+  ];
+
+  const stockNav = [
+    { path: "/products", label: "Artículos", icon: ClipboardList },
+    { path: "/inventory", label: "Inventario", icon: Package },
+    { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
+    ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
+  ];
+
+  const tesoreriaNav = [
+    ...(hasFeature("financial_center") ? [{ path: "/financial/treasury", label: "Tesorería", icon: DollarSign }] : []),
+    ...(hasFeature("financial_center") ? [{ path: "/banking", label: "Cuentas", icon: Landmark }] : []),
+    ...(hasFeature("financial_center") ? [{ path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet }] : []),
+    ...(hasFeature("financial_center") ? [{ path: "/cash-closing", label: "Cierre de Caja", icon: Lock }] : []),
+  ];
+
+  const fullFinancialNav = [
     { path: "/financial/dashboard", label: "Panel Financiero", icon: LayoutGrid },
     { path: "/financial/accounting", label: "Contabilidad", icon: ReceiptText },
     { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
-    { path: "/financial/treasury", label: "Tesorería", icon: DollarSign },
-    { path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet },
     { path: "/financial/cost-centers", label: "Centros de Costo", icon: Building2 },
     { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },
   ];
@@ -135,15 +145,18 @@ export default function MobileLayout() {
         </div>
 
         {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-sidebar">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-sidebar">
 
           <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
-          <NavSection label="Cuentas Corrientes" items={accountingNav} isActive={isActive} navigate={navigate} />
-
-          {can.viewFinancial && hasFeature("financial_center") && (
-            <NavSection label="Centro Financiero" items={financialNav} isActive={isActive} navigate={navigate} />
+          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ShoppingCart} />
+          <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ReceiptText} />
+          <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={Package} />
+          {tesoreriaNav.length > 0 && (
+            <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={DollarSign} />
           )}
-
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
+            <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} />
+          )}
           <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={navigate} />
         </nav>
 
@@ -313,25 +326,14 @@ export default function MobileLayout() {
         </div>
 
         <div className="px-3 pb-8 space-y-5">
-          <NavSection
-            label="Operación"
-            items={operationNav.filter(n => !["/", "/products", "/sales", "/clients"].includes(n.path))}
-            isActive={isActive}
-            navigate={handleSheetNav}
-          />
-          <NavSection
-            label="Cuentas Corrientes"
-            items={accountingNav}
-            isActive={isActive}
-            navigate={handleSheetNav}
-          />
-          {can.viewFinancial && hasFeature("financial_center") && (
-            <NavSection
-              label="Centro Financiero"
-              items={financialNav}
-              isActive={isActive}
-              navigate={handleSheetNav}
-            />
+          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={ShoppingCart} />
+          <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={ReceiptText} />
+          <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={Package} />
+          {tesoreriaNav.length > 0 && (
+            <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={DollarSign} />
+          )}
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
+            <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} />
           )}
           <NavSection
             label="Administración"
@@ -388,48 +390,131 @@ function NavSection({
   items,
   isActive,
   navigate,
+  accordion = false,
+  defaultOpen = false,
+  icon: SectionIcon,
 }: {
   label: string;
   items: { path: string; label: string; icon: React.ElementType }[];
   isActive: (path: string) => boolean;
   navigate: (path: string) => void;
+  accordion?: boolean;
+  defaultOpen?: boolean;
+  icon?: React.ElementType;
 }) {
+  const [open, setOpen] = useState(accordion ? defaultOpen : true);
   if (items.length === 0) return null;
+
+  const hasActive = items.some((item) => isActive(item.path));
+
+  if (!accordion) {
+    return (
+      <div>
+        <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">
+          {label}
+        </p>
+        <div className="space-y-0">
+          {items.map((item) => (
+            <NavItem key={item.path} item={item} isActive={isActive} navigate={navigate} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">
-        {label}
-      </p>
-      <div className="space-y-0.5">
-        {items.map((item) => {
-          const active = isActive(item.path);
-          const Icon = item.icon;
+      {/* Accordion header — with fixed icon (no chevron) */}
+      <button
+        className={`group flex w-full items-center gap-3 rounded-lg px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+          hasActive || open
+            ? "bg-primary/10 text-primary"
+            : "text-default-500 hover:bg-white/5 hover:text-foreground"
+        }`}
+        onClick={() => setOpen(!open)}
+        type="button"
+      >
+        {SectionIcon && (
+          <SectionIcon
+            size={15}
+            strokeWidth={hasActive || open ? 2.5 : 2}
+            className={`shrink-0 ${hasActive || open ? "text-primary" : "text-default-400"}`}
+          />
+        )}
+        <span className="flex-1">{label}</span>
+        {!open && items.length > 0 && (
+          <span className="rounded-full bg-content2/80 px-2 py-0.5 text-[10px] font-bold text-default-500">
+            {items.length}
+          </span>
+        )}
+      </button>
 
-          return (
-            <button
-              key={item.path}
-              className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold transition-all ${
-                active
-                  ? "bg-primary/12 text-primary border border-primary/20 shadow-sm shadow-primary/10"
-                  : "text-default-500 hover:bg-white/5 hover:text-foreground border border-transparent"
-              }`}
-              onClick={() => navigate(item.path)}
-              type="button"
-            >
-              <Icon
-                size={15}
-                strokeWidth={active ? 2.5 : 2}
-                className={active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}
-              />
-              <span>{item.label}</span>
-              {active && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Sub-items */}
+      {open && (
+        <div className="ml-2 space-y-0 border-l-2 border-primary/20 pl-3">
+          {items.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.path}
+                className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+                  active
+                    ? "text-primary border-l-2 border-primary -ml-[14px] pl-3"
+                    : "text-default-500 hover:text-foreground"
+                }`}
+                onClick={() => navigate(item.path)}
+                type="button"
+              >
+                <Icon
+                  size={15}
+                  strokeWidth={active ? 2.5 : 2}
+                  className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
+                />
+                <span>{item.label}</span>
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
+  );
+}
+
+function NavItem({
+  item,
+  isActive,
+  navigate,
+}: {
+  item: { path: string; label: string; icon: React.ElementType };
+  isActive: (path: string) => boolean;
+  navigate: (path: string) => void;
+}) {
+  const active = isActive(item.path);
+  const Icon = item.icon;
+
+  return (
+    <button
+      className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+        active
+          ? "text-primary"
+          : "text-default-500 hover:text-foreground"
+      }`}
+      onClick={() => navigate(item.path)}
+      type="button"
+    >
+      <Icon
+        size={15}
+        strokeWidth={active ? 2.5 : 2}
+        className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
+      />
+      <span>{item.label}</span>
+      {active && (
+        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+      )}
+    </button>
   );
 }

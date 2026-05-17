@@ -20,7 +20,7 @@ import {
 } from "@features/products/hooks/useProducts";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useSettings } from "@features/settings/hooks/useSettings";
-import { Product, PriceTier } from "@shared/types";
+import { Product, PriceTier, PriceTiers } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getErrorMessage } from "@shared/utils/errors";
@@ -360,11 +360,18 @@ export default function ProductsPage() {
     if (activeWithData.length === 0) return {};
     const p = activeWithData[0];
     const derivedPrice = Number(p.price) / Number(p.equivalentQty);
-    const update: Record<string, string> = { price: String(Math.round(derivedPrice * 100) / 100) };
+    const roundedPrice = Math.round(derivedPrice * 100) / 100;
+    const update: Record<string, string | PriceTiers> = { price: String(roundedPrice) };
     if (p.cost && Number(p.cost) > 0) {
       const derivedCost = Number(p.cost) / Number(p.equivalentQty);
       update.costPrice = String(Math.round(derivedCost * 100) / 100);
     }
+    // Also sync retail price tier from derived price and clear other tiers for auto-replicate
+    const freshTiers: PriceTiers = { retail: roundedPrice };
+    for (const tier of ["wholesale", "distributor", "premium", "especial"] as PriceTier[]) {
+      freshTiers[tier] = undefined;
+    }
+    update.priceTiers = freshTiers;
     return update;
   };
 

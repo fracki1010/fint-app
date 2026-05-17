@@ -4,7 +4,8 @@ import api from "@shared/api/axios";
 export interface Tenant {
   _id: string;
   name: string;
-  plan: "essential" | "business" | "enterprise";
+  plan: string;
+  complements: string[];
   status: "active" | "suspended" | "cancelled";
   isActive: boolean;
   limits: {

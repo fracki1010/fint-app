@@ -3,9 +3,17 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@features": path.resolve(__dirname, "./src/features"),
+      "@shared": path.resolve(__dirname, "./src/shared"),
+    },
+  },
   plugins: [
     react(),
     tsconfigPaths(),
@@ -55,8 +63,8 @@ export default defineConfig({
     }),
   ],
   test: {
-    environment: "node",
+    environment: "jsdom",
     globals: true,
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });

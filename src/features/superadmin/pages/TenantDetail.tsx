@@ -23,15 +23,11 @@ import { useTenant } from "@features/superadmin/hooks/useSuperAdmin";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planLabels: Record<string, string> = {
-  essential: "Essential",
-  business: "Business",
-  enterprise: "Enterprise",
+  app_base: "App Base",
 };
 
 const planColors: Record<string, string> = {
-  essential: "bg-default-200/50 text-default-500 border-default-200/50",
-  business: "bg-primary/15 text-primary border-primary/20",
-  enterprise: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  app_base: "bg-default-200/50 text-default-500 border-default-200/50",
 };
 
 const statusColors: Record<string, string> = {
@@ -135,11 +131,7 @@ export default function TenantDetail() {
     );
   }
 
-  const planConfig = {
-    essential: { maxUsers: 3, maxProducts: 200 },
-    business: { maxUsers: 10, maxProducts: Infinity },
-    enterprise: { maxUsers: Infinity, maxProducts: Infinity },
-  }[tenant.plan] || { maxUsers: 3, maxProducts: 200 };
+  const planLimits = tenant.limits || { maxUsers: 1, maxProducts: 200 };
 
   return (
     <SuperAdminLayout>
@@ -232,11 +224,11 @@ export default function TenantDetail() {
                 <Users size={20} />
               </div>
             </div>
-            {planConfig.maxUsers !== Infinity && (
+            {planLimits.maxUsers !== Infinity && planLimits.maxUsers !== -1 && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-default-400">{usagePercentages.users}% usado</span>
-                  <span className="text-default-400">{stats.totalUsers} / {planConfig.maxUsers}</span>
+                  <span className="text-default-400">{stats.totalUsers} / {planLimits.maxUsers}</span>
                 </div>
                 <div className="mt-1 h-1.5 w-full rounded-full bg-content2">
                   <div
@@ -258,11 +250,11 @@ export default function TenantDetail() {
                 <Package size={20} />
               </div>
             </div>
-            {planConfig.maxProducts !== Infinity && (
+            {planLimits.maxProducts !== Infinity && planLimits.maxProducts !== -1 && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-default-400">{usagePercentages.products}% usado</span>
-                  <span className="text-default-400">{stats.totalProducts} / {planConfig.maxProducts}</span>
+                  <span className="text-default-400">{stats.totalProducts} / {planLimits.maxProducts}</span>
                 </div>
                 <div className="mt-1 h-1.5 w-full rounded-full bg-content2">
                   <div
@@ -303,9 +295,7 @@ export default function TenantDetail() {
                     onChange={(e) => setEditForm({ ...editForm, plan: e.target.value })}
                     className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
-                    <option value="essential">Essential ($2/mes)</option>
-                    <option value="business">Business ($3/mes)</option>
-                    <option value="enterprise">Enterprise ($8/mes)</option>
+                    <option value="app_base">App Base ($200/mes)</option>
                   </select>
                 </div>
                 <div>
@@ -334,14 +324,28 @@ export default function TenantDetail() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-default-400">Usuarios máximos</span>
                   <span className="text-sm font-semibold text-foreground">
-                    {planConfig.maxUsers === Infinity ? "∞ Ilimitado" : planConfig.maxUsers}
+                    {planLimits.maxUsers === Infinity || planLimits.maxUsers === -1 ? "∞ Ilimitado" : planLimits.maxUsers}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-default-400">Productos máximos</span>
                   <span className="text-sm font-semibold text-foreground">
-                    {planConfig.maxProducts === Infinity ? "∞ Ilimitado" : planConfig.maxProducts}
+                    {planLimits.maxProducts === Infinity || planLimits.maxProducts === -1 ? "∞ Ilimitado" : planLimits.maxProducts}
                   </span>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm text-default-400 shrink-0">Complementos</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {tenant.complements?.length > 0 ? (
+                      tenant.complements.map((c: string) => (
+                        <span key={c} className="rounded bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+                          {c.replace(/_/g, " ")}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-default-500">Ninguno</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-sm text-default-400 shrink-0">Features</span>

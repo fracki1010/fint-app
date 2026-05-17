@@ -15,32 +15,12 @@ export type Feature =
   | "banking"
   | "quotes";
 
-const FEATURE_MATRIX: Record<string, Feature[]> = {
-  essential: ["client_account", "supplier_account", "quotes"],
-  business: ["financial_center", "recipes", "bill_of_materials", "supplier_account", "client_account", "team_management", "unlimited_products", "unlimited_orders", "banking", "quotes"],
-  enterprise: [
-    "financial_center",
-    "recipes",
-    "bill_of_materials",
-    "advanced_reports",
-    "api_access",
-    "supplier_account",
-    "client_account",
-    "team_management",
-    "unlimited_products",
-    "unlimited_orders",
-    "banking",
-    "quotes",
-  ],
-};
-
 export function usePlanFeatures() {
   const { user } = useAuth();
   const tenant = user?.tenant;
-  const plan = tenant?.plan || "essential";
-  const features = tenant?.enabledFeatures?.length
-    ? tenant.enabledFeatures
-    : FEATURE_MATRIX[plan] ?? [];
+  const plan = tenant?.plan || "app_base";
+  const complements = tenant?.complements ?? [];
+  const features = tenant?.enabledFeatures ?? [];
   const limits = tenant?.limits;
   const usage = tenant?.usage;
 
@@ -95,6 +75,7 @@ export function usePlanFeatures() {
 
   return {
     plan,
+    complements,
     features,
     hasFeature,
     isTrial,

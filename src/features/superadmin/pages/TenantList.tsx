@@ -11,15 +11,11 @@ import { useTenants } from "@features/superadmin/hooks/useSuperAdmin";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planColors: Record<string, string> = {
-  essential: "bg-default-200/50 text-default-500 border-default-200/50",
-  business: "bg-primary/15 text-primary border-primary/20",
-  enterprise: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  app_base: "bg-default-200/50 text-default-500 border-default-200/50",
 };
 
 const planLabels: Record<string, string> = {
-  essential: "Essential",
-  business: "Business",
-  enterprise: "Enterprise",
+  app_base: "App Base",
 };
 
 const statusColors: Record<string, string> = {
@@ -89,9 +85,7 @@ export default function TenantList() {
             className="rounded-xl border border-divider bg-content1 px-3 py-2 text-sm text-foreground focus:outline-none"
           >
             <option value="">Todos los planes</option>
-            <option value="essential">Essential</option>
-            <option value="business">Business</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="app_base">App Base</option>
           </select>
 
           <select
@@ -156,7 +150,7 @@ export default function TenantList() {
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${planColors[tenant.plan] || planColors.essential}`}>
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${planColors[tenant.plan] || planColors.app_base}`}>
                               <Building2 size={18} />
                             </div>
                             <div>
