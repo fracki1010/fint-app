@@ -302,9 +302,6 @@ export default function TenantDetail() {
                     className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
                     <option value="app_base">App Base ($200/mes)</option>
-                    <option value="essential">Essential ($2/mes)</option>
-                    <option value="business">Business ($3/mes)</option>
-                    <option value="enterprise">Enterprise ($8/mes)</option>
                   </select>
                 </div>
                 <div>

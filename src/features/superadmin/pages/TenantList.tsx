@@ -92,9 +92,6 @@ export default function TenantList() {
           >
             <option value="">Todos los planes</option>
             <option value="app_base">App Base</option>
-            <option value="essential">Essential</option>
-            <option value="business">Business</option>
-            <option value="enterprise">Enterprise</option>
           </select>
 
           <select
