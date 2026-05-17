@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Lock, ArrowLeft, Zap, Crown, Building2, Check } from "lucide-react";
+import { Lock, ArrowLeft, Zap, Check } from "lucide-react";
 import { usePlanFeatures, Feature } from "@shared/hooks/usePlanFeatures";
+import { COMPLEMENTS } from "@shared/config/complementConfig";
 
 const FEATURE_LABELS: Record<Feature, string> = {
   financial_center: "Centro Financiero",
@@ -17,19 +18,19 @@ const FEATURE_LABELS: Record<Feature, string> = {
   quotes: "Presupuestos",
 };
 
-const FEATURE_PLANS: Record<Feature, { plan: string; icon: React.ElementType }> = {
-  financial_center: { plan: "Business", icon: Building2 },
-  recipes: { plan: "Business", icon: Building2 },
-  bill_of_materials: { plan: "Business", icon: Building2 },
-  advanced_reports: { plan: "Enterprise", icon: Crown },
-  api_access: { plan: "Enterprise", icon: Crown },
-  supplier_account: { plan: "Business", icon: Building2 },
-  client_account: { plan: "Business", icon: Building2 },
-  team_management: { plan: "Business", icon: Building2 },
-  unlimited_products: { plan: "Business", icon: Building2 },
-  unlimited_orders: { plan: "Business", icon: Building2 },
-  banking: { plan: "Business", icon: Building2 },
-  quotes: { plan: "Business", icon: Building2 },
+/**
+ * Map features to the complement ID that provides them.
+ * Some features are part of App Base and don't need a complement.
+ */
+const FEATURE_TO_COMPLEMENT: Partial<Record<Feature, string>> = {
+  financial_center: "financiero",
+  recipes: "produccion",
+  bill_of_materials: "bom",
+  advanced_reports: "reportes",
+  api_access: "api",
+  team_management: "team_10",
+  unlimited_products: "expansion",
+  unlimited_orders: "expansion",
 };
 
 interface UpgradeRequiredProps {
@@ -39,8 +40,9 @@ interface UpgradeRequiredProps {
 export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
   const navigate = useNavigate();
   const { plan: currentPlan } = usePlanFeatures();
-  const info = FEATURE_PLANS[feature];
-  const FeatureIcon = info?.icon || Zap;
+
+  const complementId = FEATURE_TO_COMPLEMENT[feature];
+  const complementName = complementId ? COMPLEMENTS[complementId]?.name : undefined;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
@@ -64,24 +66,40 @@ export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
             Tu plan actual
           </p>
           <p className="mt-1 text-lg font-bold capitalize text-foreground">
-            {currentPlan || "Essential"}
+            {currentPlan || "App Base"}
           </p>
         </div>
 
-        {/* Upgrade to */}
-        <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary/70">
-            Disponible en
-          </p>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
-              <FeatureIcon size={16} className="text-primary" />
-            </div>
-            <p className="text-lg font-bold text-primary">
-              Plan {info?.plan || "Business"}
+        {/* Complement CTA */}
+        {complementName ? (
+          <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary/70">
+              Disponible con
             </p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
+                <Zap size={16} className="text-primary" />
+              </div>
+              <p className="text-lg font-bold text-primary">
+                {complementName}
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary/70">
+              Disponible en App Base
+            </p>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
+                <Zap size={16} className="text-primary" />
+              </div>
+              <p className="text-lg font-bold text-primary">
+                App Base
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Benefits */}
         <div className="mt-6 space-y-2 text-left">
@@ -109,7 +127,7 @@ export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
             className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-bold text-white transition hover:bg-primary/90"
           >
             <Zap size={18} />
-            Ver planes y precios
+            {complementName ? `Activar ${complementName}` : "Ver complementos"}
           </button>
           <button
             onClick={() => navigate(-1)}
