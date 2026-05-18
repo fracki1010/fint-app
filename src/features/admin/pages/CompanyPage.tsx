@@ -28,17 +28,12 @@ const FEATURE_LABELS_ES: Record<string, string> = {
   whatsapp: "Asistente por WhatsApp",
 };
 
-function UsageBar({ label, current, max, percentage }: { label: string; current: number; max: number | -1; percentage: number }) {
+function UsageBar({ label, current, max }: { label: string; current: number; max: number | -1 }) {
   const isUnlimited = max === -1 || max === Infinity || max === 0;
-  // Si percentage no es un número válido, calcularlo manualmente
-  let safePercentage: number;
-  if (typeof percentage === "number" && Number.isFinite(percentage)) {
-    safePercentage = percentage;
-  } else if (!isUnlimited && typeof current === "number" && typeof max === "number" && max > 0) {
-    safePercentage = Math.round((current / max) * 100);
-  } else {
-    safePercentage = 0;
-  }
+  // Calcular siempre desde current/max para que coincida con los números mostrados
+  const safePercentage = !isUnlimited && typeof current === "number" && typeof max === "number" && max > 0
+    ? Math.min(100, Math.round((current / max) * 100))
+    : 0;
   const barColor = safePercentage >= 90 ? "var(--heroui-danger)" : safePercentage >= 70 ? "var(--heroui-warning)" : "var(--heroui-primary)";
 
   return (
@@ -222,19 +217,16 @@ export default function CompanyPage() {
                   label="Usuarios"
                   current={plan.usage.currentUsers}
                   max={plan.limits.maxUsers}
-                  percentage={plan.usagePercentages.users}
                 />
                 <UsageBar
                   label="Productos"
                   current={plan.usage.currentProducts}
                   max={plan.limits.maxProducts}
-                  percentage={plan.usagePercentages.products}
                 />
                 <UsageBar
                   label="Ventas (mes)"
                   current={plan.usage.ordersThisMonth}
                   max={plan.limits.maxOrdersPerMonth}
-                  percentage={plan.usagePercentages.orders}
                 />
               </div>
 
