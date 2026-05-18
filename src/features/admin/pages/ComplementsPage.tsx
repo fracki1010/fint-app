@@ -13,6 +13,7 @@ import {
   Layers,
   Sparkles,
   Zap,
+  MessageCircle,
 } from "lucide-react";
 
 import { COMPLEMENTS, APP_BASE } from "@shared/config/complementConfig";
@@ -30,6 +31,7 @@ const COMPLEMENT_ICONS: Record<string, React.ElementType> = {
   listas_precios: DollarSign,
   centros_costo: TrendingUp,
   conciliacion: Landmark,
+  whatsapp: MessageCircle,
 };
 
 const COMPLEMENT_DESCRIPTIONS: Record<string, string> = {
@@ -57,6 +59,8 @@ const COMPLEMENT_DESCRIPTIONS: Record<string, string> = {
     "Categorizá gastos por centro de costo, analizá rentabilidad por producto y visualizá distribución de costos.",
   conciliacion:
     "Match automático entre movimientos bancarios y registros internos. Importación de extractos bancarios.",
+  whatsapp:
+    "Conectá un número de WhatsApp y dejá que un agente de IA atienda a tus clientes automáticamente. El agente puede consultar stock, precios, tomar pedidos y responder preguntas frecuentes 24/7 sin intervención humana.",
 };
 
 export default function ComplementsPage() {

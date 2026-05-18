@@ -88,7 +88,7 @@ export const COMPLEMENTS: Record<string, ComplementConfig> = {
   },
   whatsapp: {
     id: "whatsapp",
-    name: "Integración WhatsApp",
+    name: "Agente de IA por WhatsApp",
     price: 50,
     features: ["whatsapp"],
   },
