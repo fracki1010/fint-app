@@ -34,7 +34,7 @@ function UsageBar({ label, current, max }: { label: string; current: number; max
   const safePercentage = !isUnlimited && typeof current === "number" && typeof max === "number" && max > 0
     ? Math.min(100, Math.round((current / max) * 100))
     : 0;
-  const barColor = safePercentage >= 90 ? "var(--heroui-danger)" : safePercentage >= 70 ? "var(--heroui-warning)" : "var(--heroui-primary)";
+  const barColor = safePercentage >= 90 ? "#ef4444" : safePercentage >= 70 ? "#f59e0b" : "#3b82f6";
 
   return (
     <div className="rounded-xl bg-default-100/50 p-3">
