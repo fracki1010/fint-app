@@ -93,7 +93,6 @@ export default function MobileLayout() {
   ];
 
   const adminNav = [
-    { path: "/admin", label: "Panel Admin", icon: LayoutGrid },
     ...(can.manageTeam && hasFeature("team_management") ? [{ path: "/admin/team", label: "Equipo", icon: UserCog }] : []),
     { path: "/admin/company", label: "Empresa", icon: Building2 },
     { path: "/settings", label: "Ajustes", icon: Settings },
