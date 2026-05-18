@@ -30,7 +30,7 @@ describe("UpgradeRequired", () => {
     expect(screen.getByText(/Activar Team 10/)).toBeTruthy();
   });
 
-  it("shows App Base CTA for feature included in App Base", () => {
+  it("shows Edición estándar CTA for feature included in Edición estándar", () => {
     (usePlanFeatures as any).mockReturnValue({
       plan: "app_base",
       features: ["client_account", "supplier_account", "quotes", "banking", "financial_center"],
@@ -38,8 +38,8 @@ describe("UpgradeRequired", () => {
 
     render(<UpgradeRequired feature="quotes" />);
 
-    expect(screen.getByText("Disponible en App Base")).toBeTruthy();
-    expect(screen.getByText("App Base")).toBeTruthy();
+    expect(screen.getByText("Disponible en Edición estándar")).toBeTruthy();
+    expect(screen.getByText("Edición estándar")).toBeTruthy();
     expect(screen.getByText(/Ver complementos/)).toBeTruthy();
   });
 

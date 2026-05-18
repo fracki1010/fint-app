@@ -82,10 +82,10 @@ describe("CompanyPage", () => {
     });
   });
 
-  it("renders App Base card and complement marketplace", () => {
+  it("renders Edición estándar card and complement marketplace", () => {
     render(<CompanyPage />, { wrapper: createWrapper() });
 
-    expect(screen.getAllByText("App Base").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Edición estándar").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Complementos")).toBeTruthy();
     expect(screen.getByText("Expansión de Límites")).toBeTruthy();
     expect(screen.getByText("Team 10")).toBeTruthy();

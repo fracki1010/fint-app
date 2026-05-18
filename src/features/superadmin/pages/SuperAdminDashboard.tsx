@@ -11,7 +11,7 @@ const planColors: Record<string, string> = {
 };
 
 const planLabels: Record<string, string> = {
-  app_base: "App Base",
+  app_base: "Edición estándar",
   essential: "Essential",
   business: "Business",
   enterprise: "Enterprise",

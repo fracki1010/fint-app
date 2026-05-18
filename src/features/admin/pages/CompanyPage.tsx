@@ -166,7 +166,7 @@ export default function CompanyPage() {
               <h2 className="text-lg font-bold text-foreground">Plan</h2>
               {plan && (
                 <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                  App Base
+                  Edición estándar
                 </span>
               )}
             </div>
@@ -212,7 +212,7 @@ export default function CompanyPage() {
                 />
               </div>
 
-              {/* App Base Card */}
+              {/* Edición estándar Card */}
               <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -220,7 +220,7 @@ export default function CompanyPage() {
                       <Zap size={20} />
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-foreground">App Base</p>
+                      <p className="text-lg font-bold text-foreground">Edición estándar</p>
                       <p className="text-sm text-default-400">Tu plan actual</p>
                     </div>
                   </div>

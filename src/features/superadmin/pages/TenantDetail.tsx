@@ -23,7 +23,7 @@ import { useTenant } from "@features/superadmin/hooks/useSuperAdmin";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planLabels: Record<string, string> = {
-  app_base: "App Base",
+  app_base: "Edición estándar",
   essential: "Essential",
   business: "Business",
   enterprise: "Enterprise",
@@ -301,7 +301,7 @@ export default function TenantDetail() {
                     onChange={(e) => setEditForm({ ...editForm, plan: e.target.value })}
                     className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
                   >
-                    <option value="app_base">App Base ($200/mes)</option>
+                    <option value="app_base">Edición estándar ($200/mes)</option>
                     <option value="essential">Essential ($2/mes)</option>
                     <option value="business">Business ($3/mes)</option>
                     <option value="enterprise">Enterprise ($8/mes)</option>

@@ -18,7 +18,7 @@ const planColors: Record<string, string> = {
 };
 
 const planLabels: Record<string, string> = {
-  app_base: "App Base",
+  app_base: "Edición estándar",
   essential: "Essential",
   business: "Business",
   enterprise: "Enterprise",
@@ -91,7 +91,7 @@ export default function TenantList() {
             className="rounded-xl border border-divider bg-content1 px-3 py-2 text-sm text-foreground focus:outline-none"
           >
             <option value="">Todos los planes</option>
-            <option value="app_base">App Base</option>
+            <option value="app_base">Edición estándar</option>
             <option value="essential">Essential</option>
             <option value="business">Business</option>
             <option value="enterprise">Enterprise</option>

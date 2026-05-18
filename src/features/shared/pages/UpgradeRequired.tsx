@@ -22,7 +22,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
 
 /**
  * Map features to the complement ID that provides them.
- * Some features are part of App Base and don't need a complement.
+ * Some features are part of Edición estándar and don't need a complement.
  */
 const FEATURE_TO_COMPLEMENT: Partial<Record<Feature, string>> = {
   financial_center: "financiero",
@@ -68,7 +68,7 @@ export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
             Tu plan actual
           </p>
           <p className="mt-1 text-lg font-bold capitalize text-foreground">
-            {currentPlan || "App Base"}
+            {currentPlan || "Edición estándar"}
           </p>
         </div>
 
@@ -90,14 +90,14 @@ export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
         ) : (
           <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <p className="text-xs font-bold uppercase tracking-wider text-primary/70">
-              Disponible en App Base
+              Disponible en Edición estándar
             </p>
             <div className="mt-2 flex items-center justify-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
                 <Zap size={16} className="text-primary" />
               </div>
               <p className="text-lg font-bold text-primary">
-                App Base
+                Edición estándar
               </p>
             </div>
           </div>

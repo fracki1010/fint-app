@@ -15,7 +15,7 @@ import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 const plans = [
   {
     id: "app_base",
-    name: "App Base",
+    name: "Edición estándar",
     price: 200,
     description: "Base operativa para todo negocio",
     features: ["1 usuario", "200 productos", "500 ventas/mes", "Soporte email", "Cta. cte. clientes/proveedores", "Presupuestos", "Conciliación bancaria"],
