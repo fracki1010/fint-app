@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
+  ArrowRight,
   Building2,
+  CreditCard,
   Loader2,
   Mail,
   MapPin,
@@ -285,6 +288,18 @@ function SupplierDrawerContent({
               </button>
             </div>
           </div>
+
+          {/* Account Link */}
+          <Link
+            to={`/supplier-account/${supplier._id}`}
+            className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10"
+          >
+            <span className="flex items-center gap-2">
+              <CreditCard size={16} />
+              Ver Cuenta Corriente
+            </span>
+            <ArrowRight size={16} />
+          </Link>
 
           {/* Contact Info Cards */}
           <div className="space-y-3">

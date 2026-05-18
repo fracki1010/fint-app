@@ -1,12 +1,15 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   BarChart3,
   Building2,
   Calendar,
   CheckCircle2,
   Clock,
+  CreditCard,
   Hash,
   Loader2,
   Mail,
@@ -181,6 +184,18 @@ export function ClientDetailPanel({
               color={Number(selectedClient.debt || 0) > 0 ? "danger" : "success"}
             />
           </div>
+
+          {/* Account Link */}
+          <Link
+            to={`/client-account/${selectedClient._id}`}
+            className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/10"
+          >
+            <span className="flex items-center gap-2">
+              <CreditCard size={16} />
+              Ver Cuenta Corriente
+            </span>
+            <ArrowRight size={16} />
+          </Link>
 
           {/* Orders Stats */}
           <div className="grid grid-cols-3 gap-2">
