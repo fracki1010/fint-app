@@ -13,7 +13,9 @@ export type Feature =
   | "unlimited_products"
   | "unlimited_orders"
   | "banking"
-  | "quotes";
+  | "quotes"
+  | "whatsapp"
+  | "bank_reconciliation";
 
 export function usePlanFeatures() {
   const { user } = useAuth();

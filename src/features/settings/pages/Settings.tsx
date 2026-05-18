@@ -21,6 +21,7 @@ import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useSettings, Setting } from "@features/settings/hooks/useSettings";
 import { useWhatsApp } from "@features/sales/hooks/useWhatsApp";
 import { useAuth } from "@features/auth/hooks/useAuth";
+import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { getErrorMessage } from "@shared/utils/errors";
 
@@ -57,6 +58,7 @@ export default function SettingsPage() {
     isStopping,
     isRestarting,
   } = useWhatsApp();
+  const { hasFeature } = usePlanFeatures();
   const [saving, setSaving] = useState(false);
   const [savingWhatsAppAccess, setSavingWhatsAppAccess] = useState(false);
   const [formData, setFormData] = useState<Partial<Setting>>({});
@@ -399,13 +401,15 @@ export default function SettingsPage() {
             summary={`Tema actual: ${formData.theme === "dark" ? "Oscuro" : "Claro"}`}
           />
 
-          <SettingsSection
-            title="Integraciones"
-            description="WhatsApp y politica de entrega."
-            icon={<Smartphone size={18} />}
-            onClick={() => setActiveSection("integraciones")}
-            summary={`Estado WhatsApp: ${whatsappStatusLabel}`}
-          />
+          {hasFeature("whatsapp") && (
+            <SettingsSection
+              title="Integraciones"
+              description="WhatsApp y politica de entrega."
+              icon={<Smartphone size={18} />}
+              onClick={() => setActiveSection("integraciones")}
+              summary={`Estado WhatsApp: ${whatsappStatusLabel}`}
+            />
+          )}
 
           <SettingsSection
             title="Movimientos"

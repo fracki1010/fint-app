@@ -86,6 +86,12 @@ export const COMPLEMENTS: Record<string, ComplementConfig> = {
     price: 50,
     features: ["bank_reconciliation"],
   },
+  whatsapp: {
+    id: "whatsapp",
+    name: "Integración WhatsApp",
+    price: 50,
+    features: ["whatsapp"],
+  },
 };
 
 export const APP_BASE = {
