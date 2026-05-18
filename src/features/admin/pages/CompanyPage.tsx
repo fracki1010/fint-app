@@ -42,12 +42,15 @@ function UsageBar({ label, current, max }: { label: string; current: number; max
         <span className="text-xs text-default-500">{label}</span>
         <span className="text-xs font-semibold text-foreground">
           {current}{isUnlimited ? "" : ` / ${max}`}
+          {!isUnlimited && (
+            <span className="ml-1.5 text-[10px] text-default-400">({safePercentage}%)</span>
+          )}
         </span>
       </div>
       {!isUnlimited ? (
-        <div className="mt-2 h-1.5 w-full rounded-full bg-default-200">
+        <div className="mt-2 h-2 w-full rounded-full bg-default-200">
           <div
-            className="h-1.5 rounded-full transition-all"
+            className="h-2 rounded-full transition-all"
             style={{ width: `${Math.min(100, safePercentage)}%`, backgroundColor: barColor }}
           />
         </div>
