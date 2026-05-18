@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = getStoredToken();
-      const storedUser = getStoredUser();
 
       if (!storedToken) {
         setLoading(false);
@@ -42,19 +41,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setToken(storedToken);
 
-      if (storedUser) {
-        setUser(storedUser);
-      }
-
       try {
         const data = await fetchCurrentUser();
         if (data?.user) {
           persistAuthToken(data.user);
         }
       } catch {
-        clearAuth();
-        setToken(null);
-        setUser(null);
+        // Fallback to stored user if fetch fails
+        const storedUser = getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+        } else {
+          clearAuth();
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
