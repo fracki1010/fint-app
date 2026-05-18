@@ -8,7 +8,7 @@ import { useSettings, Setting } from "@features/settings/hooks/useSettings";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { getErrorMessage } from "@shared/utils/errors";
 import { useTenantPlan } from "@features/superadmin/hooks/useTenantPlan";
-import { APP_BASE } from "@shared/config/complementConfig";
+import { APP_BASE, COMPLEMENTS } from "@shared/config/complementConfig";
 
 const FEATURE_LABELS_ES: Record<string, string> = {
   client_account: "Cuenta corriente clientes",
@@ -184,7 +184,7 @@ export default function CompanyPage() {
         <div className="space-y-4 rounded-2xl border border-default-200 bg-content1 p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-foreground">Plan</h2>
+              <h2 className="text-lg font-bold text-foreground">Suscripción</h2>
               {plan && (
                 <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                   Edición estándar
@@ -259,13 +259,23 @@ export default function CompanyPage() {
                   <h3 className="text-sm font-bold uppercase tracking-wider text-default-500">Complementos</h3>
                 </div>
 
-                {plan.complements && plan.complements.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {plan.complements.map((compId: string) => (
-                      <span key={compId} className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
-                        {compId}
-                      </span>
-                    ))}
+                {plan.complements && plan.complements.length > 0 ? (
+                  <div className="rounded-xl border border-default-200 bg-default-50/50 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-default-400 mb-2">Activos</p>
+                    <div className="flex flex-wrap gap-2">
+                      {plan.complements.map((compId: string) => {
+                        const comp = COMPLEMENTS[compId as keyof typeof COMPLEMENTS];
+                        return (
+                          <span key={compId} className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary border border-primary/20">
+                            {comp?.name || compId}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-default-200 bg-default-50/50 p-4">
+                    <p className="text-xs text-default-500">No tenés complementos activos.</p>
                   </div>
                 )}
 
