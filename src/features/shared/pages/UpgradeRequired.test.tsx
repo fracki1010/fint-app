@@ -19,7 +19,7 @@ describe("UpgradeRequired", () => {
   it("shows complement CTA for feature that needs a complement", () => {
     (usePlanFeatures as any).mockReturnValue({
       plan: "app_base",
-      features: ["client_account", "supplier_account", "quotes", "banking"],
+      features: ["client_account", "supplier_account", "quotes", "banking", "financial_center"],
     });
 
     render(<UpgradeRequired feature="team_management" />);
@@ -33,7 +33,7 @@ describe("UpgradeRequired", () => {
   it("shows App Base CTA for feature included in App Base", () => {
     (usePlanFeatures as any).mockReturnValue({
       plan: "app_base",
-      features: ["client_account", "supplier_account", "quotes", "banking"],
+      features: ["client_account", "supplier_account", "quotes", "banking", "financial_center"],
     });
 
     render(<UpgradeRequired feature="quotes" />);
