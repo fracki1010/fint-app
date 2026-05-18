@@ -60,7 +60,7 @@ const COMPLEMENT_DESCRIPTIONS: Record<string, string> = {
   conciliacion:
     "Match automático entre movimientos bancarios y registros internos. Importación de extractos bancarios.",
   whatsapp:
-    "Conectá un número de WhatsApp y dejá que un agente de IA atienda a tus clientes automáticamente. El agente puede consultar stock, precios, tomar pedidos y responder preguntas frecuentes 24/7 sin intervención humana.",
+    "Conectá un número de WhatsApp y dejá que un agente con IA sea tu nuevo asistente personal. El asistente puede consultar stock, precios, tomar pedidos y responder preguntas frecuentes 24/7 sin intervención humana.",
 };
 
 export default function ComplementsPage() {

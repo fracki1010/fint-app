@@ -16,7 +16,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   unlimited_orders: "Ventas Ilimitadas",
   banking: "Conciliación Bancaria",
   quotes: "Presupuestos",
-  whatsapp: "Agente de IA por WhatsApp",
+  whatsapp: "Asistente por WhatsApp",
   bank_reconciliation: "Conciliación Bancaria Avanzada",
 };
 
