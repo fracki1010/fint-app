@@ -10,9 +10,35 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { useTenantPlan } from "@features/superadmin/hooks/useTenantPlan";
 import { APP_BASE } from "@shared/config/complementConfig";
 
+const FEATURE_LABELS_ES: Record<string, string> = {
+  client_account: "Cuenta corriente clientes",
+  supplier_account: "Cuenta corriente proveedores",
+  quotes: "Presupuestos",
+  banking: "Bancos",
+  financial_center: "Financiero",
+  unlimited_products: "Productos ilimitados",
+  unlimited_orders: "Ventas ilimitadas",
+  team_management: "Gestión de equipo",
+  advanced_reports: "Reportes avanzados",
+  api_access: "API REST",
+  bill_of_materials: "Lista de materiales",
+  recipes: "Producción",
+  multi_location: "Listas de precios",
+  bank_reconciliation: "Conciliación bancaria",
+  whatsapp: "Asistente por WhatsApp",
+};
+
 function UsageBar({ label, current, max, percentage }: { label: string; current: number; max: number | -1; percentage: number }) {
   const isUnlimited = max === -1 || max === Infinity || max === 0;
-  const safePercentage = Number.isFinite(percentage) ? percentage : 0;
+  // Si percentage no es un número válido, calcularlo manualmente
+  let safePercentage: number;
+  if (typeof percentage === "number" && Number.isFinite(percentage)) {
+    safePercentage = percentage;
+  } else if (!isUnlimited && typeof current === "number" && typeof max === "number" && max > 0) {
+    safePercentage = Math.round((current / max) * 100);
+  } else {
+    safePercentage = 0;
+  }
   const barColor = safePercentage >= 90 ? "var(--heroui-danger)" : safePercentage >= 70 ? "var(--heroui-warning)" : "var(--heroui-primary)";
 
   return (
@@ -229,7 +255,7 @@ export default function CompanyPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {APP_BASE.features.map((f) => (
                     <span key={f} className="rounded-full bg-content1 px-2.5 py-1 text-[10px] font-medium text-default-500 border border-default-200">
-                      {f.replace(/_/g, " ")}
+                      {FEATURE_LABELS_ES[f] || f.replace(/_/g, " ")}
                     </span>
                   ))}
                 </div>
@@ -290,10 +316,12 @@ export default function CompanyPage() {
                         <span className={`font-medium ${
                           plan.billing.paymentStatus === "paid" ? "text-success" :
                           plan.billing.paymentStatus === "past_due" ? "text-danger" :
+                          plan.billing.paymentStatus === "pending" ? "text-warning" :
                           "text-default-400"
                         }`}>
                           {plan.billing.paymentStatus === "paid" ? "Al día" :
                            plan.billing.paymentStatus === "past_due" ? "Vencido" :
+                           plan.billing.paymentStatus === "pending" ? "Pendiente" :
                            plan.billing.paymentStatus}
                         </span>
                       </span>
