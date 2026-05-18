@@ -18,6 +18,42 @@ import {
 
 import { COMPLEMENTS, APP_BASE } from "@shared/config/complementConfig";
 
+const FEATURE_LABELS_ES: Record<string, string> = {
+  client_account: "Cuenta corriente clientes",
+  supplier_account: "Cuenta corriente proveedores",
+  quotes: "Presupuestos",
+  banking: "Bancos",
+  financial_center: "Financiero",
+  unlimited_products: "Productos ilimitados",
+  unlimited_orders: "Ventas ilimitadas",
+  team_management: "Gestión de equipo",
+  advanced_reports: "Reportes avanzados",
+  api_access: "API REST",
+  bill_of_materials: "Lista de materiales",
+  recipes: "Producción",
+  multi_location: "Listas de precios",
+  bank_reconciliation: "Conciliación bancaria",
+  whatsapp: "WhatsApp",
+};
+
+const FEATURE_COLORS: Record<string, string> = {
+  client_account: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  supplier_account: "bg-cyan-500/15 text-cyan-600 border-cyan-500/30",
+  quotes: "bg-violet-500/15 text-violet-600 border-violet-500/30",
+  banking: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  financial_center: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  unlimited_products: "bg-rose-500/15 text-rose-600 border-rose-500/30",
+  unlimited_orders: "bg-orange-500/15 text-orange-600 border-orange-500/30",
+  team_management: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30",
+  advanced_reports: "bg-fuchsia-500/15 text-fuchsia-600 border-fuchsia-500/30",
+  api_access: "bg-sky-500/15 text-sky-600 border-sky-500/30",
+  bill_of_materials: "bg-teal-500/15 text-teal-600 border-teal-500/30",
+  recipes: "bg-lime-500/15 text-lime-700 border-lime-500/30",
+  multi_location: "bg-pink-500/15 text-pink-600 border-pink-500/30",
+  bank_reconciliation: "bg-green-500/15 text-green-600 border-green-500/30",
+  whatsapp: "bg-green-600/15 text-green-700 border-green-600/30",
+};
+
 const COMPLEMENT_ICONS: Record<string, React.ElementType> = {
   expansion: Layers,
   team_10: Users,
@@ -102,9 +138,9 @@ export default function ComplementsPage() {
                 {APP_BASE.features.map((f) => (
                   <span
                     key={f}
-                    className="rounded-full bg-content1 px-2.5 py-1 text-[10px] font-medium text-default-500 border border-default-200"
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold border ${FEATURE_COLORS[f] || "bg-default-100 text-default-500 border-default-200"}`}
                   >
-                    {f.replace(/_/g, " ")}
+                    {FEATURE_LABELS_ES[f] || f.replace(/_/g, " ")}
                   </span>
                 ))}
               </div>
@@ -159,9 +195,9 @@ export default function ComplementsPage() {
                         {comp.features.map((f) => (
                           <span
                             key={f}
-                            className="rounded-full bg-default-100 px-2 py-0.5 text-[9px] font-medium text-default-500"
+                            className={`rounded-full px-2 py-0.5 text-[9px] font-bold border ${FEATURE_COLORS[f] || "bg-default-100 text-default-500 border-default-200"}`}
                           >
-                            {f.replace(/_/g, " ")}
+                            {FEATURE_LABELS_ES[f] || f.replace(/_/g, " ")}
                           </span>
                         ))}
                       </div>
