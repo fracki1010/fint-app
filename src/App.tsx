@@ -61,6 +61,9 @@ const TreasuryDashboardPage = lazy(
 const CostCentersPage = lazy(
   () => import("@features/financial/pages/CostCenters"),
 );
+const CashMovementsPage = lazy(
+  () => import("@features/financial/pages/CashMovements"),
+);
 const SuperAdminDashboardPage = lazy(() => import("@features/superadmin/pages/SuperAdminDashboard"));
 const TenantListPage = lazy(() => import("@features/superadmin/pages/TenantList"));
 const TenantCreatePage = lazy(() => import("@features/superadmin/pages/TenantCreate"));
@@ -218,6 +221,10 @@ function App() {
             <Route
               element={<CostCentersPage />}
               path="/financial/cost-centers"
+            />
+            <Route
+              element={<CashMovementsPage />}
+              path="/financial/cash-movements"
             />
             <Route
               element={<IvaReportsPage />}

@@ -11,6 +11,7 @@ import {
   Cog,
   FileText,
   Settings as SettingsIcon,
+  Wallet,
 } from "lucide-react";
 
 const financialNav = [
@@ -55,6 +56,12 @@ const financialNav = [
     label: "Centros de Costo",
     mobileLabel: "COSTOS",
     icon: Building2,
+  },
+  {
+    path: "/financial/cash-movements",
+    label: "Mov. de Caja",
+    mobileLabel: "CAJA",
+    icon: Wallet,
   },
   {
     path: "/financial/iva-reports",
