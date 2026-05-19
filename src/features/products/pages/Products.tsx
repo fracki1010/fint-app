@@ -354,9 +354,9 @@ export default function ProductsPage() {
 
   // Derive base price and cost from the first active presentation with valid data
   const deriveBaseFromPresentations = (presentations: PresentationFormState[]) => {
-    const activeWithData = presentations.filter(
-      (p) => p.isActive !== false && Number(p.price) > 0 && Number(p.equivalentQty) > 0,
-    );
+    const activeWithData = presentations
+      .filter((p) => p.isActive !== false && Number(p.price) > 0 && Number(p.equivalentQty) > 0)
+      .sort((a, b) => Number(a.equivalentQty) - Number(b.equivalentQty));
     if (activeWithData.length === 0) return {};
     const p = activeWithData[0];
     const derivedPrice = Number(p.price) / Number(p.equivalentQty);
