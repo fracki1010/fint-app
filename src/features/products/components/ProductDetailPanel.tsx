@@ -741,6 +741,12 @@ export function ProductDetailPanel({
                                 {(((pres.price - presCost) / pres.price) * 100).toFixed(1)}%
                               </p>
                             </div>
+                            <div>
+                              <p className="stat-card-label">Markup</p>
+                              <p className="mt-1 text-lg font-bold text-primary">
+                                {presCost > 0 ? (((pres.price - presCost) / presCost) * 100).toFixed(1) : "0.0"}%
+                              </p>
+                            </div>
                           </div>
                         </div>
                       )}
