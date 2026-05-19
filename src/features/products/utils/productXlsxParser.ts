@@ -5,6 +5,8 @@ export interface XlsxProductRow {
   sku?: string;
   codigo_barras?: string;
   descripcion?: string;
+  costo?: number;
+  markup?: number;
   precio_base?: number;
   precio_costo?: number;
   stock_actual?: number;
@@ -51,13 +53,20 @@ export function parseProductXlsx(file: File): Promise<XlsxParseResult> {
 
         json.forEach((raw: Record<string, string>, i: number) => {
           const rowNum = i + 2; // 1-indexed + header row
+          const costo = parseFloat(raw["costo"]) || undefined;
+          const markup = parseFloat(raw["markup"]) || undefined;
+          const precio_base_calculado = costo && markup ? costo * (1 + markup / 100) : undefined;
+          const precio_base_legacy = parseFloat(raw["precio_base"]) || undefined;
+
           const row: XlsxProductRow = {
             nombre: (raw["nombre"] || "").toString().trim(),
             sku: (raw["sku"] || "").toString().trim() || undefined,
             codigo_barras: (raw["codigo_barras"] || "").toString().trim() || undefined,
             descripcion: (raw["descripcion"] || "").toString().trim() || undefined,
-            precio_base: parseFloat(raw["precio_base"]) || undefined,
-            precio_costo: parseFloat(raw["precio_costo"]) || undefined,
+            costo,
+            markup,
+            precio_base: precio_base_calculado ?? precio_base_legacy,
+            precio_costo: (costo ?? parseFloat(raw["precio_costo"])) || undefined,
             stock_actual: parseFloat(raw["stock_actual"]) || undefined,
             stock_minimo: parseFloat(raw["stock_minimo"]) || undefined,
             categoria: (raw["categoria"] || "").toString().trim() || undefined,
@@ -127,8 +136,8 @@ export function generateProductTemplate(): XLSX.WorkBook {
       sku: "PROD-001",
       codigo_barras: "7791234567890",
       descripcion: "Descripción del producto",
-      precio_base: 1200,
-      precio_costo: 800,
+      costo: 800,
+      markup: 50,
       stock_actual: 50,
       stock_minimo: 10,
       categoria: "Categoría",
