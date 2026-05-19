@@ -728,7 +728,7 @@ export function ProductDetailPanel({
                       {presCost != null && pres.price > 0 && (
                         <div className="stat-card">
                           <p className="text-sm font-bold text-foreground mb-3">Margen</p>
-                          <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="grid grid-cols-3 gap-3 text-sm">
                             <div>
                               <p className="stat-card-label">Ganancia por unidad</p>
                               <p className="mt-1 text-lg font-bold text-success">
@@ -742,7 +742,7 @@ export function ProductDetailPanel({
                               </p>
                             </div>
                             <div>
-                              <p className="stat-card-label">Markup</p>
+                              <p className="stat-card-label">Margen (Markup)</p>
                               <p className="mt-1 text-lg font-bold text-primary">
                                 {presCost > 0 ? (((pres.price - presCost) / presCost) * 100).toFixed(1) : "0.0"}%
                               </p>
