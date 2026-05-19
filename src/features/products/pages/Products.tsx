@@ -20,7 +20,7 @@ import {
 } from "@features/products/hooks/useProducts";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useSettings } from "@features/settings/hooks/useSettings";
-import { Product, PriceTier, PriceTiers } from "@shared/types";
+import { Product, PriceTier } from "@shared/types";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getErrorMessage } from "@shared/utils/errors";
@@ -352,49 +352,23 @@ export default function ProductsPage() {
   const handleRemoveCategory = (category: string) =>
     setFormData((prev) => ({ ...prev, categories: prev.categories.filter((item) => item !== category) }));
 
-  // Derive base price and cost from the first active presentation with valid data
-  const deriveBaseFromPresentations = (presentations: PresentationFormState[]) => {
-    const activeWithData = presentations
-      .filter((p) => p.isActive !== false && Number(p.price) > 0 && Number(p.equivalentQty) > 0)
-      .sort((a, b) => Number(a.equivalentQty) - Number(b.equivalentQty));
-    if (activeWithData.length === 0) return {};
-    const p = activeWithData[0];
-    const derivedPrice = Number(p.price) / Number(p.equivalentQty);
-    const roundedPrice = Math.round(derivedPrice * 100) / 100;
-    const update: Record<string, string | PriceTiers> = { price: String(roundedPrice) };
-    if (p.cost && Number(p.cost) > 0) {
-      const derivedCost = Number(p.cost) / Number(p.equivalentQty);
-      update.costPrice = String(Math.round(derivedCost * 100) / 100);
-    }
-    // Also sync retail price tier from derived price and clear other tiers for auto-replicate
-    const freshTiers: PriceTiers = { retail: roundedPrice };
-    for (const tier of ["wholesale", "distributor", "premium", "especial"] as PriceTier[]) {
-      freshTiers[tier] = undefined;
-    }
-    update.priceTiers = freshTiers;
-    return update;
-  };
-
   const handleAddPresentation = () =>
-    setFormData((prev) => {
-      const nextPresentations = [...prev.presentations, emptyPresentation()];
-      const derived = deriveBaseFromPresentations(nextPresentations);
-      return { ...prev, presentations: nextPresentations, ...derived };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      presentations: [...prev.presentations, emptyPresentation()],
+    }));
 
   const handleUpdatePresentation = (index: number, field: keyof PresentationFormState, value: string | boolean) =>
-    setFormData((prev) => {
-      const nextPresentations = prev.presentations.map((p, i) => (i === index ? { ...p, [field]: value } : p));
-      const derived = deriveBaseFromPresentations(nextPresentations);
-      return { ...prev, presentations: nextPresentations, ...derived };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      presentations: prev.presentations.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    }));
 
   const handleRemovePresentation = (index: number) =>
-    setFormData((prev) => {
-      const nextPresentations = prev.presentations.filter((_, i) => i !== index);
-      const derived = deriveBaseFromPresentations(nextPresentations);
-      return { ...prev, presentations: nextPresentations, ...derived };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      presentations: prev.presentations.filter((_, i) => i !== index),
+    }));
 
   // Mobile: full-screen detail
   if (!isDesktop && productId) {

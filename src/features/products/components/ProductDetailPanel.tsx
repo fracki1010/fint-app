@@ -673,7 +673,12 @@ export function ProductDetailPanel({
                   const presStock = getAvailableStock(product, pres);
                   const isOut = presStock <= 0;
                   const isLow = presStock > 0 && presStock <= (product.minStock || 5);
-                  const presCost = product.costPrice && product.costPrice > 0 ? product.costPrice * pres.equivalentQty : null;
+                  const presCost =
+                    pres.cost != null && pres.cost > 0
+                      ? pres.cost
+                      : product.costPrice && product.costPrice > 0
+                        ? product.costPrice * pres.equivalentQty
+                        : null;
 
                   return (
                     <div key={pres._id} className="space-y-3">
@@ -697,7 +702,14 @@ export function ProductDetailPanel({
                         <div className="stat-card text-center">
                           <p className="stat-card-label flex items-center justify-center gap-1.5">
                             Costo
-                            {product.costLocked && (
+                            {pres.cost != null && pres.cost > 0 ? (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-primary cursor-help"
+                                title="Costo propio de esta presentación"
+                              >
+                                Propio
+                              </span>
+                            ) : product.costLocked && (
                               <span
                                 className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-blue-500 cursor-help"
                                 title="Calculado automáticamente de las compras"
@@ -706,10 +718,10 @@ export function ProductDetailPanel({
                               </span>
                             )}
                           </p>
-                          <p className={`stat-card-value mt-2 ${product.costLocked ? "text-blue-600 dark:text-blue-400" : ""}`}>
+                          <p className={`stat-card-value mt-2 ${product.costLocked && !(pres.cost != null && pres.cost > 0) ? "text-blue-600 dark:text-blue-400" : ""}`}>
                             {presCost != null ? formatCompactCurrency(presCost, currency) : "—"}
                           </p>
-                          {product.costLocked && presCost != null && (
+                          {!(pres.cost != null && pres.cost > 0) && product.costLocked && presCost != null && (
                             <p className="mt-1 text-[10px] text-blue-500/70">
                               {formatCompactCurrency(product.costPrice || 0, currency)} × {pres.equivalentQty}
                             </p>
