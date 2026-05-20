@@ -22,6 +22,7 @@ import { useAppToast } from "@features/notifications/components/AppToast";
 import { useTenant } from "@features/superadmin/hooks/useSuperAdmin";
 import { COMPLEMENTS } from "@shared/config/complementConfig";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
+import ComplementSelectorModal from "@features/superadmin/components/ComplementSelectorModal";
 
 const planLabels: Record<string, string> = {
   app_base: "Edición estándar",
@@ -52,6 +53,7 @@ export default function TenantDetail() {
   const { tenant, adminUser, settings, stats, usagePercentages, loading } = useTenant(tenantId);
 
   const [editing, setEditing] = useState(false);
+  const [complementModalOpen, setComplementModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     plan: "",
     status: "",
@@ -329,24 +331,21 @@ export default function TenantDetail() {
                   <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-default-500">
                     Complementos
                   </label>
-                  <div className="space-y-2 max-h-48 overflow-y-auto rounded-xl border border-divider bg-background p-3">
-                    {Object.entries(COMPLEMENTS).map(([id, comp]) => (
-                      <label key={id} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={editForm.complements.includes(id)}
-                          onChange={(e) => {
-                            const newComplements = e.target.checked
-                              ? [...editForm.complements, id]
-                              : editForm.complements.filter((c) => c !== id);
-                            setEditForm({ ...editForm, complements: newComplements });
-                          }}
-                          className="h-4 w-4 rounded border-divider text-primary focus:ring-primary"
-                        />
-                        <span className="text-sm text-foreground">{comp.name}</span>
-                        <span className="text-xs text-default-500">${comp.price}/mes</span>
-                      </label>
-                    ))}
+                  <div className="rounded-xl border border-divider bg-background p-3">
+                    <p className="text-xs text-default-500 mb-2">
+                      {editForm.complements.length === 0
+                        ? "Sin complementos activos"
+                        : `${editForm.complements.length} activo${editForm.complements.length !== 1 ? "s" : ""} (${editForm.complements.map((c) => COMPLEMENTS[c]?.name || c).join(", ")})`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setComplementModalOpen(true)}
+                      className="w-full rounded-xl border border-dashed border-primary/30 px-4 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary/5"
+                    >
+                      {editForm.complements.length === 0
+                        ? "Gestionar complementos"
+                        : "Modificar complementos"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -483,6 +482,14 @@ export default function TenantDetail() {
           </div>
         )}
       </div>
+
+      {/* Complement Selector Modal */}
+      <ComplementSelectorModal
+        open={complementModalOpen}
+        onClose={() => setComplementModalOpen(false)}
+        selected={editForm.complements}
+        onSave={(complements) => setEditForm((prev) => ({ ...prev, complements }))}
+      />
     </SuperAdminLayout>
   );
 }

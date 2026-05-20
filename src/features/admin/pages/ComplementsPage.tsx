@@ -14,9 +14,11 @@ import {
   Sparkles,
   Zap,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 
-import { COMPLEMENTS, APP_BASE } from "@shared/config/complementConfig";
+import { useComplementCatalog } from "@features/complements/hooks/useComplementCatalog";
+import { APP_BASE } from "@shared/config/complementConfig";
 
 const fmtArs = (n: number) =>
   "$ " + n.toLocaleString("es-AR");
@@ -39,8 +41,6 @@ const FEATURE_LABELS_ES: Record<string, string> = {
   whatsapp: "WhatsApp",
 };
 
-
-
 const COMPLEMENT_ICONS: Record<string, React.ElementType> = {
   expansion: Layers,
   team_10: Users,
@@ -57,37 +57,9 @@ const COMPLEMENT_ICONS: Record<string, React.ElementType> = {
   whatsapp: MessageCircle,
 };
 
-const COMPLEMENT_DESCRIPTIONS: Record<string, string> = {
-  expansion:
-    "Eliminá los límites de productos y ventas mensuales. Ideal para negocios en crecimiento que necesitan escalar sin restricciones.",
-  team_10:
-    "Agregá hasta 10 usuarios con roles diferenciados (admin, ventas, depósito, contabilidad). Perfecto para equipos en crecimiento.",
-  team_unlimited:
-    "Usuarios ilimitados con roles personalizables. Para empresas grandes con equipos distribuidos.",
-  financiero:
-    "Dashboard visual con KPIs de tesorería, comparación de ventas vs compras y alertas de variaciones anormales.",
-  contabilidad:
-    "Libros IVA automáticos (ventas y compras), exportación para contador y generación de asientos contables.",
-  bom:
-    "Definí productos compuestos por ingredientes. Cálculo automático de costos teóricos y explosión de materiales.",
-  produccion:
-    "Registrá órdenes de producción, consumo automático de stock de ingredientes y trazabilidad de lotes.",
-  api:
-    "Acceso programático completo a tu tenant. Documentación interactiva Swagger e integración con otros sistemas.",
-  reportes:
-    "Reportes personalizables por fecha, producto, vendedor y estado. Exportación a Excel y PDF.",
-  listas_precios:
-    "Hasta 5 listas de precios diferenciadas. Asignación automática por cliente (mayoristas, minoristas, etc.).",
-  centros_costo:
-    "Categorizá gastos por centro de costo, analizá rentabilidad por producto y visualizá distribución de costos.",
-  conciliacion:
-    "Match automático entre movimientos bancarios y registros internos. Importación de extractos bancarios.",
-  whatsapp:
-    "Conectá un número de WhatsApp y dejá que un agente con IA sea tu nuevo asistente personal. El asistente puede consultar stock, precios, tomar pedidos y responder preguntas frecuentes 24/7 sin intervención humana.",
-};
-
 export default function ComplementsPage() {
   const navigate = useNavigate();
+  const { catalog, loading } = useComplementCatalog();
 
   return (
     <div className="h-full">
@@ -116,7 +88,7 @@ export default function ComplementsPage() {
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Edición estándar</h2>
-                <span className="text-lg font-bold text-primary">{fmtArs(APP_BASE.price)}/mes</span>
+                <span className="text-lg font-bold text-primary">{fmtArs(catalog?.appBasePrice || APP_BASE.price)}/mes</span>
               </div>
               <p className="mt-1 text-sm text-default-500">
                 Incluido en todos los planes. Todo lo esencial para arrancar y operar tu negocio.
@@ -157,44 +129,50 @@ export default function ComplementsPage() {
         </div>
 
         {/* Complements Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Object.values(COMPLEMENTS).map((comp) => {
-            const Icon = COMPLEMENT_ICONS[comp.id] || Zap;
-            return (
-              <div
-                key={comp.id}
-                className="group rounded-2xl border border-default-200 bg-content1 p-5 transition hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
-                    <Icon size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-foreground">{comp.name}</h3>
-                      <span className="text-sm font-bold text-primary">{fmtArs(comp.price)}/mes</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(catalog?.complements || []).map((comp) => {
+              const Icon = COMPLEMENT_ICONS[comp.id] || Zap;
+              return (
+                <div
+                  key={comp.id}
+                  className="group rounded-2xl border border-default-200 bg-content1 p-5 transition hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
+                      <Icon size={20} />
                     </div>
-                    <p className="mt-2 text-xs text-default-500 leading-relaxed">
-                      {COMPLEMENT_DESCRIPTIONS[comp.id] || comp.features.join(", ")}
-                    </p>
-                    {comp.features.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {comp.features.map((f) => (
-                          <span
-                            key={f}
-                            className="rounded-full bg-default-100 px-2 py-0.5 text-[9px] font-medium text-default-500"
-                          >
-                            {FEATURE_LABELS_ES[f] || f.replace(/_/g, " ")}
-                          </span>
-                        ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-foreground">{comp.name}</h3>
+                        <span className="text-sm font-bold text-primary">{fmtArs(comp.price)}/mes</span>
                       </div>
-                    )}
+                      <p className="mt-2 text-xs text-default-500 leading-relaxed">
+                        {comp.description || comp.features.join(", ")}
+                      </p>
+                      {comp.features.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {comp.features.map((f) => (
+                            <span
+                              key={f}
+                              className="rounded-full bg-default-100 px-2 py-0.5 text-[9px] font-medium text-default-500"
+                            >
+                              {FEATURE_LABELS_ES[f] || f.replace(/_/g, " ")}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

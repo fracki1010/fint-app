@@ -144,6 +144,15 @@ export interface PricingConfig {
   effectivePrices: Record<string, number>;
 }
 
+export interface PricingData {
+  success: boolean;
+  appBasePrice: number;
+  effectivePrices: Record<string, number>;
+  defaultPrices: Record<string, number>;
+  overrides: Record<string, number>;
+  descriptions: Record<string, string>;
+}
+
 export function useSuperAdminPricing() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["superadmin", "pricing"],
@@ -154,7 +163,7 @@ export function useSuperAdminPricing() {
   });
 
   return {
-    pricing: data as { success: boolean; effectivePrices: Record<string, number>; appBasePrice: number } | undefined,
+    pricing: data as PricingData | undefined,
     loading: isLoading,
     error: error?.message || null,
     refetch,
