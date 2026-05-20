@@ -12,11 +12,14 @@ import api from "@shared/api/axios";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
+const fmtArs = (n: number) =>
+  "$ " + n.toLocaleString("es-AR");
+
 const plans = [
   {
     id: "app_base",
     name: "Edición estándar",
-    price: 200,
+    price: 8000,
     description: "Base operativa para todo negocio",
     features: ["1 usuario", "200 productos", "500 ventas/mes", "Soporte email", "Cta. cte. clientes/proveedores", "Presupuestos", "Conciliación bancaria"],
   },
@@ -267,7 +270,7 @@ export default function TenantCreate() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-foreground">{plan.name}</span>
-                    <span className="text-lg font-bold text-primary">${plan.price}</span>
+                    <span className="text-lg font-bold text-primary">{fmtArs(plan.price)}</span>
                   </div>
                   <p className="mt-1 text-xs text-default-400">{plan.description}</p>
                   <ul className="mt-3 space-y-1">

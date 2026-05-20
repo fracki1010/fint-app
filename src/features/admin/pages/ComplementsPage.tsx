@@ -18,6 +18,9 @@ import {
 
 import { COMPLEMENTS, APP_BASE } from "@shared/config/complementConfig";
 
+const fmtArs = (n: number) =>
+  "$ " + n.toLocaleString("es-AR");
+
 const FEATURE_LABELS_ES: Record<string, string> = {
   client_account: "Cuenta corriente clientes",
   supplier_account: "Cuenta corriente proveedores",
@@ -113,7 +116,7 @@ export default function ComplementsPage() {
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">Edición estándar</h2>
-                <span className="text-lg font-bold text-primary">${APP_BASE.price}/mes</span>
+                <span className="text-lg font-bold text-primary">{fmtArs(APP_BASE.price)}/mes</span>
               </div>
               <p className="mt-1 text-sm text-default-500">
                 Incluido en todos los planes. Todo lo esencial para arrancar y operar tu negocio.
@@ -169,7 +172,7 @@ export default function ComplementsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold text-foreground">{comp.name}</h3>
-                      <span className="text-sm font-bold text-primary">${comp.price}/mes</span>
+                      <span className="text-sm font-bold text-primary">{fmtArs(comp.price)}/mes</span>
                     </div>
                     <p className="mt-2 text-xs text-default-500 leading-relaxed">
                       {COMPLEMENT_DESCRIPTIONS[comp.id] || comp.features.join(", ")}

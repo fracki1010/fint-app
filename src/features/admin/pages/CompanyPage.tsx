@@ -10,6 +10,9 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { useTenantPlan } from "@features/superadmin/hooks/useTenantPlan";
 import { APP_BASE, COMPLEMENTS } from "@shared/config/complementConfig";
 
+const fmtArs = (n: number) =>
+  "$ " + n.toLocaleString("es-AR");
+
 const FEATURE_LABELS_ES: Record<string, string> = {
   client_account: "Cuenta corriente clientes",
   supplier_account: "Cuenta corriente proveedores",
@@ -242,7 +245,7 @@ export default function CompanyPage() {
                       <p className="text-sm text-default-400">Tu plan actual</p>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-primary">${APP_BASE.price}/mes</span>
+                  <span className="text-lg font-bold text-primary">{fmtArs(APP_BASE.price)}/mes</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {APP_BASE.features.map((f) => (
