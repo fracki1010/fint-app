@@ -137,6 +137,30 @@ export interface AuditLogEntry {
   timestamp: string;
 }
 
+export interface PricingConfig {
+  appBasePrice: number;
+  defaultPrices: Record<string, number>;
+  overrides: Record<string, number>;
+  effectivePrices: Record<string, number>;
+}
+
+export function useSuperAdminPricing() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["superadmin", "pricing"],
+    queryFn: async () => {
+      const response = await api.get("/superadmin/pricing");
+      return response.data;
+    },
+  });
+
+  return {
+    pricing: data as { success: boolean; effectivePrices: Record<string, number>; appBasePrice: number } | undefined,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
+
 export function useAuditLogs(filters?: {
   page?: number;
   limit?: number;

@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@shared/api/axios";
 import { useAppToast } from "@features/notifications/components/AppToast";
 import { useTenant } from "@features/superadmin/hooks/useSuperAdmin";
+import { COMPLEMENTS } from "@shared/config/complementConfig";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
 
 const planLabels: Record<string, string> = {
@@ -55,6 +56,7 @@ export default function TenantDetail() {
     plan: "",
     status: "",
     notes: "",
+    complements: [] as string[],
   });
 
   const startEditing = () => {
@@ -63,6 +65,7 @@ export default function TenantDetail() {
       plan: tenant.plan,
       status: tenant.status,
       notes: tenant.metadata?.notes || "",
+      complements: tenant.complements || [],
     });
     setEditing(true);
   };
@@ -72,6 +75,7 @@ export default function TenantDetail() {
       const response = await api.patch(`/superadmin/tenants/${tenantId}`, {
         plan: data.plan,
         status: data.status,
+        complements: data.complements,
         metadata: { notes: data.notes },
       });
       return response.data;
@@ -321,6 +325,30 @@ export default function TenantDetail() {
                     <option value="cancelled">Cancelado</option>
                   </select>
                 </div>
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-default-500">
+                    Complementos
+                  </label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto rounded-xl border border-divider bg-background p-3">
+                    {Object.entries(COMPLEMENTS).map(([id, comp]) => (
+                      <label key={id} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editForm.complements.includes(id)}
+                          onChange={(e) => {
+                            const newComplements = e.target.checked
+                              ? [...editForm.complements, id]
+                              : editForm.complements.filter((c) => c !== id);
+                            setEditForm({ ...editForm, complements: newComplements });
+                          }}
+                          className="h-4 w-4 rounded border-divider text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-foreground">{comp.name}</span>
+                        <span className="text-xs text-default-500">${comp.price}/mes</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="mt-4 space-y-4">
@@ -348,7 +376,7 @@ export default function TenantDetail() {
                     {tenant.complements?.length > 0 ? (
                       tenant.complements.map((c: string) => (
                         <span key={c} className="rounded bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
-                          {c.replace(/_/g, " ")}
+                          {COMPLEMENTS[c]?.name || c.replace(/_/g, " ")}
                         </span>
                       ))
                     ) : (

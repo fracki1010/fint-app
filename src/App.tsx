@@ -69,6 +69,7 @@ const TenantListPage = lazy(() => import("@features/superadmin/pages/TenantList"
 const TenantCreatePage = lazy(() => import("@features/superadmin/pages/TenantCreate"));
 const TenantDetailPage = lazy(() => import("@features/superadmin/pages/TenantDetail"));
 const AuditLogPage = lazy(() => import("@features/superadmin/pages/AuditLogPage"));
+const PricingPage = lazy(() => import("@features/superadmin/pages/PricingPage"));
 const BankAccountsPage = lazy(() => import("@features/banking/pages/BankAccounts"));
 const BankTransactionsPage = lazy(() => import("@features/banking/pages/BankTransactions"));
 const ReconciliationPage = lazy(() => import("@features/banking/pages/Reconciliation"));
@@ -144,6 +145,7 @@ function App() {
           <Route element={<TenantCreatePage />} path="/superadmin/tenants/new" />
           <Route element={<TenantDetailPage />} path="/superadmin/tenants/:tenantId" />
           <Route element={<AuditLogPage />} path="/superadmin/audit" />
+          <Route element={<PricingPage />} path="/superadmin/pricing" />
         </Route>
 
         {/* Regular App Routes — superadmins can't access these */}

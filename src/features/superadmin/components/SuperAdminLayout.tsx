@@ -10,6 +10,7 @@ import {
   X,
   Sun,
   Moon,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "@features/auth/hooks/useAuth";
 import { useThemeStore } from "@shared/stores/themeStore";
@@ -21,6 +22,7 @@ interface SuperAdminLayoutProps {
 const navItems = [
   { path: "/superadmin", label: "Dashboard", icon: LayoutDashboard },
   { path: "/superadmin/tenants", label: "Tenants", icon: Building2 },
+  { path: "/superadmin/pricing", label: "Precios", icon: DollarSign },
   { path: "/superadmin/audit", label: "Audit Log", icon: ClipboardList },
 ];
 
