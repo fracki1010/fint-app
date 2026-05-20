@@ -134,8 +134,10 @@ export default function MobileLayout() {
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-4 border-b border-white/8">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-[84px] w-[84px] rounded-xl object-contain" />
+          <div className="flex items-center gap-1">
+            <div className="h-[84px] w-[84px] overflow-hidden rounded-xl">
+              <img src={logo} alt="Logo" className="h-[110px] w-[110px] -m-[13px] object-cover" />
+            </div>
             <div>
               <p className="text-[15px] font-bold tracking-tight text-foreground">Fint Suite</p>
               <p className="text-[11px] text-default-400">Panel Operativo</p>
@@ -218,9 +220,9 @@ export default function MobileLayout() {
       <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 lg:pb-0">
         {/* Mobile header with logo */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="flex h-[66px] w-[66px] items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-              <img src={logo} alt="Logo" className="h-[54px] w-[54px] rounded-xl object-contain" />
+          <div className="flex items-center gap-1">
+            <div className="flex h-[66px] w-[66px] items-center justify-center overflow-hidden rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+              <img src={logo} alt="Logo" className="h-[86px] w-[86px] -m-[10px] object-cover" />
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">Fint Suite</p>
