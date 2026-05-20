@@ -34,7 +34,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
-import logo from "@/assets/logo-ambar-5.svg";
+import logo from "@/assets/logo-ambar-7.svg";
 
 export default function MobileLayout() {
   const location = useLocation();
@@ -135,7 +135,7 @@ export default function MobileLayout() {
         {/* Brand */}
         <div className="px-5 pt-6 pb-4 border-b border-white/8">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-14 w-14 rounded-xl object-contain" />
+            <img src={logo} alt="Logo" className="h-[84px] w-[84px] rounded-xl object-contain" />
             <div>
               <p className="text-[15px] font-bold tracking-tight text-foreground">Fint Suite</p>
               <p className="text-[11px] text-default-400">Panel Operativo</p>
@@ -219,8 +219,8 @@ export default function MobileLayout() {
         {/* Mobile header with logo */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-              <img src={logo} alt="Logo" className="h-9 w-9 rounded-xl object-contain" />
+            <div className="flex h-[66px] w-[66px] items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+              <img src={logo} alt="Logo" className="h-[54px] w-[54px] rounded-xl object-contain" />
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">Fint Suite</p>
