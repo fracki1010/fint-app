@@ -499,7 +499,7 @@ export default function DashboardPage() {
         </section>
 
         {/* ── Purchasing Widgets ─────────────────────────────────────────── */}
-        <section className="grid gap-5 lg:grid-cols-3">
+        <section className="grid gap-5 lg:grid-cols-2">
           {/* Cuentas por Cobrar - NEW */}
           <ReceivablesSummaryCard 
             data={receivables} 

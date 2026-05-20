@@ -138,7 +138,7 @@ export default function MobileLayout() {
             <div className="h-[84px] w-[84px] overflow-hidden rounded-xl">
               <img src={logo} alt="Logo" className="h-[110px] w-[110px] -m-[13px] object-cover" />
             </div>
-            <div className="-ml-1">
+            <div className="-ml-3">
               <p className="text-[15px] font-bold leading-none tracking-tight text-foreground">Fint Suite</p>
               <p className="text-[11px] leading-none text-default-400">Panel Operativo</p>
             </div>
@@ -224,7 +224,7 @@ export default function MobileLayout() {
             <div className="flex h-[66px] w-[66px] items-center justify-center overflow-hidden rounded-2xl bg-primary/10 ring-1 ring-primary/20">
               <img src={logo} alt="Logo" className="h-[86px] w-[86px] -m-[10px] object-cover" />
             </div>
-            <div className="-ml-0.5">
+            <div className="-ml-2">
               <p className="text-sm font-bold leading-none text-foreground">Fint Suite</p>
               <p className="text-[10px] leading-none text-default-400">Panel Operativo</p>
             </div>
