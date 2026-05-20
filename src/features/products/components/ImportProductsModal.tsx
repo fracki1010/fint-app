@@ -51,6 +51,8 @@ export default function ImportProductsModal({ open, onClose, onImported }: Impor
         sku: g.sku,
         ...(g.data[0].codigo_barras ? { codigo_barras: g.data[0].codigo_barras } : {}),
         ...(g.data[0].descripcion ? { descripcion: g.data[0].descripcion } : {}),
+        ...(g.data[0].costo ? { costo: g.data[0].costo } : {}),
+        ...(g.data[0].markup ? { markup: g.data[0].markup } : {}),
         precio_base: g.data[0].precio_base,
         precio_costo: g.data[0].precio_costo,
         stock_actual: g.data[0].stock_actual,
@@ -62,9 +64,12 @@ export default function ImportProductsModal({ open, onClose, onImported }: Impor
         precio_mayorista: g.data[0].precio_mayorista,
         precio_distribuidor: g.data[0].precio_distribuidor,
         presentacion_nombre: g.presentations[0]?.presentacion_nombre,
+        presentacion_costo: g.presentations[0]?.presentacion_costo,
+        presentacion_markup: g.presentations[0]?.presentacion_markup,
         presentacion_precio: g.presentations[0]?.presentacion_precio,
         presentacion_unidades: g.presentations[0]?.presentacion_unidades,
         presentacion_sku: g.presentations[0]?.presentacion_sku,
+        presentacion_unidad_medida: g.presentations[0]?.presentacion_unidad_medida,
       }));
       const res = await importProducts({ products });
       setResult(res);

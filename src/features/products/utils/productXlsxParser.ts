@@ -18,9 +18,12 @@ export interface XlsxProductRow {
   precio_mayorista?: number;
   precio_distribuidor?: number;
   presentacion_nombre?: string;
+  presentacion_costo?: number;
+  presentacion_markup?: number;
   presentacion_precio?: number;
   presentacion_unidades?: number;
   presentacion_sku?: string;
+  presentacion_unidad_medida?: string;
 }
 
 export interface XlsxParseResult {
@@ -76,9 +79,17 @@ export function parseProductXlsx(file: File): Promise<XlsxParseResult> {
             precio_mayorista: parseFloat(raw["precio_mayorista"]) || undefined,
             precio_distribuidor: parseFloat(raw["precio_distribuidor"]) || undefined,
             presentacion_nombre: (raw["presentacion_nombre"] || "").toString().trim() || undefined,
-            presentacion_precio: parseFloat(raw["presentacion_precio"]) || undefined,
+            presentacion_costo: parseFloat(raw["presentacion_costo"]) || undefined,
+            presentacion_markup: parseFloat(raw["presentacion_markup"]) || undefined,
+            presentacion_precio: (() => {
+              const pc = parseFloat(raw["presentacion_costo"]);
+              const pm = parseFloat(raw["presentacion_markup"]);
+              if (!isNaN(pc) && !isNaN(pm)) return pc * (1 + pm / 100);
+              return parseFloat(raw["presentacion_precio"]) || undefined;
+            })(),
             presentacion_unidades: parseFloat(raw["presentacion_unidades"]) || undefined,
             presentacion_sku: (raw["presentacion_sku"] || "").toString().trim() || undefined,
+            presentacion_unidad_medida: (raw["presentacion_unidad_medida"] || "").toString().trim() || undefined,
           };
 
           if (!row.nombre) {
@@ -146,10 +157,12 @@ export function generateProductTemplate(): XLSX.WorkBook {
       precio_minorista: 1200,
       precio_mayorista: 1000,
       precio_distribuidor: 900,
-      presentacion_nombre: "Presentación Ejemplo",
-      presentacion_precio: 1200,
-      presentacion_unidades: 1,
+      presentacion_nombre: "Bolsa 20kg",
+      presentacion_costo: 700,
+      presentacion_markup: 40,
+      presentacion_unidades: 20,
       presentacion_sku: "PROD-001-P1",
+      presentacion_unidad_medida: "kg",
     },
   ];
   const ws = XLSX.utils.json_to_sheet(data);
