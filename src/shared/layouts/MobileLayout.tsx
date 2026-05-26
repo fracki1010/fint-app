@@ -31,6 +31,7 @@ import {
   Sun,
   Moon,
   Lock,
+  Menu,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-7.svg";
@@ -206,11 +207,30 @@ export default function MobileLayout() {
 
       {/* ── Main content ─────────────────────────────────────────────── */}
       <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0">
-        {/* Mobile top bar — solo el logo centrado */}
-        <div className="sticky top-0 z-30 flex items-center justify-center border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden">
+        {/* Mobile top bar — hamburguesa, logo centrado, campana */}
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden">
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
+            onClick={() => setShowDrawer(true)}
+            aria-label="Abrir menú"
+          >
+            <Menu size={20} strokeWidth={2.5} />
+          </button>
           <div className="flex h-8 w-8 overflow-hidden rounded-lg">
             <img src={logo} alt="Fint" className="h-[42px] w-[42px] -m-[5px] object-cover" />
           </div>
+          <button
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
+            onClick={() => setShowNotifications(true)}
+            aria-label="Notificaciones"
+          >
+            <Bell size={19} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white ring-2 ring-background">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
         </div>
         <div className="px-4 pt-2 lg:px-6 lg:pt-4">
           <PlanLimitBanner />
