@@ -250,7 +250,7 @@ export default function DashboardPage() {
   const growthColor = growthPct > 0 ? "text-success" : growthPct < 0 ? "text-danger" : "text-default-400";
 
   return (
-    <div className="relative flex w-full flex-col bg-background font-sans">
+    <div className="relative flex w-full min-w-0 flex-col overflow-x-hidden bg-background font-sans">
 
       {/* ── Hero: Revenue + KPIs ───────────────────────────────────────── */}
       <div className="financial-card-accent mx-4 mt-4 max-w-full rounded-[28px] p-5 lg:mx-6 lg:mt-6 lg:p-7">
