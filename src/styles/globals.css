@@ -423,7 +423,13 @@ select.corp-input {
   background: color-mix(in srgb, var(--heroui-background) 84%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  padding: 14px 24px;
+  padding: 12px 16px;
+}
+
+@media (min-width: 640px) {
+  .page-header {
+    padding: 14px 24px;
+  }
 }
 
 @media (min-width: 1024px) {

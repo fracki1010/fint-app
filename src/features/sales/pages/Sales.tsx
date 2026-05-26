@@ -208,7 +208,7 @@ export default function SalesPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "min-h-screen" : "min-h-screen pb-28"}`}>
+    <div className={`flex flex-col ${isDesktop ? "min-h-screen" : "min-h-screen pb-20"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -216,33 +216,68 @@ export default function SalesPage() {
             <h1 className="page-title">Ventas</h1>
             {!isHeaderCompact && <p className="page-subtitle">Seguimiento de operaciones y estados</p>}
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              className="flex items-center gap-1.5 rounded-xl border border-divider/30 px-4 py-2.5 text-sm font-bold text-default-600 hover:bg-content2/60 transition"
-              onClick={() => setIsImportModalOpen(true)}
-              title="Importar ventas desde CSV"
-            >
-              <Upload size={15} /> {isDesktop ? "Importar" : ""}
-            </button>
-            <Link
-              className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/20 transition"
-              to="/quick-sale"
-            >
-              <ScanBarcode size={15} /> Venta Rápida
-            </Link>
-            <Link
-              className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition"
-              to="/new-operation"
-            >
-              <Plus size={15} /> Nueva venta
-            </Link>
-            <button
-              className="flex items-center gap-1.5 rounded-xl border border-divider/30 px-4 py-2.5 text-sm font-bold text-default-600 hover:bg-content2/60 transition"
-              onClick={exportToCsv}
-              title="Exportar ventas filtradas"
-            >
-              <FileDown size={15} /> {isDesktop ? "Exportar" : ""}
-            </button>
+          <div className={`flex items-center gap-1.5 ${isDesktop ? "" : "shrink-0"}`}>
+            {isDesktop ? (
+              <>
+                <button
+                  className="flex items-center gap-1.5 rounded-xl border border-divider/30 px-4 py-2.5 text-sm font-bold text-default-600 hover:bg-content2/60 transition"
+                  onClick={() => setIsImportModalOpen(true)}
+                  title="Importar ventas desde CSV"
+                >
+                  <Upload size={15} /> Importar
+                </button>
+                <Link
+                  className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/20 transition"
+                  to="/quick-sale"
+                >
+                  <ScanBarcode size={15} /> Venta Rápida
+                </Link>
+                <Link
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 hover:bg-primary/90 transition"
+                  to="/new-operation"
+                >
+                  <Plus size={15} /> Nueva venta
+                </Link>
+                <button
+                  className="flex items-center gap-1.5 rounded-xl border border-divider/30 px-4 py-2.5 text-sm font-bold text-default-600 hover:bg-content2/60 transition"
+                  onClick={exportToCsv}
+                  title="Exportar ventas filtradas"
+                >
+                  <FileDown size={15} /> Exportar
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25 transition active:scale-90"
+                  to="/new-operation"
+                  title="Nueva venta"
+                >
+                  <Plus size={18} />
+                </Link>
+                <Link
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider/30 text-default-500 transition active:scale-90"
+                  to="/quick-sale"
+                  title="Venta rápida"
+                >
+                  <ScanBarcode size={18} />
+                </Link>
+                <button
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider/30 text-default-500 transition active:scale-90"
+                  onClick={() => setIsImportModalOpen(true)}
+                  title="Importar"
+                >
+                  <Upload size={18} />
+                </button>
+                <button
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider/30 text-default-500 transition active:scale-90"
+                  onClick={exportToCsv}
+                  title="Exportar"
+                >
+                  <FileDown size={18} />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -477,7 +512,7 @@ export default function SalesPage() {
 
       {/* Mobile FABs */}
       {!isDesktop && (
-        <div className="fixed bottom-[100px] right-6 z-10 flex flex-col gap-3 lg:hidden">
+        <div className="fixed bottom-6 right-6 z-10 flex flex-col gap-3 lg:hidden">
           <Button
             isIconOnly
             as={Link}
