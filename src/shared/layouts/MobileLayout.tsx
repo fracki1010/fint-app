@@ -30,8 +30,8 @@ import {
   CheckCheck,
   Sun,
   Moon,
-  MoreHorizontal,
   Lock,
+  Menu,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-7.svg";
@@ -46,17 +46,17 @@ export default function MobileLayout() {
   const { can, roleLabel } = usePermissions();
   const { hasFeature } = usePlanFeatures();
   const { theme, toggleTheme } = useThemeStore();
-  const [showMoreSheet, setShowMoreSheet] = useState(false);
-  const handleSheetNav = (path: string) => {
+  const [showDrawer, setShowDrawer] = useState(false);
+  const handleDrawerNav = (path: string) => {
     navigate(path);
-    setShowMoreSheet(false);
+    setShowDrawer(false);
   };
 
   const operationNav = [
     { path: "/", label: "Inicio", icon: LayoutGrid },
   ];
 
-  // ── Accordion groups for Essential-style layout ──
+  // ── Accordion groups for mobile drawer ──
   const comprasNav = [
     { path: "/purchases", label: "Órdenes de Compra", icon: ShoppingCart },
     { path: "/suppliers", label: "Proveedores", icon: Truck },
@@ -99,15 +99,7 @@ export default function MobileLayout() {
     ...(user?.isSuperAdmin ? [{ path: "/superadmin", label: "SuperAdmin", icon: Shield }] : []),
   ];
 
-  const mobileBottomTabs = [
-    { path: "/", label: "INICIO", icon: LayoutGrid },
-    { path: "/products", label: "ARTÍCULOS", icon: ClipboardList },
-    { path: "/sales", label: "VENTAS", icon: ReceiptText },
-    { path: "/clients", label: "CLIENTES", icon: Users },
-    { path: null, label: "MÁS", icon: MoreHorizontal },
-  ];
-
-  const hideBottomBar =
+  const hideFab =
     ["/new-operation"].includes(location.pathname);
 
   useEffect(() => {
@@ -217,7 +209,7 @@ export default function MobileLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 lg:pb-0">
+      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0">
         {/* Mobile header with logo */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
           <div className="flex items-center">
@@ -303,82 +295,63 @@ export default function MobileLayout() {
         </div>
       </div>
 
-      {/* ── Mobile More Sheet ────────────────────────────────────────── */}
+      {/* ── Mobile Drawer (hamburger menu) ──────────────────────────── */}
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[60] transition-all duration-300 ${showMoreSheet ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
-        onClick={() => setShowMoreSheet(false)}
+        className={`fixed inset-0 z-[60] transition-all duration-300 lg:hidden ${showDrawer ? "bg-black/40 backdrop-blur-sm" : "pointer-events-none opacity-0"}`}
+        onClick={() => setShowDrawer(false)}
       />
-      <div
-        className={`fixed bottom-0 z-[70] w-full max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-content1 transition-transform duration-300 ease-out scrollbar-sidebar ${showMoreSheet ? "translate-y-0" : "translate-y-full"}`}
-        style={{ boxShadow: "0 -24px 60px rgba(40,25,15,0.28)" }}
-      >
-        <div className="sticky top-0 z-10 flex items-center justify-center pt-3 pb-1 bg-inherit">
-          <div className="h-1 w-8 rounded-full bg-white/20" />
-        </div>
 
-        <div className="flex items-center justify-between px-5 py-2">
-          <h3 className="text-base font-bold text-foreground">Menú</h3>
+      {/* Drawer panel — offset: ocupa ~80%, deja ver contenido atrás */}
+      <div
+        className={`fixed left-0 top-0 z-[70] h-screen w-[80vw] max-w-sm border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out lg:hidden ${
+          showDrawer ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Drawer header with logo */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/8">
+          <div className="flex items-center gap-3">
+            <div className="h-[42px] w-[42px] overflow-hidden rounded-xl">
+              <img src={logo} alt="Logo" className="h-[56px] w-[56px] -m-[7px] object-cover" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Fint Suite</p>
+              <p className="text-[10px] text-default-400">Panel Operativo</p>
+            </div>
+          </div>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
-            onClick={() => setShowMoreSheet(false)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:bg-white/5 hover:text-foreground transition"
+            onClick={() => setShowDrawer(false)}
           >
             <X size={15} />
           </button>
         </div>
 
-        <div className="px-3 pb-8 space-y-5">
-          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={ShoppingCart} />
-          <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={ReceiptText} />
-          <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={Package} />
+        {/* Nav sections */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-sidebar" style={{ height: "calc(100vh - 72px)" }}>
+          <NavSection label="Inicio" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
+          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />
+          <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
+          <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
           {tesoreriaNav.length > 0 && (
-            <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} icon={DollarSign} />
+            <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={DollarSign} />
           )}
           {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
-            <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleSheetNav} accordion defaultOpen={false} />
+            <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
           )}
-          <NavSection
-            label="Administración"
-            items={adminNav}
-            isActive={isActive}
-            navigate={handleSheetNav}
-          />
-        </div>
+          <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={handleDrawerNav} />
+        </nav>
       </div>
 
-      {/* ── Mobile bottom bar ────────────────────────────────────────── */}
-      {!hideBottomBar && (
-        <nav className="fixed bottom-0 w-full border-t border-white/10 bg-[color:color-mix(in_srgb,var(--heroui-content1)_88%,transparent)] backdrop-blur-xl flex justify-around items-center pt-3 pb-6 px-2 z-50 shadow-[0_-18px_40px_rgba(20,12,8,0.20)] lg:hidden">
-          {mobileBottomTabs.map((tab) => {
-            const active = tab.path ? isActive(tab.path) : showMoreSheet;
-            const Icon = tab.icon;
-
-            return (
-              <button
-                key={tab.path || "more"}
-                className={`flex flex-col items-center justify-center gap-1 w-16 rounded-2xl py-1.5 transition-all ${
-                  active ? "text-primary scale-105" : "text-default-400 hover:text-default-600"
-                }`}
-                onClick={() => (tab.path ? navigate(tab.path) : setShowMoreSheet(true))}
-              >
-                <div className="relative">
-                  <Icon
-                    className={active ? "fill-primary/15 bg-primary/12 rounded-xl p-1 shadow-[0_8px_20px_rgba(217,119,6,0.18)]" : ""}
-                    size={24}
-                    strokeWidth={active ? 2.5 : 2}
-                  />
-                  {tab.path === "/" && unreadCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-[10px] font-bold tracking-tight ${active ? "opacity-100" : "opacity-70"}`}>
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+      {/* ── Floating Action Button (Hamburger) ────────────────────────── */}
+      {!hideFab && (
+        <button
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_8px_24px_rgba(200,143,55,0.35)] transition-all active:scale-90 hover:shadow-[0_8px_28px_rgba(200,143,55,0.45)] lg:hidden"
+          onClick={() => setShowDrawer(true)}
+          aria-label="Abrir menú"
+        >
+          <Menu size={22} strokeWidth={2.5} />
+        </button>
       )}
     </div>
   );
