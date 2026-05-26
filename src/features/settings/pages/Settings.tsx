@@ -9,7 +9,6 @@ import {
   LogOut,
   ArrowUpRight,
   X,
-  ChartNoAxesCombined,
   Palette,
   Receipt,
 } from "lucide-react";
@@ -427,14 +426,6 @@ export default function SettingsPage() {
             summary={`Prefijos: ${formData.invoicePrefix || "F-"}, ${formData.deliveryNotePrefix || "R-"}, ${formData.receiptPrefix || "D-"}`}
           />
 
-          <SettingsSection
-            className="lg:col-span-2"
-            title="Centro Financiero"
-            description="Dashboard ejecutivo, contabilidad, analisis y proyecciones."
-            icon={<ChartNoAxesCombined size={18} />}
-            onClick={() => navigate("/financial/dashboard")}
-            summary="Ir al modulo financiero"
-          />
         </div>
       </main>
 
