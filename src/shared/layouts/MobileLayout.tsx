@@ -99,9 +99,6 @@ export default function MobileLayout() {
     ...(user?.isSuperAdmin ? [{ path: "/superadmin", label: "SuperAdmin", icon: Shield }] : []),
   ];
 
-  const hideFab =
-    ["/new-operation"].includes(location.pathname);
-
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo({ top: 0, behavior: "auto" });
@@ -210,17 +207,35 @@ export default function MobileLayout() {
 
       {/* ── Main content ─────────────────────────────────────────────── */}
       <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0">
-        {/* Mobile header with logo */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
-          <div className="flex items-center">
-            <div className="flex h-[66px] w-[66px] items-center justify-center overflow-hidden rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-              <img src={logo} alt="Logo" className="h-[86px] w-[86px] -m-[10px] object-cover" />
-            </div>
-            <div className="-ml-2">
-              <p className="text-sm font-bold leading-none text-foreground">Fint Suite</p>
-              <p className="text-[10px] leading-none text-default-400">Panel Operativo</p>
+        {/* Mobile top bar */}
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-3 lg:hidden">
+          <div className="flex items-center gap-3">
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
+              onClick={() => setShowDrawer(true)}
+              aria-label="Abrir menú"
+            >
+              <Menu size={20} strokeWidth={2.5} />
+            </button>
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 overflow-hidden rounded-lg">
+                <img src={logo} alt="" className="h-[42px] w-[42px] -m-[5px] object-cover" />
+              </div>
+              <span className="text-sm font-bold text-foreground">Fint Suite</span>
             </div>
           </div>
+          <button
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
+            onClick={() => setShowNotifications(true)}
+            aria-label="Notificaciones"
+          >
+            <Bell size={19} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[8px] font-bold text-white ring-2 ring-background">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
         </div>
         <div className="px-4 pt-2 lg:px-6 lg:pt-4">
           <PlanLimitBanner />
@@ -343,16 +358,7 @@ export default function MobileLayout() {
         </nav>
       </div>
 
-      {/* ── Floating Action Button (Hamburger) ────────────────────────── */}
-      {!hideFab && (
-        <button
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_8px_24px_rgba(200,143,55,0.35)] transition-all active:scale-90 hover:shadow-[0_8px_28px_rgba(200,143,55,0.45)] lg:hidden"
-          onClick={() => setShowDrawer(true)}
-          aria-label="Abrir menú"
-        >
-          <Menu size={22} strokeWidth={2.5} />
-        </button>
-      )}
+
     </div>
   );
 }
