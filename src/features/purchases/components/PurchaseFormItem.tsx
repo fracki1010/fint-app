@@ -79,9 +79,7 @@ export default function PurchaseFormItem({
           <Autocomplete
             aria-label="Producto"
             classNames={{ base: "w-full", listboxWrapper: "bg-content1" }}
-            defaultItems={products.filter(
-              (p) => !p.type || p.type === "raw_material" || p.type === "both",
-            )}
+            defaultItems={products}
             inputValue={item.productName}
             placeholder="Buscar producto o materia prima..."
             size="sm"
