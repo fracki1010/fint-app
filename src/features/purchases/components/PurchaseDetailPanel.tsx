@@ -14,7 +14,6 @@ import {
   Truck,
   Ban,
   Receipt,
-  X,
   CheckCircle2,
   XCircle,
   DollarSign,
@@ -25,7 +24,6 @@ import { Purchase, PurchaseStatus, PaymentCondition, PaymentStatus } from "@shar
 import { formatCurrency } from "@shared/utils/currency";
 import { formatDateShort } from "@shared/utils/date";
 import api from "@shared/api/axios";
-import type { PayPurchaseData } from "@features/purchases/hooks/usePurchases";
 import { useReceipts, useCreateReceipt } from "@features/purchases/hooks/useReceipts";
 import ReceiveModal from "./ReceiveModal";
 
@@ -112,12 +110,10 @@ interface PurchaseDetailPanelProps {
   isConfirming: boolean;
   isReceiving: boolean;
   isCancelling: boolean;
-  isPaying: boolean;
   onBack: () => void;
   onConfirm: () => void;
   onReceive: () => void;
   onCancel: () => void;
-  onPay: (data: PayPurchaseData) => void;
 }
 
 // ── Component ───────────────────────────────────────────────────────────
@@ -130,14 +126,11 @@ export default function PurchaseDetailPanel({
   isConfirming,
   isReceiving: _isReceiving,
   isCancelling,
-  isPaying,
   onBack,
   onConfirm,
   onReceive: _onReceive,
   onCancel,
-  onPay,
 }: PurchaseDetailPanelProps) {
-  const [showPayModal, setShowPayModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
 
   const { data: receipts = [] } = useReceipts(selectedPurchase?._id);
@@ -170,14 +163,6 @@ export default function PurchaseDetailPanel({
 
   const isFullyReceived = receptionTotals?.allFullyReceived ?? false;
 
-  const remaining = selectedPurchase
-    ? Math.max(0, selectedPurchase.total - (selectedPurchase.paidAmount || 0))
-    : 0;
-
-  const [payData, setPayData] = useState<PayPurchaseData>({
-    amount: remaining,
-    paymentMethod: "transfer",
-  });
   const status = selectedPurchase?.status;
 
   if (!selectedPurchase) {
@@ -569,8 +554,14 @@ export default function PurchaseDetailPanel({
               </div>
             )}
             {(status === "CONFIRMED" || status === "RECEIVED") && selectedPurchase?.paymentStatus !== "PAID" && (
-              <Button color="secondary" className="flex-1" isDisabled={isPaying} onPress={() => { setPayData({ amount: remaining, paymentMethod: "transfer" }); setShowPayModal(true); }} startContent={<DollarSign size={18} />}>
-                Registrar Pago
+              <Button
+                color="secondary"
+                className="flex-1"
+                as={Link}
+                to={`/supplier-payments/new?supplierId=${getSupplierId(selectedPurchase.supplier) || ""}&purchaseId=${selectedPurchase._id}`}
+                startContent={<DollarSign size={18} />}
+              >
+                Ir a Orden de Pago
               </Button>
             )}
             {selectedPurchase?.paymentStatus === "PAID" && (
@@ -587,118 +578,6 @@ export default function PurchaseDetailPanel({
           </div>
         </div>
       </div>
-
-      {/* ── Pay Modal ──────────────────────────────────────────── */}
-      {showPayModal && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-sm rounded-t-2xl bg-content1 p-6 shadow-2xl sm:rounded-2xl">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-default-400">Compras</p>
-                <h3 className="mt-1 text-lg font-semibold text-foreground">Registrar Pago</h3>
-              </div>
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-divider/20 text-default-400 hover:text-foreground transition-colors"
-                onClick={() => setShowPayModal(false)}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <label className="block">
-                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-                  Monto *
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm font-mono"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={payData.amount}
-                  onChange={(e) =>
-                    setPayData((prev) => ({ ...prev, amount: Number(e.target.value) }))
-                  }
-                />
-                <p className="mt-1 text-[11px] text-default-400">
-                  Saldo pendiente: {formatCurrency(remaining, currency)}
-                </p>
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-                  Método de pago *
-                </span>
-                <select
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  value={payData.paymentMethod}
-                  onChange={(e) =>
-                    setPayData((prev) => ({ ...prev, paymentMethod: e.target.value as PayPurchaseData["paymentMethod"] }))
-                  }
-                >
-                  <option value="cash">Efectivo</option>
-                  <option value="card">Tarjeta</option>
-                  <option value="transfer">Transferencia</option>
-                  <option value="mercadopago">Mercado Pago</option>
-                  <option value="check">Cheque</option>
-                  <option value="other">Otro</option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-                  Referencia
-                </span>
-                <input
-                  className="corp-input w-full rounded-2xl px-4 py-3 text-sm"
-                  type="text"
-                  placeholder="N° de comprobante, recibo..."
-                  value={payData.reference || ""}
-                  onChange={(e) =>
-                    setPayData((prev) => ({ ...prev, reference: e.target.value }))
-                  }
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-default-500">
-                  Notas
-                </span>
-                <textarea
-                  className="corp-input min-h-[64px] w-full rounded-2xl px-4 py-3 text-sm resize-none"
-                  placeholder="Observaciones del pago..."
-                  value={payData.notes || ""}
-                  onChange={(e) =>
-                    setPayData((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                />
-              </label>
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                className="flex-1 rounded-2xl border border-divider/20 px-4 py-3 text-sm font-semibold text-default-600 hover:bg-content2/60 transition-colors"
-                onClick={() => setShowPayModal(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="flex-1 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 hover:shadow-emerald-500/35 transition-all"
-                disabled={isPaying || !payData.amount || payData.amount <= 0}
-                onClick={() => {
-                  onPay(payData);
-                  setShowPayModal(false);
-                }}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {isPaying && <Loader2 className="animate-spin" size={18} />}
-                  Confirmar Pago
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Receive Modal ──────────────────────────────────────── */}
       {showReceiveModal && selectedPurchase && (

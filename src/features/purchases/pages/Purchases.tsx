@@ -27,10 +27,9 @@ import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
 import {
   usePurchases,
   usePurchaseDetail,
-  usePayPurchase,
   buildPurchaseItemsPayload,
+
 } from "@features/purchases/hooks/usePurchases";
-import type { PayPurchaseData } from "@features/purchases/hooks/usePurchases";
 import { useProducts } from "@features/products/hooks/useProducts";
 import { useSuppliers } from "@features/suppliers/hooks/useSuppliers";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
@@ -518,7 +517,6 @@ export default function PurchasesPage() {
   } = usePurchases();
 
   const { purchase: detailPurchase, loading: detailLoading } = usePurchaseDetail(purchaseId);
-  const payPurchaseMutation = usePayPurchase();
   const { products } = useProducts();
   const { suppliers } = useSuppliers();
 
@@ -656,16 +654,6 @@ export default function PurchasesPage() {
     }
   };
 
-  const handlePay = async (data: PayPurchaseData) => {
-    if (!purchaseId) return;
-    try {
-      await payPurchaseMutation.mutateAsync({ id: purchaseId, data });
-      showToast({ variant: "success", message: "Pago registrado correctamente." });
-    } catch (error) {
-      showToast({ variant: "error", message: getErrorMessage(error, "No se pudo registrar el pago.") });
-    }
-  };
-
   // ── Detail view ───────────────────────────────────────────────────
 
   if (purchaseId) {
@@ -679,12 +667,10 @@ export default function PurchasesPage() {
           isConfirming={isConfirming}
           isReceiving={isReceiving}
           isCancelling={isCancelling}
-          isPaying={payPurchaseMutation.isPending}
           onBack={() => navigate("/purchases")}
           onConfirm={handleConfirm}
           onReceive={handleReceive}
           onCancel={handleCancel}
-          onPay={handlePay}
         />
         <ConfirmModal
           open={confirmReceive.open}
