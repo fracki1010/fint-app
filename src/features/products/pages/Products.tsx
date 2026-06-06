@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Boxes,
   Search,
@@ -14,9 +14,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@heroui/button";
 
 import {
-  useInfiniteProducts,
-  useProductDetail,
   useProducts,
+  usePaginatedProducts,
+  useProductDetail,
 } from "@features/products/hooks/useProducts";
 import { useIsDesktop } from "@shared/hooks/useIsDesktop";
 import { useSettings } from "@features/settings/hooks/useSettings";
@@ -25,7 +25,6 @@ import { useAppToast } from "@features/notifications/components/AppToast";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { getErrorMessage } from "@shared/utils/errors";
 import { getAvailableStock } from "@features/products/utils/stock";
-import { PaginationBar } from "@shared/components/PaginationBar";
 import {
   ProductFormModal,
   PresentationFormState,
@@ -88,18 +87,15 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId?: string }>();
   const isDesktop = useIsDesktop();
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const { products, total, loading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteProducts(20);
   const { settings } = useSettings();
   const currency = settings?.currency || "USD";
   const { createProduct, updateProduct, deleteProduct, isCreating, isUpdating, isDeleting } = useProducts({ enabled: false });
   const { showToast } = useAppToast();
 
-  const DESKTOP_PAGE_SIZE = 15;
-  const [desktopPage, setDesktopPage] = useState(1);
-
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -109,6 +105,12 @@ export default function ProductsPage() {
   });
   const [showImportModal, setShowImportModal] = useState(false);
 
+  const { products, total, totalPages, loading } = usePaginatedProducts({
+    page: currentPage,
+    limit: 10,
+    search: searchTerm,
+  });
+
   const queryClient = useQueryClient();
 
   const safeProducts = useMemo(
@@ -117,6 +119,15 @@ export default function ProductsPage() {
   );
 
   const { product: selectedProduct } = useProductDetail(productId);
+
+  // Debounced search: apply when user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchQuery);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (showEditModal && selectedProduct) {
@@ -153,48 +164,6 @@ export default function ProductsPage() {
     }
   }, [showEditModal, selectedProduct]);
 
-  useEffect(() => {
-    setDesktopPage(1);
-  }, [searchQuery, activeFilter]);
-
-  const filteredProducts = useMemo(() => {
-    let result = safeProducts;
-    const lowStockThreshold = settings?.lowStockThreshold || 5;
-
-    if (activeFilter === "low_stock") {
-      result = result.filter((p) => p.stock <= (p.minStock || lowStockThreshold));
-    } else if (activeFilter !== "all") {
-      result = result.filter((p) =>
-        (p.categories && p.categories.length > 0 ? p.categories : p.category ? [p.category] : []).some(
-          (cat) => cat.toLowerCase() === activeFilter.toLowerCase(),
-        ),
-      );
-    }
-
-    if (searchQuery) {
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.sku?.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-    }
-
-    return result;
-  }, [safeProducts, searchQuery, activeFilter, settings?.lowStockThreshold]);
-
-  const desktopItems = isDesktop
-    ? filteredProducts.slice((desktopPage - 1) * DESKTOP_PAGE_SIZE, desktopPage * DESKTOP_PAGE_SIZE)
-    : filteredProducts;
-  const desktopTotalPages = Math.ceil((total ?? filteredProducts.length) / DESKTOP_PAGE_SIZE);
-
-  const handleDesktopNext = () => {
-    const next = desktopPage + 1;
-    if (next * DESKTOP_PAGE_SIZE > safeProducts.length && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-    setDesktopPage(next);
-  };
-
   const categories = useMemo(() => {
     const cats = new Set(
       safeProducts.flatMap((p) =>
@@ -218,17 +187,6 @@ export default function ProductsPage() {
   const lowStockCount = safeProducts.filter(
     (p) => p.stock <= (p.minStock || settings?.lowStockThreshold || 5),
   ).length;
-
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target || !hasNextPage || isDesktop) return;
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0]?.isIntersecting && !isFetchingNextPage) fetchNextPage(); },
-      { rootMargin: "240px 0px" },
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, filteredProducts.length, isDesktop]);
 
   const resetForm = () =>
     setFormData({ ...emptyForm, unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure });
@@ -510,9 +468,9 @@ export default function ProductsPage() {
             <Loader2 className="mx-auto mb-3 animate-spin" size={28} />
             <p className="text-sm">Cargando catálogo...</p>
           </div>
-        ) : filteredProducts.length > 0 ? (
+        ) : products.length > 0 ? (
           <>
-            {(isDesktop ? desktopItems : filteredProducts).map((product) => {
+            {products.map((product) => {
               const defaultPres = product.presentations
                 ?.find(p => p._id === product.defaultPresentationId && p.isActive !== false)
                 || product.presentations?.find(p => p.isActive !== false)
@@ -529,7 +487,6 @@ export default function ProductsPage() {
                   ? product.costPrice * (defaultPres.equivalentQty || 1)
                   : undefined);
               const displayStock = defaultPres ? getAvailableStock(product, defaultPres) : product.stock;
-              // Compare stock in base units for alerts, display in presentation units
               const stockForAlert = product.stock;
               const isLow = stockForAlert <= (product.minStock || settings?.lowStockThreshold || 5);
               const isOut = stockForAlert <= 0;
@@ -552,7 +509,6 @@ export default function ProductsPage() {
                     <Boxes size={18} />
                   </div>
 
-                  {/* Name + SKU + categories */}
                   <div className="min-w-0 flex-1 text-left">
                     <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
                     <div className="mt-0.5 flex items-center gap-2">
@@ -565,13 +521,11 @@ export default function ProductsPage() {
                         <span key={cat} className="badge bg-content2/70 text-default-500">{cat}</span>
                       ))}
                     </div>
-                    {/* Stock visible on mobile inline */}
                     {!isDesktop && (
                       <p className={`mt-1 text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
                         {isOut ? "Sin stock" : `${displayStock} ${displayUnit}`}
                       </p>
                     )}
-                    {/* Presentation stock summary */}
                     {product.presentations && product.presentations.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         {product.presentations.filter((pr) => pr.isActive !== false).slice(0, isDesktop ? 3 : 2).map((pres) => {
@@ -590,7 +544,6 @@ export default function ProductsPage() {
                     )}
                   </div>
 
-                  {/* Stock — desktop column */}
                   {isDesktop && (
                     <div className="hidden lg:block shrink-0 w-28 text-right">
                       <p className={`text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
@@ -600,7 +553,6 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  {/* Cost — desktop column */}
                   {isDesktop && (
                     <div className="hidden lg:block shrink-0 w-24 text-right">
                       <p className="text-[10px] uppercase tracking-wide text-default-400">Costo</p>
@@ -610,7 +562,6 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  {/* Price + margin */}
                   <div className="shrink-0 text-right">
                     {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Precio</p>}
                     <p className="text-sm font-bold text-foreground">{formatCompactCurrency(displayPrice, currency)}</p>
@@ -626,31 +577,26 @@ export default function ProductsPage() {
               );
             })}
 
-            {!isDesktop && (
-              <>
-                <div ref={loadMoreRef} className="h-4 w-full" />
-                {isFetchingNextPage && (
-                  <div className="py-4 text-center text-default-400">
-                    <Loader2 className="mx-auto animate-spin" size={20} />
-                  </div>
-                )}
-                {!hasNextPage && safeProducts.length > 0 && (
-                  <p className="py-3 text-center text-xs text-default-400">Fin del catálogo</p>
-                )}
-              </>
-            )}
-            {isDesktop && (
-              <PaginationBar
-                from={(desktopPage - 1) * DESKTOP_PAGE_SIZE + 1}
-                loading={isFetchingNextPage}
-                page={desktopPage}
-                to={Math.min(desktopPage * DESKTOP_PAGE_SIZE, total ?? filteredProducts.length)}
-                total={total ?? filteredProducts.length}
-                totalPages={desktopTotalPages}
-                onNext={handleDesktopNext}
-                onPrev={() => setDesktopPage((p) => p - 1)}
-              />
-            )}
+            {/* Pagination for all screen sizes */}
+            <div className="flex items-center justify-center gap-3 py-3">
+              <button
+                className="rounded-xl border border-divider/30 px-4 py-2 text-xs font-bold text-default-500 hover:bg-content2/60 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Anterior
+              </button>
+              <span className="text-xs font-semibold text-default-500">
+                Pág. {currentPage} de {totalPages || 1}
+              </span>
+              <button
+                className="rounded-xl border border-divider/30 px-4 py-2 text-xs font-bold text-default-500 hover:bg-content2/60 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Siguiente
+              </button>
+            </div>
           </>
         ) : (
           <div className="py-16 text-center text-default-400">

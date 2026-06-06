@@ -67,7 +67,7 @@ export default function PaymentOrderFormPage() {
     if (!supplierId || Object.keys(selectedPurchases).length === 0) return;
     setSaving(true);
     try {
-      const items = Object.entries(selectedPurchases).map(([purchase, amount]) => ({ purchase, amount }));
+      const items = Object.entries(selectedPurchases).map(([purchaseId, amount]) => ({ purchaseId, amount }));
       const order = await createOrder({
         supplierId,
         date,

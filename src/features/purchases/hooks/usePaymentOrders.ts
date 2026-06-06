@@ -16,7 +16,7 @@ export interface CreatePaymentOrderPayload {
   paymentMethod: string;
   reference?: string;
   notes?: string;
-  items: { purchase: string; amount: number }[];
+  items: { purchaseId: string; amount: number }[];
   total: number;
 }
 

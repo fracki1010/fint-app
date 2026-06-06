@@ -37,7 +37,7 @@ export function useCreateReceipt() {
       };
     }) => {
       const response = await api.post<Receipt>(
-        `/purchases/${purchaseId}/receipts`,
+        `/purchases/${purchaseId}/receive`,
         data,
       );
       return response.data;

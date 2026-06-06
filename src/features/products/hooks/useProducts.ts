@@ -174,6 +174,53 @@ export function useInfiniteProducts(limit = 20) {
   };
 }
 
+export function usePaginatedProducts({
+  page = 1,
+  limit = 10,
+  search = "",
+  type,
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  type?: string;
+}) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["products-paginated", page, limit, search, type],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const params: Record<string, string | number> = { page, limit };
+      if (search.trim()) params.search = search.trim();
+      if (type) params.type = type;
+
+      const response = await api.get<PaginatedProductsResponse>("/products", {
+        params,
+      });
+
+      return response.data;
+    },
+    placeholderData: (prev: any) => prev,
+  });
+
+  const typedData = data as PaginatedProductsResponse | undefined;
+
+  return {
+    products: typedData?.products || [],
+    total: typedData?.total || 0,
+    totalPages: typedData?.totalPages || 1,
+    currentPage: typedData?.currentPage || page,
+    loading: isLoading,
+    error: error?.message || null,
+  } as {
+    products: Product[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    loading: boolean;
+    error: string | null;
+  };
+}
+
 export function useProductDetail(id?: string) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["product", id],
