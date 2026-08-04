@@ -10,6 +10,7 @@ import {
   Tags,
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import { useProductSearch, useProductLookupManual } from "@features/products/hooks/useProductLookup";
 import { useGenericClient } from "@features/clients/hooks/useGenericClient";
 import { useQuickSale } from "@features/sales/hooks/useQuickSale";
@@ -51,6 +52,7 @@ export default function QuickSalePage() {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
   const { showToast } = useAppToast();
+  const { isSimple } = useExperienceMode();
   const { settings } = useSettings();
   const { genericClient } = useGenericClient();
   const { clients } = useClients();
@@ -631,7 +633,7 @@ export default function QuickSalePage() {
       )}
 
       {/* Voucher Selection */}
-      {items.length > 0 && (
+      {items.length > 0 && !isSimple && (
         <div className="px-4 py-3 border-t border-divider/60">
           <VoucherSelector
             selectedTypes={selectedVoucherTypes}
@@ -654,6 +656,7 @@ export default function QuickSalePage() {
           onCheckout={handleFinalize}
           isCreating={isCreating}
           canFinalize={canFinalize}
+          isSimple={isSimple}
         />
       </div>
 
@@ -961,7 +964,7 @@ export default function QuickSalePage() {
             )}
 
             {/* Voucher Selection */}
-            {items.length > 0 && (
+            {items.length > 0 && !isSimple && (
               <div className="px-6 py-4 border-t border-divider/60">
                 <VoucherSelector
                   selectedTypes={selectedVoucherTypes}
@@ -984,6 +987,7 @@ export default function QuickSalePage() {
                 onCheckout={handleFinalize}
                 isCreating={isCreating}
                 canFinalize={canFinalize}
+                isSimple={isSimple}
               />
             </div>
           </div>

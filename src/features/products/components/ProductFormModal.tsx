@@ -12,6 +12,7 @@ import {
   Package,
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { PriceTier, PriceTiers } from "@shared/types";
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
@@ -167,6 +168,7 @@ export function ProductFormModal({
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scanningPresentationIndex, setScanningPresentationIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"etiqueta" | "precios" | "inventario" | "unidades">("etiqueta");
+  const { isSimple } = useExperienceMode();
 
   const {
     state: barcodeState,
@@ -257,8 +259,10 @@ export function ProductFormModal({
         <div className="flex gap-1">
           {[
             { id: "etiqueta" as const, label: "Etiqueta" },
-            { id: "precios" as const, label: "Precios" },
-            { id: "inventario" as const, label: "Inventario" },
+            ...(isSimple ? [] : [
+              { id: "precios" as const, label: "Precios" },
+              { id: "inventario" as const, label: "Inventario" },
+            ]),
             { id: "unidades" as const, label: "U. Alternativas" },
           ].map((tab) => (
             <button
@@ -305,7 +309,7 @@ export function ProductFormModal({
             </label>
 
             {/* Tipo (solo crear) */}
-            {mode === "create" && (
+            {mode === "create" && !isSimple && (
               <div className="mt-5">
                 <span className="mb-2.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Tipo</span>
                 <div className="flex gap-2">

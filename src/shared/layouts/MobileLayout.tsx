@@ -4,7 +4,9 @@ import { useNotifications } from "@features/notifications/hooks/useNotifications
 import { useAuth } from "@features/auth/hooks/useAuth";
 import { usePermissions } from "@features/auth/hooks/usePermissions";
 import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import PlanLimitBanner from "@shared/components/PlanLimitBanner";
+import { ExperienceModeBanner } from "@shared/components/ExperienceModeBanner";
 import {
   LayoutGrid,
   ClipboardList,
@@ -45,6 +47,7 @@ export default function MobileLayout() {
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
   const { hasFeature } = usePlanFeatures();
+  const { isSimple, isFull } = useExperienceMode();
   const { theme, toggleTheme } = useThemeStore();
   const [showDrawer, setShowDrawer] = useState(false);
   const handleDrawerNav = (path: string) => {
@@ -138,13 +141,13 @@ export default function MobileLayout() {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-sidebar">
 
           <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
-          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ShoppingCart} />
+          {!isSimple && <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ShoppingCart} />}
           <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ReceiptText} />
           <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={Package} />
-          {tesoreriaNav.length > 0 && (
+          {tesoreriaNav.length > 0 && !isSimple && (
             <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={DollarSign} />
           )}
-          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
             <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} />
           )}
           <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={navigate} />
@@ -234,6 +237,7 @@ export default function MobileLayout() {
         </div>
         <div className="px-4 pt-2 lg:px-6 lg:pt-4">
           <PlanLimitBanner />
+          <ExperienceModeBanner />
         </div>
         <Outlet />
       </main>
@@ -340,13 +344,13 @@ export default function MobileLayout() {
         {/* Nav sections */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-sidebar" style={{ height: "calc(100vh - 72px)" }}>
           <NavSection label="Inicio" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
-          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />
+          {!isSimple && <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />}
           <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
           <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
-          {tesoreriaNav.length > 0 && (
+          {tesoreriaNav.length > 0 && !isSimple && (
             <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={DollarSign} />
           )}
-          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
             <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
           )}
           <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={handleDrawerNav} />

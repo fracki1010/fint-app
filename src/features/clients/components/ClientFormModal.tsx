@@ -5,6 +5,7 @@ import { PriceTier } from "@shared/types";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { ClientPriceListSelector } from "./ClientPriceListSelector";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 
 // ── Types & Constants ────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ export function ClientFormModal({
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormState, string>>>({});
+  const { isSimple } = useExperienceMode();
 
   useEffect(() => {
     if (isDesktop) return;
@@ -150,6 +152,7 @@ export function ClientFormModal({
             error={errors.name}
             icon={Users}
           />
+          {!isSimple && (
           <Input
             label="Empresa"
             value={formData.company}
@@ -157,6 +160,7 @@ export function ClientFormModal({
             placeholder="Nombre de la empresa"
             icon={Building2}
           />
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -199,6 +203,7 @@ export function ClientFormModal({
           icon={MapPin}
         />
 
+        {!isSimple && (
         <Input
           label="Dirección fiscal"
           value={formData.fiscalAddress}
@@ -206,6 +211,7 @@ export function ClientFormModal({
           placeholder="Dirección fiscal completa"
           icon={MapPin}
         />
+        )}
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Input
@@ -214,6 +220,7 @@ export function ClientFormModal({
             onChange={(v) => onChange("debt", v)}
             type="number"
           />
+          {!isSimple && (
           <Input
             label="Límite de crédito"
             value={formData.creditLimit}
@@ -222,6 +229,7 @@ export function ClientFormModal({
             type="number"
             icon={CreditCard}
           />
+          )}
         </div>
 
         <ClientPriceListSelector

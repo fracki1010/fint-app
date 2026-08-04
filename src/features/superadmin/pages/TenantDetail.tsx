@@ -59,6 +59,7 @@ export default function TenantDetail() {
     status: "",
     notes: "",
     complements: [] as string[],
+    experienceMode: "simple" as string,
   });
 
   const startEditing = () => {
@@ -68,6 +69,7 @@ export default function TenantDetail() {
       status: tenant.status,
       notes: tenant.metadata?.notes || "",
       complements: tenant.complements || [],
+      experienceMode: tenant.experienceMode || "simple",
     });
     setEditing(true);
   };
@@ -78,6 +80,7 @@ export default function TenantDetail() {
         plan: data.plan,
         status: data.status,
         complements: data.complements,
+        experienceMode: data.experienceMode,
         metadata: { notes: data.notes },
       });
       return response.data;
@@ -328,6 +331,20 @@ export default function TenantDetail() {
                   </select>
                 </div>
                 <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-default-500">
+                    Modo de Experiencia
+                  </label>
+                  <select
+                    value={editForm.experienceMode}
+                    onChange={(e) => setEditForm({ ...editForm, experienceMode: e.target.value })}
+                    className="w-full rounded-xl border border-divider bg-background px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none"
+                  >
+                    <option value="simple">Simple — funciones básicas</option>
+                    <option value="intermediate">Intermedio — compras y tesorería</option>
+                    <option value="full">Completo — todas las funciones</option>
+                  </select>
+                </div>
+                <div>
                   <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-default-500">
                     Complementos
                   </label>
@@ -396,6 +413,14 @@ export default function TenantDetail() {
                       <span className="text-sm text-default-500">Ninguno</span>
                     )}
                   </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-default-400">Modo de Experiencia</span>
+                  <span className="text-sm font-semibold text-foreground capitalize">
+                    {tenant.experienceMode === "simple" && "Simple"}
+                    {tenant.experienceMode === "intermediate" && "Intermedio"}
+                    {tenant.experienceMode === "full" && "Completo"}
+                  </span>
                 </div>
               </div>
             )}
