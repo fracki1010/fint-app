@@ -34,6 +34,8 @@ import {
 } from "../components/ProductFormModal";
 import { ProductDetailPanel } from "../components/ProductDetailPanel";
 import ImportProductsModal from "../components/ImportProductsModal";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
+import QuickStockAdjust from "../components/QuickStockAdjust";
 
 function slugifyText(value: string) {
   return value
@@ -104,6 +106,8 @@ export default function ProductsPage() {
     unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure,
   });
   const [showImportModal, setShowImportModal] = useState(false);
+  const [adjustProduct, setAdjustProduct] = useState<Product | null>(null);
+  const { isSimple } = useExperienceMode();
 
   const { products, total, totalPages, loading } = usePaginatedProducts({
     page: currentPage,
@@ -572,6 +576,26 @@ export default function ProductsPage() {
                     )}
                   </div>
 
+                  {isSimple && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAdjustProduct(product);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setAdjustProduct(product);
+                        }
+                      }}
+                    >
+                      + Stock
+                    </span>
+                  )}
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
               );
@@ -686,6 +710,13 @@ export default function ProductsPage() {
           setShowImportModal(false);
         }}
       />
+      {adjustProduct && (
+        <QuickStockAdjust
+          product={adjustProduct}
+          isOpen={!!adjustProduct}
+          onClose={() => setAdjustProduct(null)}
+        />
+      )}
     </>
   );
 
