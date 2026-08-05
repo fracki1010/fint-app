@@ -320,21 +320,21 @@ export default function MobileLayout() {
 
         {/* Nav sections — Material3 list style */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 scrollbar-sidebar">
-          <NavSection label="Principal" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
-          {!isSimple && <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />}
-          <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
-          <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
+          <NavSection label="Principal" variant="mobile" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
+          {!isSimple && <NavSection label="Compras" variant="mobile" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />}
+          <NavSection label="Ventas" variant="mobile" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
+          <NavSection label="Stock" variant="mobile" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
           {tesoreriaNav.length > 0 && !isSimple && (
-            <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={DollarSign} />
+            <NavSection label="Tesorería" variant="mobile" items={tesoreriaNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={DollarSign} />
           )}
           {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
-            <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
+            <NavSection label="Centro Financiero" variant="mobile" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
           )}
 
           {/* Divider before admin */}
           <div className="my-3 mx-3 h-px bg-divider/5" />
           <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">Sistema</p>
-          <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={handleDrawerNav} />
+          <NavSection label="Administración" variant="mobile" items={adminNav} isActive={isActive} navigate={handleDrawerNav} />
         </nav>
 
         {/* User footer — compact */}
@@ -448,6 +448,7 @@ function NotificationsList({
   );
 }
 
+
 // ── NavSection ──────────────────────────────────────────────────────────
 
 function NavSection({
@@ -458,6 +459,7 @@ function NavSection({
   accordion = false,
   defaultOpen = false,
   icon: SectionIcon,
+  variant = "desktop",
 }: {
   label: string;
   items: { path: string; label: string; icon: React.ElementType }[];
@@ -466,78 +468,122 @@ function NavSection({
   accordion?: boolean;
   defaultOpen?: boolean;
   icon?: React.ElementType;
+  variant?: "desktop" | "mobile";
 }) {
   const [open, setOpen] = useState(accordion ? defaultOpen : true);
   if (items.length === 0) return null;
 
   const hasActive = items.some((item) => isActive(item.path));
+  const isMobile = variant === "mobile";
 
   if (!accordion) {
     return (
       <div>
-        <div className="space-y-0.5">
+        {!isMobile && (
+          <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">
+            {label}
+          </p>
+        )}
+        <div className={isMobile ? "space-y-0.5" : "space-y-0"}>
           {items.map((item) => (
-            <NavItem key={item.path} item={item} isActive={isActive} navigate={navigate} />
+            <NavItem key={item.path} item={item} isActive={isActive} navigate={navigate} variant={variant} />
           ))}
         </div>
       </div>
     );
   }
 
+  // ── Accordion ──
+  const headerActive = hasActive || open;
+  const headerBg = isMobile ? "bg-primary/12 text-primary" : "bg-primary/10 text-primary";
+  const headerDefault = isMobile
+    ? "text-default-600 hover:bg-default/10 hover:text-foreground"
+    : "text-default-500 hover:bg-white/5 hover:text-foreground";
+  const headerShape = isMobile ? "rounded-full px-4 py-2.5" : "rounded-lg px-3 py-[6px]";
+  const iconSize = isMobile ? 18 : 15;
+  const badgeStyle = isMobile ? "bg-default/15 text-default-500" : "bg-content2/80 text-default-500";
+
   return (
     <div>
-      {/* Accordion header — with fixed icon (no chevron) */}
       <button
-        className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
-          hasActive || open
-            ? "bg-primary/12 text-primary"
-            : "text-default-600 hover:bg-default/8 hover:text-foreground"
+        className={`group flex w-full items-center gap-3 ${headerShape} text-left text-[13px] font-semibold transition-all ${
+          headerActive ? headerBg : headerDefault
         }`}
         onClick={() => setOpen(!open)}
         type="button"
       >
         {SectionIcon && (
           <SectionIcon
-            size={18}
-            strokeWidth={hasActive || open ? 2.5 : 2}
-            className={`shrink-0 ${hasActive || open ? "text-primary" : "text-default-400"}`}
+            size={iconSize}
+            strokeWidth={headerActive ? 2.5 : 2}
+            className={`shrink-0 ${headerActive ? "text-primary" : "text-default-400"}`}
           />
         )}
         <span className="flex-1">{label}</span>
         {!open && items.length > 0 && (
-          <span className="rounded-full bg-default/15 px-2 py-0.5 text-[10px] font-bold text-default-500">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeStyle}`}>
             {items.length}
           </span>
         )}
       </button>
 
-      {/* Sub-items */}
       {open && (
-        <div className="ml-1 space-y-0.5">
-          {items.map((item) => {
-            const active = isActive(item.path);
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.path}
-                className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
-                  active
-                    ? "bg-primary/12 text-primary"
-                    : "text-default-600 hover:bg-default/8 hover:text-foreground"
-                }`}
-                onClick={() => navigate(item.path)}
-                type="button"
-              >
-                <Icon
-                  size={18}
-                  strokeWidth={active ? 2.5 : 2}
-                  className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition-colors"}`}
-                />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        isMobile ? (
+          <div className="ml-1 space-y-0.5">
+            {items.map((item) => {
+              const active = isActive(item.path);
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
+                    active
+                      ? "bg-primary/12 text-primary"
+                      : "text-default-600 hover:bg-default/10 hover:text-foreground"
+                  }`}
+                  onClick={() => navigate(item.path)}
+                  type="button"
+                >
+                  <Icon
+                    size={18}
+                    strokeWidth={active ? 2.5 : 2}
+                    className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition-colors"}`}
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="ml-2 space-y-0 border-l-2 border-primary/20 pl-3">
+            {items.map((item) => {
+              const active = isActive(item.path);
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+                    active
+                      ? "text-primary border-l-2 border-primary -ml-[14px] pl-3"
+                      : "text-default-500 hover:text-foreground"
+                  }`}
+                  onClick={() => navigate(item.path)}
+                  type="button"
+                >
+                  <Icon
+                    size={15}
+                    strokeWidth={active ? 2.5 : 2}
+                    className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
+                  />
+                  <span>{item.label}</span>
+                  {active && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );
@@ -547,30 +593,36 @@ function NavItem({
   item,
   isActive,
   navigate,
+  variant = "desktop",
 }: {
   item: { path: string; label: string; icon: React.ElementType };
   isActive: (path: string) => boolean;
   navigate: (path: string) => void;
+  variant?: "desktop" | "mobile";
 }) {
   const active = isActive(item.path);
   const Icon = item.icon;
+  const isMobile = variant === "mobile";
 
   return (
     <button
-      className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
-        active
-          ? "bg-primary/12 text-primary"
-          : "text-default-600 hover:bg-default/8 hover:text-foreground"
+      className={`group flex w-full items-center gap-3 text-left text-[13px] font-semibold transition-all ${
+        isMobile
+          ? `rounded-full px-4 py-2.5 ${active ? "bg-primary/12 text-primary" : "text-default-600 hover:bg-default/10 hover:text-foreground"}`
+          : `px-3 py-[6px] ${active ? "text-primary" : "text-default-500 hover:text-foreground"}`
       }`}
       onClick={() => navigate(item.path)}
       type="button"
     >
       <Icon
-        size={18}
+        size={isMobile ? 18 : 15}
         strokeWidth={active ? 2.5 : 2}
-        className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition-colors"}`}
+        className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
       />
       <span>{item.label}</span>
+      {!isMobile && active && (
+        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+      )}
     </button>
   );
 }
