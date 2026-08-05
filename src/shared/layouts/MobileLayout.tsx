@@ -5,6 +5,7 @@ import { useAuth } from "@features/auth/hooks/useAuth";
 import { usePermissions } from "@features/auth/hooks/usePermissions";
 import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
 import { useExperienceMode } from "@shared/hooks/useExperienceMode";
+import { useDrawerGesture } from "@shared/hooks/useDrawerGesture";
 import PlanLimitBanner from "@shared/components/PlanLimitBanner";
 import { ExperienceModeBanner } from "@shared/components/ExperienceModeBanner";
 import OfflineIndicator from "@shared/components/OfflineIndicator";
@@ -50,10 +51,10 @@ export default function MobileLayout() {
   const { hasFeature } = usePlanFeatures();
   const { isSimple, isFull } = useExperienceMode();
   const { theme, toggleTheme } = useThemeStore();
-  const [showDrawer, setShowDrawer] = useState(false);
+  const { state: drawer, handlers: drawerHandlers, open: openDrawer, close: closeDrawer } = useDrawerGesture();
   const handleDrawerNav = (path: string) => {
     navigate(path);
-    setShowDrawer(false);
+    closeDrawer();
   };
 
   const operationNav = [
@@ -210,12 +211,18 @@ export default function MobileLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom">
+      <main
+        ref={mainRef}
+        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-transform duration-300 ease-out lg:transform-none"
+        style={{
+          transform: `translateX(${drawer.progress * 80}px)`,
+        }}
+      >
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden safe-top">
           <button
             className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
-            onClick={() => setShowDrawer(true)}
+            onClick={openDrawer}
             aria-label="Abrir menú"
           >
             <Menu size={20} strokeWidth={2.5} />
@@ -267,18 +274,32 @@ export default function MobileLayout() {
         <NotificationsList notifications={notifications} markAsRead={markAsRead} />
       </div>
 
-      {/* ── Mobile Drawer (hamburger menu) ──────────────────────────── */}
-      {/* Backdrop */}
+      {/* ── Edge swipe zone (invisible, left edge) ───────────────────── */}
       <div
-        className={`fixed inset-0 z-[60] transition-all duration-300 lg:hidden ${showDrawer ? "bg-black/40 backdrop-blur-sm" : "pointer-events-none opacity-0"}`}
-        onClick={() => setShowDrawer(false)}
+        className="fixed left-0 top-0 z-[55] h-full w-6 lg:hidden"
+        {...drawerHandlers.edgeHandlers}
       />
 
-      {/* Drawer panel — offset: ocupa ~80%, deja ver contenido atrás */}
+      {/* ── Mobile Drawer (native gesture) ────────────────────────────── */}
+      {/* Backdrop */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen w-[80vw] max-w-sm border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out lg:hidden safe-left ${
-          showDrawer ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-0 z-[60] transition-opacity duration-300 lg:hidden ${
+          drawer.isOpen ? "bg-black/40 backdrop-blur-sm" : "pointer-events-none opacity-0"
         }`}
+        style={{ opacity: drawer.progress * 0.4 }}
+        onClick={closeDrawer}
+      />
+
+      {/* Drawer panel */}
+      <div
+        className={`fixed left-0 top-0 z-[70] h-screen border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] lg:hidden safe-left ${
+          drawer.isDragging ? "transition-none" : "transition-transform duration-300 ease-out"
+        }`}
+        style={{
+          width: `${Math.min(320, typeof window !== "undefined" ? window.innerWidth * 0.8 : 320)}px`,
+          transform: `translateX(${(drawer.progress - 1) * 100}%)`,
+        }}
+        {...drawerHandlers.drawerHandlers}
       >
         {/* Drawer header with logo */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/8 safe-top">
@@ -293,7 +314,7 @@ export default function MobileLayout() {
           </div>
           <button
             className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:bg-white/5 hover:text-foreground transition"
-            onClick={() => setShowDrawer(false)}
+            onClick={closeDrawer}
           >
             <X size={15} />
           </button>
