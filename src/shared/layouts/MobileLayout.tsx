@@ -210,13 +210,12 @@ export default function MobileLayout() {
         </div>
       </aside>
 
-      {/* ── Main content — shifts right when drawer opens ─────────────── */}
+      {/* ── Main content ─────────────────────────────────────────────── */}
       <main
         ref={mainRef}
-        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:transform-none lg:rounded-none"
+        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-transform duration-300 ease-out lg:transform-none"
         style={{
-          transform: `translateX(${drawer.progress * 80}px)`,
-          borderRadius: drawer.progress > 0 ? "20px 0 0 20px" : "0",
+          transform: drawer.progress > 0 ? `translateX(${drawer.progress * 80}px)` : undefined,
         }}
       >
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
@@ -295,7 +294,7 @@ export default function MobileLayout() {
       <div
         className={`fixed left-0 top-0 z-[70] h-screen bg-[var(--heroui-background)] safe-left lg:hidden ${
           drawer.isDragging ? "transition-none" : "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-        }`}
+        } ${drawer.progress === 0 ? "pointer-events-none" : ""}`}
         style={{
           width: `${Math.min(320, typeof window !== "undefined" ? window.innerWidth * 0.8 : 320)}px`,
           transform: `translateX(${(drawer.progress - 1) * 100}%)`,
