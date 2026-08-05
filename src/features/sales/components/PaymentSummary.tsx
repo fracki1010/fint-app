@@ -70,6 +70,7 @@ export default function PaymentSummary({
   onCheckout,
   isCreating,
   canFinalize,
+  isSimple,
 }: PaymentSummaryProps) {
   const [mode, setMode] = useState<"simple" | "doble">("simple");
   const [expanded, setExpanded] = useState(false);

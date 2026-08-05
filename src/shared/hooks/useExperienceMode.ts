@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useAuth } from "@features/auth/hooks/useAuth";
 
 export type ExperienceMode = "simple" | "intermediate" | "full";
