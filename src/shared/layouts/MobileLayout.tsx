@@ -283,10 +283,10 @@ export default function MobileLayout() {
       {/* ── Mobile Drawer (native gesture, Material3) ────────────────── */}
       {/* Scrim */}
       <div
-        className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-[60] bg-black/60 transition-opacity duration-300 lg:hidden ${
           drawer.isOpen ? "" : "pointer-events-none opacity-0"
         }`}
-        style={{ opacity: drawer.progress * 0.5 }}
+        style={{ opacity: drawer.progress * 0.85 }}
         onClick={closeDrawer}
       />
 
@@ -299,7 +299,7 @@ export default function MobileLayout() {
           width: `${Math.min(320, typeof window !== "undefined" ? window.innerWidth * 0.8 : 320)}px`,
           transform: `translateX(${(drawer.progress - 1) * 100}%)`,
           borderRadius: "0 20px 20px 0",
-          boxShadow: "0 16px 48px -12px rgba(0,0,0,0.45)",
+          boxShadow: "0 0 0 1px rgba(255,255,255,0.05), 0 16px 48px -12px rgba(0,0,0,0.55)",
         }}
         {...drawerHandlers.drawerHandlers}
       >
