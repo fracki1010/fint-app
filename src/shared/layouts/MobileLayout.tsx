@@ -210,12 +210,13 @@ export default function MobileLayout() {
         </div>
       </aside>
 
-      {/* ── Main content ─────────────────────────────────────────────── */}
+      {/* ── Main content — shifts right when drawer opens ─────────────── */}
       <main
         ref={mainRef}
-        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-transform duration-300 ease-out lg:transform-none"
+        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:transform-none lg:rounded-none"
         style={{
           transform: `translateX(${drawer.progress * 80}px)`,
+          borderRadius: drawer.progress > 0 ? "20px 0 0 20px" : "0",
         }}
       >
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
@@ -280,49 +281,46 @@ export default function MobileLayout() {
         {...drawerHandlers.edgeHandlers}
       />
 
-      {/* ── Mobile Drawer (native gesture) ────────────────────────────── */}
-      {/* Backdrop */}
+      {/* ── Mobile Drawer (native gesture, Material3) ────────────────── */}
+      {/* Scrim */}
       <div
-        className={`fixed inset-0 z-[60] transition-opacity duration-300 lg:hidden ${
-          drawer.isOpen ? "bg-black/40 backdrop-blur-sm" : "pointer-events-none opacity-0"
+        className={`fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+          drawer.isOpen ? "" : "pointer-events-none opacity-0"
         }`}
-        style={{ opacity: drawer.progress * 0.4 }}
+        style={{ opacity: drawer.progress * 0.5 }}
         onClick={closeDrawer}
       />
 
-      {/* Drawer panel */}
+      {/* Drawer panel — Material3 Navigation Drawer */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] lg:hidden safe-left ${
-          drawer.isDragging ? "transition-none" : "transition-transform duration-300 ease-out"
+        className={`fixed left-0 top-0 z-[70] h-screen bg-[var(--heroui-background)] safe-left lg:hidden ${
+          drawer.isDragging ? "transition-none" : "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         }`}
         style={{
           width: `${Math.min(320, typeof window !== "undefined" ? window.innerWidth * 0.8 : 320)}px`,
           transform: `translateX(${(drawer.progress - 1) * 100}%)`,
+          borderRadius: "0 20px 20px 0",
+          boxShadow: "0 16px 48px -12px rgba(0,0,0,0.45)",
         }}
         {...drawerHandlers.drawerHandlers}
       >
-        {/* Drawer header with logo */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/8 safe-top">
-          <div className="flex items-center gap-3">
-            <div className="h-[42px] w-[42px] overflow-hidden rounded-xl">
-              <img src={logo} alt="Logo" className="h-[56px] w-[56px] -m-[7px] object-cover" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">Fint Suite</p>
-              <p className="text-[10px] text-default-400">Panel Operativo</p>
-            </div>
+        {/* Drawer header — Material3 style */}
+        <div className="flex items-center gap-3 px-5 pt-6 pb-4 safe-top">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+            <img src={logo} alt="Fint" className="h-8 w-8 object-cover" />
           </div>
-          <button
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-default-400 hover:bg-white/5 hover:text-foreground transition"
-            onClick={closeDrawer}
-          >
-            <X size={15} />
-          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold tracking-tight text-foreground">Fint Suite</p>
+            <p className="text-[11px] text-default-500">Panel Operativo</p>
+          </div>
         </div>
 
-        {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-sidebar" style={{ height: "calc(100vh - 72px)" }}>
-          <NavSection label="Inicio" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
+        {/* Divider */}
+        <div className="mx-5 h-px bg-divider/10" />
+
+        {/* Nav sections — Material3 list style */}
+        <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 scrollbar-sidebar">
+          <NavSection label="Principal" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
           {!isSimple && <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />}
           <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
           <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
@@ -332,8 +330,33 @@ export default function MobileLayout() {
           {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
             <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
           )}
+
+          {/* Divider before admin */}
+          <div className="my-3 mx-3 h-px bg-divider/5" />
+          <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">Sistema</p>
           <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={handleDrawerNav} />
         </nav>
+
+        {/* User footer — compact */}
+        <div className="border-t border-divider/5 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+              {userInitials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-foreground">{user?.fullName || "Usuario"}</p>
+              <p className="truncate text-[10px] text-default-400">{roleLabel}</p>
+            </div>
+            <button
+              className="shrink-0 rounded-full p-1.5 text-default-400 hover:bg-default/10 hover:text-danger transition"
+              title="Cerrar sesión"
+              type="button"
+              onClick={() => logout()}
+            >
+              <LogOut size={13} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── Offline indicator ─────────────────────────────────────────── */}
@@ -452,10 +475,7 @@ function NavSection({
   if (!accordion) {
     return (
       <div>
-        <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-default-400">
-          {label}
-        </p>
-        <div className="space-y-0">
+        <div className="space-y-0.5">
           {items.map((item) => (
             <NavItem key={item.path} item={item} isActive={isActive} navigate={navigate} />
           ))}
@@ -468,24 +488,24 @@ function NavSection({
     <div>
       {/* Accordion header — with fixed icon (no chevron) */}
       <button
-        className={`group flex w-full items-center gap-3 rounded-lg px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+        className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
           hasActive || open
-            ? "bg-primary/10 text-primary"
-            : "text-default-500 hover:bg-white/5 hover:text-foreground"
+            ? "bg-primary/12 text-primary"
+            : "text-default-600 hover:bg-default/8 hover:text-foreground"
         }`}
         onClick={() => setOpen(!open)}
         type="button"
       >
         {SectionIcon && (
           <SectionIcon
-            size={15}
+            size={18}
             strokeWidth={hasActive || open ? 2.5 : 2}
             className={`shrink-0 ${hasActive || open ? "text-primary" : "text-default-400"}`}
           />
         )}
         <span className="flex-1">{label}</span>
         {!open && items.length > 0 && (
-          <span className="rounded-full bg-content2/80 px-2 py-0.5 text-[10px] font-bold text-default-500">
+          <span className="rounded-full bg-default/15 px-2 py-0.5 text-[10px] font-bold text-default-500">
             {items.length}
           </span>
         )}
@@ -493,30 +513,27 @@ function NavSection({
 
       {/* Sub-items */}
       {open && (
-        <div className="ml-2 space-y-0 border-l-2 border-primary/20 pl-3">
+        <div className="ml-1 space-y-0.5">
           {items.map((item) => {
             const active = isActive(item.path);
             const Icon = item.icon;
             return (
               <button
                 key={item.path}
-                className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+                className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
                   active
-                    ? "text-primary border-l-2 border-primary -ml-[14px] pl-3"
-                    : "text-default-500 hover:text-foreground"
+                    ? "bg-primary/12 text-primary"
+                    : "text-default-600 hover:bg-default/8 hover:text-foreground"
                 }`}
                 onClick={() => navigate(item.path)}
                 type="button"
               >
                 <Icon
-                  size={15}
+                  size={18}
                   strokeWidth={active ? 2.5 : 2}
-                  className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
+                  className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition-colors"}`}
                 />
                 <span>{item.label}</span>
-                {active && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
               </button>
             );
           })}
@@ -540,23 +557,20 @@ function NavItem({
 
   return (
     <button
-      className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+      className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
         active
-          ? "text-primary"
-          : "text-default-500 hover:text-foreground"
+          ? "bg-primary/12 text-primary"
+          : "text-default-600 hover:bg-default/8 hover:text-foreground"
       }`}
       onClick={() => navigate(item.path)}
       type="button"
     >
       <Icon
-        size={15}
+        size={18}
         strokeWidth={active ? 2.5 : 2}
-        className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition"}`}
+        className={`shrink-0 ${active ? "text-primary" : "text-default-400 group-hover:text-default-600 transition-colors"}`}
       />
       <span>{item.label}</span>
-      {active && (
-        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-      )}
     </button>
   );
 }
