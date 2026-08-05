@@ -7,6 +7,7 @@ import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
 import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import PlanLimitBanner from "@shared/components/PlanLimitBanner";
 import { ExperienceModeBanner } from "@shared/components/ExperienceModeBanner";
+import OfflineIndicator from "@shared/components/OfflineIndicator";
 import {
   LayoutGrid,
   ClipboardList,
@@ -209,9 +210,9 @@ export default function MobileLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────── */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0">
+      <main ref={mainRef} className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom">
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden safe-top">
           <button
             className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground transition"
             onClick={() => setShowDrawer(true)}
@@ -242,71 +243,28 @@ export default function MobileLayout() {
         <Outlet />
       </main>
 
-      {/* ── Notifications slide-over ─────────────────────────────────── */}
+      {/* ── Notifications (bottom sheet on mobile, slide-over on desktop) ── */}
       <div
         className={`fixed inset-0 z-[60] transition-all duration-300 ${showNotifications ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
         onClick={() => setShowNotifications(false)}
       />
+      {/* Desktop: slide-over from left */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen w-full max-w-xl overflow-y-auto border-r border-white/10 bg-content1 shadow-[24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar ${showNotifications ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed left-0 top-0 z-[70] hidden h-screen w-full max-w-xl overflow-y-auto border-r border-white/10 bg-content1 shadow-[24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar lg:block ${showNotifications ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* Header */}
-        <div className="page-header flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="section-kicker">Sistema</p>
-            <h2 className="page-title">Notificaciones</h2>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {unreadCount > 0 && (
-              <button
-                className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
-                onClick={() => void markAllAsRead()}
-              >
-                <CheckCheck size={13} />
-                Marcar todas
-              </button>
-            )}
-            <button
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
-              onClick={() => setShowNotifications(false)}
-            >
-              <X size={15} />
-            </button>
-          </div>
+        <NotificationsHeader unreadCount={unreadCount} markAllAsRead={markAllAsRead} onClose={() => setShowNotifications(false)} />
+        <NotificationsList notifications={notifications} markAsRead={markAsRead} />
+      </div>
+      {/* Mobile: bottom sheet */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] overflow-y-auto rounded-t-[28px] border-t border-white/10 bg-content1 shadow-[0_-24px_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-out safe-bottom lg:hidden ${showNotifications ? "translate-y-0" : "translate-y-full"}`}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1 w-10 rounded-full bg-default-300" />
         </div>
-
-        {/* List */}
-        <div className="space-y-2 px-4 pb-8">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
-              <button
-                key={notification._id}
-                className={`list-row w-full ${!notification.isRead ? "border-primary/20 bg-primary/5" : ""}`}
-                onClick={() => void markAsRead(notification._id)}
-              >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${!notification.isRead ? "bg-primary/12 text-primary" : "bg-content2/70 text-default-400"}`}>
-                  <Bell size={15} />
-                </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-sm font-semibold text-foreground">{notification.title}</p>
-                  <p className="mt-0.5 text-xs text-default-500 line-clamp-2">{notification.message}</p>
-                  <p className="mt-1 text-[10px] text-default-400">{new Date(notification.createdAt).toLocaleString()}</p>
-                </div>
-                {!notification.isRead && (
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                )}
-              </button>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-content2/60 text-default-400">
-                <Bell size={24} />
-              </div>
-              <p className="mt-4 text-sm font-semibold text-foreground">Todo en orden</p>
-              <p className="mt-1 text-xs text-default-400">No hay notificaciones por ahora.</p>
-            </div>
-          )}
-        </div>
+        <NotificationsHeader unreadCount={unreadCount} markAllAsRead={markAllAsRead} onClose={() => setShowNotifications(false)} />
+        <NotificationsList notifications={notifications} markAsRead={markAsRead} />
       </div>
 
       {/* ── Mobile Drawer (hamburger menu) ──────────────────────────── */}
@@ -318,12 +276,12 @@ export default function MobileLayout() {
 
       {/* Drawer panel — offset: ocupa ~80%, deja ver contenido atrás */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen w-[80vw] max-w-sm border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out lg:hidden ${
+        className={`fixed left-0 top-0 z-[70] h-screen w-[80vw] max-w-sm border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_96%,transparent)] backdrop-blur-2xl shadow-[24px_0_60px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out lg:hidden safe-left ${
           showDrawer ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Drawer header with logo */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/8">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/8 safe-top">
           <div className="flex items-center gap-3">
             <div className="h-[42px] w-[42px] overflow-hidden rounded-xl">
               <img src={logo} alt="Logo" className="h-[56px] w-[56px] -m-[7px] object-cover" />
@@ -357,7 +315,91 @@ export default function MobileLayout() {
         </nav>
       </div>
 
+      {/* ── Offline indicator ─────────────────────────────────────────── */}
+      <OfflineIndicator />
 
+    </div>
+  );
+}
+
+// ── Notifications sub-components ─────────────────────────────────────
+
+function NotificationsHeader({
+  unreadCount,
+  markAllAsRead,
+  onClose,
+}: {
+  unreadCount: number;
+  markAllAsRead: () => Promise<void>;
+  onClose: () => void;
+}) {
+  return (
+    <div className="page-header flex items-center gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="section-kicker">Sistema</p>
+        <h2 className="page-title">Notificaciones</h2>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {unreadCount > 0 && (
+          <button
+            className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
+            onClick={() => void markAllAsRead()}
+          >
+            <CheckCheck size={13} />
+            Marcar todas
+          </button>
+        )}
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-default-400 transition hover:text-foreground"
+          onClick={onClose}
+        >
+          <X size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NotificationsList({
+  notifications,
+  markAsRead,
+}: {
+  notifications: { _id: string; title: string; message: string; createdAt: string; isRead: boolean }[];
+  markAsRead: (id: string) => Promise<unknown>;
+}) {
+  if (notifications.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-content2/60 text-default-400">
+          <Bell size={24} />
+        </div>
+        <p className="mt-4 text-sm font-semibold text-foreground">Todo en orden</p>
+        <p className="mt-1 text-xs text-default-400">No hay notificaciones por ahora.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 px-4 pb-8">
+      {notifications.map((notification) => (
+        <button
+          key={notification._id}
+          className={`list-row w-full ${!notification.isRead ? "border-primary/20 bg-primary/5" : ""}`}
+          onClick={() => void markAsRead(notification._id)}
+        >
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${!notification.isRead ? "bg-primary/12 text-primary" : "bg-content2/70 text-default-400"}`}>
+            <Bell size={15} />
+          </div>
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-sm font-semibold text-foreground">{notification.title}</p>
+            <p className="mt-0.5 text-xs text-default-500 line-clamp-2">{notification.message}</p>
+            <p className="mt-1 text-[10px] text-default-400">{new Date(notification.createdAt).toLocaleString()}</p>
+          </div>
+          {!notification.isRead && (
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+          )}
+        </button>
+      ))}
     </div>
   );
 }

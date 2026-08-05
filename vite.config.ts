@@ -22,16 +22,36 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon-32.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Fint",
+        name: "Fint Suite",
         short_name: "Fint",
         description:
           "Panel operativo y comercial para la gestion de ventas, clientes e inventario.",
         start_url: "/",
         scope: "/",
         display: "standalone",
-        background_color: "#ffffff",
+        display_override: ["standalone", "minimal-ui"],
+        orientation: "any",
+        background_color: "#F8F6F4",
         theme_color: "#0f172a",
         lang: "es",
+        categories: ["business", "finance", "productivity"],
+        prefer_related_applications: false,
+        shortcuts: [
+          {
+            name: "Nueva Venta",
+            short_name: "Vender",
+            description: "Crear una nueva venta",
+            url: "/sales",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
+          },
+          {
+            name: "Productos",
+            short_name: "Productos",
+            description: "Ver y gestionar productos",
+            url: "/products",
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
+          },
+        ],
         icons: [
           {
             src: "/icon-192.png",
