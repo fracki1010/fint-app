@@ -219,7 +219,7 @@ export default function MobileLayout() {
         }}
       >
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-2.5 lg:hidden safe-top">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-3 lg:hidden safe-top">
           <button
             className="flex h-11 w-11 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground active:scale-95 transition"
             onClick={openDrawer}
@@ -304,7 +304,7 @@ export default function MobileLayout() {
         {...drawerHandlers.drawerHandlers}
       >
         {/* Drawer header — Material3 style */}
-        <div className="flex items-center gap-3 px-5 pt-6 pb-4 safe-top">
+        <div className="flex items-center gap-3 px-5 pt-8 pb-4 safe-top">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
             <img src={logo} alt="Fint" className="h-8 w-8 object-cover" />
           </div>
