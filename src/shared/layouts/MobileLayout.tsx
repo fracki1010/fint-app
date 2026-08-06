@@ -283,16 +283,16 @@ export default function MobileLayout() {
       {/* ── Mobile Drawer (native gesture, Material3) ────────────────── */}
       {/* Scrim */}
       <div
-        className={`fixed inset-0 z-[60] bg-black/60 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-[60] bg-black/70 transition-opacity duration-300 lg:hidden ${
           drawer.isOpen ? "" : "pointer-events-none opacity-0"
         }`}
-        style={{ opacity: drawer.progress * 0.85 }}
+        style={{ opacity: drawer.progress * 0.9 }}
         onClick={closeDrawer}
       />
 
       {/* Drawer panel — Material3 Navigation Drawer */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen bg-[var(--heroui-background)] safe-left lg:hidden ${
+        className={`fixed left-0 top-0 z-[70] h-screen bg-content1 safe-left lg:hidden ${
           drawer.isDragging ? "transition-none" : "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         } ${drawer.progress === 0 ? "pointer-events-none" : ""}`}
         style={{
