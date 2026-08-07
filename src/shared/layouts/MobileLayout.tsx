@@ -528,7 +528,7 @@ function NavSection({
 
       {open && (
         isMobile ? (
-          <div className="ml-1 space-y-0.5">
+          <div className="ml-4 space-y-0.5">
             {items.map((item) => {
               const active = isActive(item.path);
               const Icon = item.icon;
