@@ -494,7 +494,7 @@ function NavSection({
 
   // ── Accordion ──
   const headerActive = hasActive || open;
-  const headerBg = isMobile ? "bg-primary/12 text-primary" : "bg-primary/10 text-primary";
+  const headerBg = isMobile ? "bg-amber-500/15 text-primary" : "bg-primary/10 text-primary";
   const headerDefault = isMobile
     ? "text-default-600 hover:bg-default/10 hover:text-foreground"
     : "text-default-500 hover:bg-white/5 hover:text-foreground";
@@ -537,7 +537,7 @@ function NavSection({
                   key={item.path}
                   className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
                     active
-                      ? "bg-primary/12 text-primary"
+                      ? "bg-amber-500/15 text-primary"
                       : "text-default-600 hover:bg-default/10 hover:text-foreground"
                   }`}
                   onClick={() => navigate(item.path)}
@@ -607,7 +607,7 @@ function NavItem({
     <button
       className={`group flex w-full items-center gap-3 text-left text-[13px] font-semibold transition-all ${
         isMobile
-          ? `rounded-full px-4 py-2.5 ${active ? "bg-primary/12 text-primary" : "text-default-600 hover:bg-default/10 hover:text-foreground"}`
+          ? `rounded-full px-4 py-2.5 ${active ? "bg-amber-500/15 text-primary" : "text-default-600 hover:bg-default/10 hover:text-foreground"}`
           : `px-3 py-[6px] ${active ? "text-primary" : "text-default-500 hover:text-foreground"}`
       }`}
       onClick={() => navigate(item.path)}
