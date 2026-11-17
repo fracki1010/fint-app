@@ -460,14 +460,14 @@ function SupplierDrawer({
       <>
         {/* Backdrop */}
         <div
-          className={`fixed inset-0 z-40 transition-all duration-300 ${
+          className={`fixed inset-0 z-40 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${
             isOpen ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"
           }`}
           onClick={onClose}
         />
         {/* Panel */}
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${
+          className={`fixed right-0 top-0 z-50 h-dvh w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
@@ -599,13 +599,13 @@ export default function Suppliers() {
     <div className="h-full"><div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl lg:px-6">
       {/* Header */}
       <div
-        className={`flex items-center justify-between transition-all lg:pt-0 ${
+        className={`flex items-center justify-between transition-[color,background-color,border-color,box-shadow,opacity,transform] lg:pt-0 ${
           isHeaderCompact ? "pt-1" : "pt-2"
         }`}
       >
         <div>
           <h1
-            className={`font-bold text-foreground transition-all ${
+            className={`font-bold text-foreground transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
               isHeaderCompact ? "text-base" : "text-xl"
             } ${isDesktop ? "!text-xl" : ""}`}
           >

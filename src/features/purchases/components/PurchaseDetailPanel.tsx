@@ -167,9 +167,9 @@ export default function PurchaseDetailPanel({
 
   if (!selectedPurchase) {
     return (
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-4xl lg:pb-8">
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-4xl lg:pb-8">
         <header
-          className={`app-topbar sticky top-0 z-30 transition-all duration-300 ${
+          className={`app-topbar sticky top-0 z-30 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${
             isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
           }`}
         >
@@ -199,9 +199,9 @@ export default function PurchaseDetailPanel({
   }
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-4xl lg:pb-8">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-4xl lg:pb-8">
       <header
-        className={`app-topbar sticky top-0 z-30 transition-all duration-300 ${
+        className={`app-topbar sticky top-0 z-30 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${
           isHeaderCompact ? "px-4 pb-3 pt-3" : "px-6 pb-4 pt-6"
         }`}
       >
@@ -212,10 +212,10 @@ export default function PurchaseDetailPanel({
           <ArrowUpRight className="rotate-180" size={14} />
           Volver
         </button>
-        <p className={`section-kicker transition-all duration-200 ${isHeaderCompact ? "mt-1 text-[10px] opacity-80" : "mt-3 opacity-100"}`}>
+        <p className={`section-kicker transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 ${isHeaderCompact ? "mt-1 text-[10px] opacity-80" : "mt-3 opacity-100"}`}>
           Detalle de Compra
         </p>
-        <h1 className={`font-bold tracking-[-0.03em] text-foreground transition-all duration-300 ${
+        <h1 className={`font-bold tracking-[-0.03em] text-foreground transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${
           isHeaderCompact ? "mt-1 text-xl" : "mt-2 text-[28px]"
         }`}>
           {formatId(selectedPurchase._id)}

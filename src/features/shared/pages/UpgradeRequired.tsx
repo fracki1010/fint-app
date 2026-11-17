@@ -47,7 +47,7 @@ export default function UpgradeRequired({ feature }: UpgradeRequiredProps) {
   const complementName = complementId ? COMPLEMENTS[complementId]?.name : undefined;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
       <div className="mx-auto w-full max-w-md text-center">
         {/* Icon */}
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-default-100">

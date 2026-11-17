@@ -267,7 +267,7 @@ export function ProductFormModal({
           ].map((tab) => (
             <button
               key={tab.id}
-              className={`px-4 py-3 text-xs font-bold transition-all border-b-2 -mb-[1px] ${
+              className={`px-4 py-3 text-xs font-bold transition-[color,background-color,border-color,box-shadow,opacity,transform] border-b-2 -mb-[1px] ${
                 activeTab === tab.id
                   ? "border-primary text-primary"
                   : "border-transparent text-default-400 hover:text-foreground"
@@ -320,7 +320,7 @@ export function ProductFormModal({
                   ].map((opt) => (
                     <button
                       key={opt.value}
-                      className={`flex-1 rounded-xl px-4 py-3 text-left transition-all ${
+                      className={`flex-1 rounded-xl px-4 py-3 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                         formData.type === opt.value
                           ? "bg-primary text-white shadow-sm ring-1 ring-primary/30"
                           : "bg-content2/50 text-default-500 hover:bg-content2/80 hover:text-foreground"
@@ -936,7 +936,7 @@ export function ProductFormModal({
       size="xl"
       onOpenChange={(open: boolean) => { if (!open) onClose(); }}
     >
-      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1 safe-bottom">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>

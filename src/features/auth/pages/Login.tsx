@@ -26,7 +26,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background px-5 py-10">
+    <div className="min-h-dvh bg-background px-5 py-10">
       <div className="mx-auto w-full max-w-md">
         <Card className="app-panel rounded-[28px]">
           <CardBody className="p-6">

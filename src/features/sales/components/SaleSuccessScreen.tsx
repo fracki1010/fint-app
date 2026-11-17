@@ -34,7 +34,7 @@ export default function SaleSuccessScreen({
   const successTotal = orderResult?.totalAmount || total;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-6 text-center">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
         <CheckCircle2 size={44} className="text-success" />
       </div>

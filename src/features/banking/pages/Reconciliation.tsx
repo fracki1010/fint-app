@@ -98,7 +98,7 @@ export default function ReconciliationPage() {
   }, [confirmReconciliation, dateTo]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Header */}
       <div className="bg-content1 border-b px-6 py-4">
         <div className="max-w-7xl mx-auto">

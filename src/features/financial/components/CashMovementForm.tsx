@@ -78,7 +78,7 @@ export default function CashMovementForm({
           <span className="mb-2.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Tipo</span>
           <div className="flex gap-2">
             <button
-              className={`flex-1 rounded-xl px-4 py-3 text-left transition-all ${
+              className={`flex-1 rounded-xl px-4 py-3 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                 type === "expense"
                   ? "bg-danger/10 text-danger ring-1 ring-danger/30 shadow-sm"
                   : "bg-content2/50 text-default-500 hover:bg-content2/80"
@@ -90,7 +90,7 @@ export default function CashMovementForm({
               <span className="text-xs font-bold">Egreso</span>
             </button>
             <button
-              className={`flex-1 rounded-xl px-4 py-3 text-left transition-all ${
+              className={`flex-1 rounded-xl px-4 py-3 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                 type === "income"
                   ? "bg-success/10 text-success ring-1 ring-success/30 shadow-sm"
                   : "bg-content2/50 text-default-500 hover:bg-content2/80"
@@ -191,7 +191,7 @@ export default function CashMovementForm({
     <Drawer hideCloseButton isOpen={isOpen} backdrop="opaque" placement="right" scrollBehavior="inside" size="md"
       onOpenChange={(open: boolean) => { if (!open) onClose(); }}
     >
-      <DrawerContent className="h-[100dvh] w-full max-w-lg overflow-x-hidden rounded-none bg-content1">
+      <DrawerContent className="h-[100dvh] w-full max-w-lg overflow-x-hidden rounded-none bg-content1 safe-bottom">
         <DrawerBody className="p-0">{content}</DrawerBody>
       </DrawerContent>
     </Drawer>

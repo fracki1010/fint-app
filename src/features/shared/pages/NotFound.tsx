@@ -3,7 +3,7 @@ import { Compass } from "lucide-react";
 
 export default function NotFoundPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
+    <div className="flex min-h-dvh items-center justify-center px-6">
       <div className="app-panel w-full max-w-md rounded-[28px] p-6 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/12 text-primary">
           <Compass size={24} />

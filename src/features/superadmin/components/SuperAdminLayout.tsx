@@ -44,7 +44,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       {/* Backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
@@ -55,7 +55,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-divider bg-content1 transition-transform duration-200 ease-in-out ${
+        className={`fixed left-0 top-0 z-40 flex h-dvh w-64 flex-col border-r border-divider bg-content1 transition-transform duration-200 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
@@ -87,7 +87,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                   active
                     ? "bg-primary/15 text-primary border border-primary/20"
                     : "text-default-400 hover:bg-content2 hover:text-foreground"
@@ -104,14 +104,14 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
         <div className="border-t border-divider px-3 py-4 space-y-1">
           <button
             onClick={() => toggleTheme()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-all hover:bg-content2 hover:text-foreground"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-[color,background-color,border-color,box-shadow,opacity,transform] hover:bg-content2 hover:text-foreground"
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             {theme === "dark" ? "Modo claro" : "Modo oscuro"}
           </button>
           <button
             onClick={() => logout()}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-all hover:bg-danger/10 hover:text-danger"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-default-400 transition-[color,background-color,border-color,box-shadow,opacity,transform] hover:bg-danger/10 hover:text-danger"
           >
             <LogOut size={18} />
             Cerrar sesión
@@ -120,7 +120,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="min-h-screen flex-1 lg:pl-64">
+      <main className="min-h-dvh flex-1 lg:pl-64">
         {/* Top Bar */}
         <div className="sticky top-0 z-20 border-b border-divider bg-background/80 backdrop-blur-xl px-4 py-3 lg:px-6">
           <div className="flex items-center justify-between">

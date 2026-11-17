@@ -72,9 +72,11 @@ export function useDrawerGesture(): {
     touchRef.current = { startX: touch.clientX, startProgress: state.progress };
   }, [state.progress]);
 
+  // Why no preventDefault: React attaches touchmove as passive, so it is ignored
+  // and only logs a warning. The drawer's touch-pan-y class leaves vertical
+  // scrolling to the browser and passes horizontal drags to this handler.
   const onDrawerTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchRef.current) return;
-    e.preventDefault();
     updateProgress(e.touches[0].clientX);
   }, [updateProgress]);
 

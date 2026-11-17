@@ -313,14 +313,14 @@ export default function ClientAccountDetailPage() {
 
   if (!clientId) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <p className="text-default-400">Cliente no especificado</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       {/* Header */}
       <div className="sticky top-0 z-20 border-b border-white/10 bg-background/80 backdrop-blur-xl px-4 py-4 lg:px-6">
         <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function ClientAccountDetailPage() {
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
                   <div 
-                    className={`h-full rounded-full transition-all ${
+                    className={`h-full rounded-full transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                       creditStatus?.isOverLimit ? "bg-danger" : 
                       creditStatus?.isNearLimit ? "bg-warning" : "bg-success"
                     }`}

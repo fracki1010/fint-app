@@ -16,7 +16,7 @@ export default function MovementDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -24,7 +24,7 @@ export default function MovementDetailPage() {
 
   if (error || !movement) {
     return (
-      <div className="flex flex-col min-h-screen bg-background px-6 py-8">
+      <div className="flex flex-col min-h-dvh bg-background px-6 py-8">
         <Button
           className="mb-4 w-fit"
           startContent={<ArrowLeft size={16} />}
@@ -75,7 +75,7 @@ export default function MovementDetailPage() {
     : null;
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar px-6 pt-6 pb-5">
         <Button
           className="mb-4"

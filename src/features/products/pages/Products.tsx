@@ -335,7 +335,7 @@ export default function ProductsPage() {
   // Mobile: full-screen detail
   if (!isDesktop && productId) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-dvh flex-col bg-background">
         <ProductDetailPanel
           currency={currency}
           isDeleting={isDeleting}
@@ -728,13 +728,13 @@ export default function ProductsPage() {
 
         {/* Backdrop */}
         <div
-          className={`fixed inset-0 z-40 transition-all duration-300 ${productId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+          className={`fixed inset-0 z-40 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${productId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
           onClick={() => navigate("/products")}
         />
 
         {/* Slide-over panel */}
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${productId ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed right-0 top-0 z-50 h-dvh w-[min(700px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${productId ? "translate-x-0" : "translate-x-full"}`}
         >
           {productId && (
             <ProductDetailPanel
@@ -756,7 +756,7 @@ export default function ProductsPage() {
 
   // Mobile: full-screen list
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-28">
+    <div className="flex min-h-dvh flex-col bg-background pb-28">
       {listPanel}
       {modals}
     </div>

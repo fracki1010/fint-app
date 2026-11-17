@@ -194,7 +194,7 @@ export default function SalesPage() {
   // Mobile: show full-screen detail when orderId is set
   if (!isDesktop && orderId) {
     return (
-      <div className="flex h-screen flex-col bg-background">
+      <div className="flex h-dvh flex-col bg-background">
         <OrderDetailPanel
           currency={currency}
           isDesktop={false}
@@ -208,7 +208,7 @@ export default function SalesPage() {
 
   // ── List panel ──────────────────────────────────────────────────────
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "min-h-screen" : "min-h-screen pb-20"}`}>
+    <div className={`flex flex-col ${isDesktop ? "min-h-dvh" : "min-h-dvh pb-20"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -444,7 +444,7 @@ export default function SalesPage() {
               return (
                 <button
                   key={order._id}
-                  className={`w-full rounded-2xl border px-4 py-3.5 text-left transition-all ${
+                  className={`w-full rounded-2xl border px-4 py-3.5 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                     isSelected
                       ? "border-primary/30 bg-primary/8 shadow-[0_0_0_1px_rgb(var(--warm-glow)/0.15),0_4px_16px_rgb(var(--warm-glow)/0.10)]"
                       : "border-[color:rgb(var(--warm-border)/0.08)] bg-content2/40 hover:border-primary/20 hover:bg-primary/5"
@@ -542,14 +542,14 @@ export default function SalesPage() {
   // ── Desktop slide-over layout ─────────────────────────────────────────
   if (isDesktop) {
     return (
-      <div className="min-h-screen overflow-y-auto">
+      <div className="min-h-dvh overflow-y-auto">
         {ListPanel}
         <div
-          className={`fixed inset-0 z-40 transition-all duration-300 ${orderId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+          className={`fixed inset-0 z-40 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${orderId ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
           onClick={() => navigate("/sales")}
         />
         <div
-          className={`fixed right-0 top-0 z-50 h-screen w-[min(700px,58vw)] overflow-y-auto border-l border-[color:rgb(var(--warm-border)/0.12)] bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${orderId ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed right-0 top-0 z-50 h-dvh w-[min(700px,58vw)] overflow-y-auto border-l border-[color:rgb(var(--warm-border)/0.12)] bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${orderId ? "translate-x-0" : "translate-x-full"}`}
         >
           {orderId && (
             <OrderDetailPanel

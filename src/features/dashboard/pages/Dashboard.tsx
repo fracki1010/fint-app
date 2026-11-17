@@ -224,7 +224,7 @@ export default function DashboardPage() {
 
   if (loading && !dashboard) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -232,7 +232,7 @@ export default function DashboardPage() {
 
   if (!dashboard) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6">
+      <div className="flex min-h-dvh items-center justify-center px-6">
         <div className="app-panel w-full max-w-md rounded-[28px] p-6 text-center">
           <p className="text-base font-semibold text-foreground">
             No pudimos cargar el panel ejecutivo
@@ -278,26 +278,26 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-5 flex items-stretch gap-3 overflow-x-auto no-scrollbar">
-          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+        <div className="mt-5 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto overscroll-x-contain no-scrollbar">
+          <div className="flex min-w-[140px] snap-start flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Cobrado</span>
             <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
               {formatCompactCurrency(dashboard.sales.collectedMonth, currency)}
             </span>
           </div>
-          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+          <div className="flex min-w-[140px] snap-start flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Stock Bajo</span>
             <span className={`mt-1.5 text-lg font-bold tracking-tight ${dashboard.inventory.lowStockCount > 0 ? "text-danger" : "text-white"}`}>
               {dashboard.inventory.lowStockCount}
             </span>
           </div>
-          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+          <div className="flex min-w-[140px] snap-start flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Pendientes</span>
             <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
               {dashboard.operations.pendingOrders}
             </span>
           </div>
-          <div className="flex min-w-[140px] flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
+          <div className="flex min-w-[140px] snap-start flex-col rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Con Deuda</span>
             <span className="mt-1.5 text-lg font-bold tracking-tight text-white">
               {dashboard.customers.customersWithDebt}
@@ -349,7 +349,7 @@ export default function DashboardPage() {
               return (
                 <Link
                   key={action.to}
-                  className={`app-panel rounded-2xl p-4 transition-all hover:-translate-y-0.5 active:scale-[0.98] lg:rounded-[22px] lg:p-5 ${
+                  className={`app-panel rounded-2xl p-4 transition-[color,background-color,border-color,box-shadow,opacity,transform] hover:-translate-y-0.5 active:scale-[0.98] lg:rounded-[22px] lg:p-5 ${
                     action.primary
                       ? "financial-card-accent !border-0 col-span-1 lg:col-span-1"
                       : ""

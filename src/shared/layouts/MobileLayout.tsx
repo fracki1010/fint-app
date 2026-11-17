@@ -121,10 +121,10 @@ export default function MobileLayout() {
     : "??";
 
   return (
-    <div className="MobileAppWrapper flex h-screen w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+    <div className="MobileAppWrapper flex h-dvh w-full bg-background font-sans text-foreground lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
 
       {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
-      <aside className="hidden h-screen overflow-hidden lg:flex lg:flex-col border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_92%,transparent)] backdrop-blur-xl">
+      <aside className="hidden h-dvh overflow-hidden lg:flex lg:flex-col border-r border-white/8 bg-[color:color-mix(in_srgb,var(--heroui-content1)_92%,transparent)] backdrop-blur-xl">
 
         {/* Brand */}
         <div className="px-5 pt-6 pb-4 border-b border-white/8">
@@ -252,12 +252,12 @@ export default function MobileLayout() {
 
       {/* ── Notifications (bottom sheet on mobile, slide-over on desktop) ── */}
       <div
-        className={`fixed inset-0 z-[60] transition-all duration-300 ${showNotifications ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
+        className={`fixed inset-0 z-[60] transition-opacity duration-300 ${showNotifications ? "bg-black/30 backdrop-blur-[2px]" : "pointer-events-none opacity-0"}`}
         onClick={() => setShowNotifications(false)}
       />
       {/* Desktop: slide-over from left */}
       <div
-        className={`fixed left-0 top-0 z-[70] hidden h-screen w-full max-w-xl overflow-y-auto border-r border-white/10 bg-content1 shadow-[24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar lg:block ${showNotifications ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed left-0 top-0 z-[70] hidden h-dvh w-full max-w-xl overflow-y-auto border-r border-white/10 bg-content1 shadow-[24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out scrollbar-sidebar lg:block ${showNotifications ? "translate-x-0" : "-translate-x-full"}`}
       >
         <NotificationsHeader unreadCount={unreadCount} markAllAsRead={markAllAsRead} onClose={() => setShowNotifications(false)} />
         <NotificationsList notifications={notifications} markAsRead={markAsRead} />
@@ -276,7 +276,7 @@ export default function MobileLayout() {
 
       {/* ── Edge swipe zone (invisible, left edge) ───────────────────── */}
       <div
-        className="fixed left-0 top-0 z-[55] h-full w-6 lg:hidden"
+        className="fixed left-0 top-0 z-[55] h-full w-6 touch-pan-y lg:hidden"
         {...drawerHandlers.edgeHandlers}
       />
 
@@ -292,8 +292,8 @@ export default function MobileLayout() {
 
       {/* Drawer panel — Material3 Navigation Drawer */}
       <div
-        className={`fixed left-0 top-0 z-[70] h-screen bg-content1 safe-left lg:hidden ${
-          drawer.isDragging ? "transition-none" : "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+        className={`fixed left-0 top-0 z-[70] h-dvh touch-pan-y overscroll-y-contain bg-content1 safe-left lg:hidden ${
+          drawer.isDragging ? "transition-none" : "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         } ${drawer.progress === 0 ? "pointer-events-none" : ""}`}
         style={{
           width: `${Math.min(320, typeof window !== "undefined" ? window.innerWidth * 0.8 : 320)}px`,
@@ -505,7 +505,7 @@ function NavSection({
   return (
     <div>
       <button
-        className={`group flex w-full items-center gap-3 ${headerShape} text-left text-[13px] font-semibold transition-all ${
+        className={`group flex w-full items-center gap-3 ${headerShape} text-left text-[13px] font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
           headerActive ? headerBg : headerDefault
         }`}
         onClick={() => setOpen(!open)}
@@ -535,7 +535,7 @@ function NavSection({
               return (
                 <button
                   key={item.path}
-                  className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-all ${
+                  className={`group flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[13px] font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                     active
                       ? "bg-amber-500/15 text-primary"
                       : "text-default-600 hover:bg-default/10 hover:text-foreground"
@@ -561,7 +561,7 @@ function NavSection({
               return (
                 <button
                   key={item.path}
-                  className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-all ${
+                  className={`group flex w-full items-center gap-3 px-3 py-[6px] text-left text-[13px] font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                     active
                       ? "text-primary border-l-2 border-primary -ml-[14px] pl-3"
                       : "text-default-500 hover:text-foreground"
@@ -605,7 +605,7 @@ function NavItem({
 
   return (
     <button
-      className={`group flex w-full items-center gap-3 text-left text-[13px] font-semibold transition-all ${
+      className={`group flex w-full items-center gap-3 text-left text-[13px] font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
         isMobile
           ? `rounded-full px-4 py-2.5 ${active ? "bg-amber-500/15 text-primary" : "text-default-600 hover:bg-default/10 hover:text-foreground"}`
           : `px-3 py-[6px] ${active ? "text-primary" : "text-default-500 hover:text-foreground"}`

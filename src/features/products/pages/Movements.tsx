@@ -151,7 +151,7 @@ export default function MovementsPage() {
   };
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full flex-col overflow-hidden bg-background pb-28 lg:pb-8">
+    <div className="relative mx-auto flex min-h-dvh w-full flex-col overflow-hidden bg-background pb-28 lg:pb-8">
       {/* ── Mobile header ── */}
       <header className="app-topbar px-6 pt-6 pb-5 lg:hidden">
         <div className="flex items-start justify-between gap-4">

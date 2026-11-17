@@ -264,7 +264,7 @@ export default function NewOperationPage() {
   };
 
   return (
-    <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
       <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -585,7 +585,7 @@ export default function NewOperationPage() {
                   {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
                     <button
                       key={m}
-                      className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                      className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                         paymentMethod === m
                           ? "bg-primary text-primary-foreground shadow-md"
                           : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
@@ -660,7 +660,7 @@ export default function NewOperationPage() {
               {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
                 <button
                   key={m}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
                     paymentMethod === m
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"

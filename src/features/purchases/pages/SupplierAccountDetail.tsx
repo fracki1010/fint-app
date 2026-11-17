@@ -305,14 +305,14 @@ export default function SupplierAccountDetailPage() {
 
   if (!supplierId) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <p className="text-default-400">Proveedor no especificado</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       {/* Header */}
       <div className="sticky top-0 z-20 border-b border-white/10 bg-background/80 backdrop-blur-xl px-4 py-4 lg:px-6">
         <div className="flex items-center gap-3">
@@ -398,7 +398,7 @@ export default function SupplierAccountDetailPage() {
                     <div key={key} className="flex items-center gap-3">
                       <span className={`w-20 text-xs font-semibold ${color}`}>{label}</span>
                       <div className="flex-1 h-2 bg-default-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${bar} transition-all`} style={{ width: `${pct}%` }} />
+                        <div className={`h-full rounded-full ${bar} transition-[color,background-color,border-color,box-shadow,opacity,transform]`} style={{ width: `${pct}%` }} />
                       </div>
                       <span className="w-24 text-right text-xs font-mono text-foreground">
                         {formatCurrency(amount, currency)}

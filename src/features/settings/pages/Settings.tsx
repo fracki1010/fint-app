@@ -241,7 +241,7 @@ export default function SettingsPage() {
 
   if (loading && !settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -443,8 +443,8 @@ export default function SettingsPage() {
         <DrawerContent
           className={
             isDesktop
-              ? "h-screen w-full max-w-xl overflow-x-hidden rounded-none bg-content1"
-              : "h-screen w-screen max-w-none overflow-x-hidden rounded-none bg-content1"
+              ? "h-dvh w-full max-w-xl overflow-x-hidden rounded-none bg-content1"
+              : "h-dvh w-screen max-w-none overflow-x-hidden rounded-none bg-content1"
           }
         >
           <DrawerBody className="flex h-full flex-col overflow-x-hidden p-6">

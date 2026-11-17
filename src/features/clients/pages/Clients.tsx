@@ -458,7 +458,7 @@ export default function ClientsPage() {
   // Vista móvil: detalle completo
   if (!isDesktop && clientId) {
     return (
-      <div className="flex h-screen flex-col bg-background">
+      <div className="flex h-dvh flex-col bg-background">
         <ClientDetailPanel
           clientId={clientId}
           currency={currency}
@@ -492,7 +492,7 @@ export default function ClientsPage() {
 
   // Panel de lista
   const ListPanel = (
-    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-screen pb-28"}`}>
+    <div className={`flex flex-col ${isDesktop ? "h-full" : "min-h-dvh pb-28"}`}>
       {/* Header */}
       <div className={`shrink-0 page-header ${isHeaderCompact ? "py-3" : ""}`}>
         <div className="flex items-center justify-between gap-3">
@@ -700,7 +700,7 @@ export default function ClientsPage() {
               return (
                 <button
                   key={client._id}
-                  className={`group w-full rounded-2xl border px-4 py-3.5 text-left transition-all duration-200 ${
+                  className={`group w-full rounded-2xl border px-4 py-3.5 text-left transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-200 ${
                     isSelected
                       ? "border-primary/30 bg-primary/5 shadow-sm shadow-primary/10"
                       : "border-white/[0.06] bg-content2/30 hover:border-primary/20 hover:bg-content2/50"
@@ -820,14 +820,14 @@ export default function ClientsPage() {
         <div className="h-full">
           {ListPanel}
           <div
-            className={`fixed inset-0 z-40 transition-all duration-300 ${
+            className={`fixed inset-0 z-40 transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-300 ${
               clientId ? "bg-black/30 backdrop-blur-sm" : "pointer-events-none opacity-0"
             }`}
             onClick={() => navigate("/clients")}
             aria-hidden={!clientId}
           />
           <div
-            className={`fixed right-0 top-0 z-50 h-screen w-[min(720px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${
+            className={`fixed right-0 top-0 z-50 h-dvh w-[min(720px,58vw)] overflow-y-auto border-l border-white/10 bg-content1 shadow-[-24px_0_60px_rgba(40,25,15,0.28)] transition-transform duration-300 ease-in-out ${
               clientId ? "translate-x-0" : "translate-x-full"
             }`}
             role="complementary"

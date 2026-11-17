@@ -262,7 +262,7 @@ export default function QuickSalePage() {
   }
 
   return (
-    <div className={`flex min-h-screen flex-col bg-background ${isDesktop ? "lg:overflow-hidden lg:h-screen" : ""}`}>
+    <div className={`flex min-h-dvh flex-col bg-background ${isDesktop ? "lg:overflow-hidden lg:h-dvh" : ""}`}>
       {/* Loading overlay during order creation */}
       {isCreating && (
         <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -272,7 +272,7 @@ export default function QuickSalePage() {
         </div>
       )}
       {/* ── Mobile layout ── */}
-      <div className={`flex min-h-screen flex-col bg-background ${isDesktop ? "lg:hidden" : ""}`}>
+      <div className={`flex min-h-dvh flex-col bg-background ${isDesktop ? "lg:hidden" : ""}`}>
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-divider/60 bg-background/80 px-4 py-3 backdrop-blur-lg">
         <div className="flex items-center gap-3">
           {isDesktop && (
@@ -664,7 +664,7 @@ export default function QuickSalePage() {
 
       {/* ── Desktop layout ── */}
       {isDesktop && (
-        <div className="hidden lg:flex h-screen overflow-hidden">
+        <div className="hidden lg:flex h-dvh overflow-hidden">
           {/* Left panel: Search + Items */}
           <div className="flex flex-1 flex-col min-w-0">
             {/* Header */}

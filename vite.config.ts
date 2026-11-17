@@ -22,6 +22,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon-32.png", "apple-touch-icon.png"],
       manifest: {
+        id: "/",
         name: "Fint Suite",
         short_name: "Fint",
         description:
@@ -32,7 +33,7 @@ export default defineConfig({
         display_override: ["standalone", "minimal-ui"],
         orientation: "any",
         background_color: "#F8F6F4",
-        theme_color: "#0f172a",
+        theme_color: "#F8F6F4",
         lang: "es",
         categories: ["business", "finance", "productivity"],
         prefer_related_applications: false,

@@ -292,7 +292,7 @@ export function ClientFormModal({
         if (!open) onClose();
       }}
     >
-      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1">
+      <DrawerContent className="h-[100dvh] w-full max-w-xl overflow-x-hidden rounded-none bg-content1 safe-bottom">
         <DrawerBody className="p-0">{formLayout}</DrawerBody>
       </DrawerContent>
     </Drawer>
