@@ -515,12 +515,6 @@ export function ProductFormModal({
         {/* ═══════ INVENTARIO ═══════ */}
         {activeTab === "inventario" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-px flex-1 bg-divider/20" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-default-400">Inventario</span>
-            <div className="h-px flex-1 bg-divider/20" />
-          </div>
-
           <div className="rounded-2xl border border-divider/20 bg-gradient-to-br from-content1 to-content2/20 p-5 shadow-sm">
             {formData.presentations.length === 0 ? (
               <div className="py-6 text-center">
@@ -546,6 +540,7 @@ export function ProductFormModal({
                         }
                       }}
                     >
+                      <option value="base">{formData.unitOfMeasure || "Unidad base"}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
@@ -553,7 +548,7 @@ export function ProductFormModal({
                   ) : null}
                 </div>
                 {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
-                  <p className="mt-1 text-[10px] text-default-400">Stock en unidades de la presentación seleccionada</p>
+                  <p className="mt-1 text-[10px] text-default-400">Elegí la unidad de carga; una presentación se convierte a unidad base.</p>
                 )}
               </label>
               <label className="block">
@@ -573,6 +568,7 @@ export function ProductFormModal({
                         }
                       }}
                     >
+                      <option value="base">{formData.unitOfMeasure || "Unidad base"}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
@@ -580,7 +576,7 @@ export function ProductFormModal({
                   ) : null}
                 </div>
                 {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
-                  <p className="mt-1 text-[10px] text-default-400">Stock mínimo en unidades de la presentación</p>
+                  <p className="mt-1 text-[10px] text-default-400">Elegí la unidad de carga; una presentación se convierte a unidad base.</p>
                 )}
               </label>
               <label className="block">
