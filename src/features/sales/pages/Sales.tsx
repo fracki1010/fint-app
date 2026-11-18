@@ -521,7 +521,7 @@ export default function SalesPage() {
 
       {/* Mobile FABs */}
       {!isDesktop && (
-        <div className="fixed bottom-6 right-6 z-10 flex flex-col gap-3 lg:hidden">
+        <div className="fixed bottom-24 right-6 z-10 flex flex-col gap-3 lg:hidden">
           <Button
             isIconOnly
             as={Link}

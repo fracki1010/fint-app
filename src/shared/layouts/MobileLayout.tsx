@@ -219,10 +219,11 @@ export default function MobileLayout() {
         </div>
       </aside>
 
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* ── Main content ─────────────────────────────────────────────── */}
       <main
         ref={mainRef}
-        className="flex-1 overflow-y-auto pb-20 lg:pb-0 safe-bottom transition-transform duration-300 ease-out lg:transform-none"
+        className="flex-1 overflow-y-auto transition-transform duration-300 ease-out lg:transform-none"
         style={{
           transform: drawer.progress > 0 ? `translateX(${drawer.progress * 80}px)` : undefined,
         }}
@@ -295,7 +296,7 @@ export default function MobileLayout() {
       {/* Mobile tab bar: three daily destinations, new sale in the middle, the rest in the drawer */}
       <nav
         aria-label="Navegación principal"
-        className="mobile-chrome fixed bottom-0 left-0 right-0 z-[50] border-t border-divider/10 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden"
+        className="mobile-chrome relative shrink-0 border-t border-divider/10 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pt-1.5 pb-2">
           {[
@@ -337,6 +338,7 @@ export default function MobileLayout() {
           </li>
         </ul>
       </nav>
+      </div>
 
       {/* Drawer panel — Material3 Navigation Drawer */}
       <div
