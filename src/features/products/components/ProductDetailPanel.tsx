@@ -264,6 +264,40 @@ export function ProductDetailPanel({
                   </div>
                 </div>
 
+                {/* Ganancia del formato principal: mismo criterio que la lista de artículos */}
+                {defaultPres && product.type !== "raw_material" && defaultPres.price > 0 && (() => {
+                  const cost = defaultPres.cost ?? (product.costPrice != null ? product.costPrice * (defaultPres.equivalentQty || 1) : null);
+                  if (cost == null || cost <= 0) {
+                    return (
+                      <div className="stat-card flex items-center justify-between gap-3">
+                        <p className="text-xs font-semibold text-default-500">Ganancia por {defaultPres.name}</p>
+                        <p className="text-xs text-default-400">Cargá el costo para verla</p>
+                      </div>
+                    );
+                  }
+                  const profit = defaultPres.price - cost;
+                  const margin = (profit / defaultPres.price) * 100;
+                  return (
+                    <div className="stat-card space-y-3">
+                      <p className="text-sm font-bold text-foreground">Ganancia por {defaultPres.name}</p>
+                      <div className="grid grid-cols-2 gap-3 text-center">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-default-400">Ganancia</p>
+                          <p className={`mt-1 text-lg font-bold ${profit >= 0 ? "text-success" : "text-danger"}`}>
+                            {formatCompactCurrency(profit, currency)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-default-400">Margen</p>
+                          <p className={`mt-1 text-lg font-bold ${margin >= 0 ? "text-success" : "text-danger"}`}>
+                            {margin.toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Default presentation selector */}
                 {activePres.length > 1 && (
                   <div className="flex items-center gap-2">
@@ -289,7 +323,7 @@ export function ProductDetailPanel({
                 )}
 
             {/* Tier Prices per Presentation */}
-            {product.presentations && product.presentations.length > 0 && product.priceTiers?.retail && (
+            {product.presentations && product.presentations.length > 0 && (product.priceTiers?.retail ?? 0) > 0 && (
               <div className="stat-card space-y-4">
                 <div className="flex items-center gap-2 pb-1 border-b border-divider/20">
                   <DollarSign size={16} className="text-primary" />
