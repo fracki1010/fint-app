@@ -484,6 +484,10 @@ export default function ProductsPage() {
                     ? [product.category]
                     : [];
               const isSelected = product._id === productId;
+              const marginPct =
+                displayCost != null && displayCost > 0 && displayPrice > 0
+                  ? ((displayPrice - displayCost) / displayPrice) * 100
+                  : null;
 
               return (
                 <div
@@ -553,14 +557,18 @@ export default function ProductsPage() {
                     </div>
                   )}
 
+                  {isDesktop && (
+                    <div className="hidden lg:block shrink-0 w-20 text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-default-400">Margen</p>
+                      <p className={`text-xs font-semibold ${marginPct == null ? "text-default-400" : marginPct >= 0 ? "text-success" : "text-danger"}`}>
+                        {marginPct == null ? "—" : `${marginPct.toFixed(1)}%`}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="shrink-0 text-right">
                     {isDesktop && <p className="text-[10px] uppercase tracking-wide text-default-400">Precio</p>}
                     <p className="text-sm font-bold text-foreground">{formatCompactCurrency(displayPrice, currency)}</p>
-                    {isDesktop && displayCost != null && displayCost > 0 && displayPrice > 0 && (
-                      <p className="text-[10px] text-success">
-                        {(((displayPrice - displayCost) / displayPrice) * 100).toFixed(0)}% mg
-                      </p>
-                    )}
                   </div>
 
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
