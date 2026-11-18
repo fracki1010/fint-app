@@ -41,6 +41,8 @@ import { ConfirmModal } from "@shared/components/ConfirmModal";
 // ── Tipos ───────────────────────────────────────────────────────────────
 
 type SortField = "name" | "company" | "debt" | "createdAt";
+
+const PRICE_LIST_LABEL: Record<string, string> = { wholesale: "Mayorista", distributor: "Distribuidor" };
 type SortDirection = "asc" | "desc";
 type FilterType = "all" | "withDebt" | "noDebt" | "withEmail" | "noEmail";
 
@@ -538,8 +540,8 @@ export default function ClientsPage() {
             <MetricCard
               label="Con Deuda"
               value={clientsWithDebt}
-              subValue={`${((clientsWithDebt / (safeClients.length || 1)) * 100).toFixed(0)}% del total`}
-              trend={clientsWithDebt > 0 ? "down" : "up"}
+              subValue={clientsWithDebt > 0 ? `${((clientsWithDebt / (safeClients.length || 1)) * 100).toFixed(0)}% del total` : "Ninguno con deuda"}
+              trend={clientsWithDebt > 0 ? "down" : undefined}
               icon={AlertCircle}
               color={clientsWithDebt > 0 ? "warning" : "success"}
             />
@@ -724,6 +726,11 @@ export default function ClientsPage() {
                         <p className="truncate text-sm font-semibold text-foreground">
                           {client.name || "Sin nombre"}
                         </p>
+                        {client.priceList && client.priceList !== "retail" && PRICE_LIST_LABEL[client.priceList] && (
+                          <span className="rounded-md bg-content2/70 px-1.5 py-0.5 text-[10px] font-semibold text-default-500">
+                            {PRICE_LIST_LABEL[client.priceList]}
+                          </span>
+                        )}
                         {hasDebt && (
                           <Badge variant="danger" size="sm">
                             Deuda
@@ -765,15 +772,18 @@ export default function ClientsPage() {
                       >
                         {formatCompactCurrency(Number(client.debt || 0), currency)}
                       </p>
+                      {!isDesktop && (
+                        <p className={`text-[10px] font-semibold ${hasDebt ? "text-danger" : "text-default-400"}`}>
+                          {hasDebt ? "Debe" : "Al día"}
+                        </p>
+                      )}
                     </div>
-                    {isDesktop && (
-                      <ChevronRight
+                    <ChevronRight
                         size={16}
                         className={`shrink-0 transition-colors ${
                           isSelected ? "text-primary" : "text-default-300"
                         }`}
                       />
-                    )}
                   </div>
                 </button>
               );
