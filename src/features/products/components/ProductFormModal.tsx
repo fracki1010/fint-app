@@ -540,7 +540,7 @@ export function ProductFormModal({
                         }
                       }}
                     >
-                      <option value="base">{formData.unitOfMeasure || "Unidad base"}</option>
+                      <option value="base">{UNIT_OPTIONS.find((u) => u.value === formData.unitOfMeasure)?.label ?? formData.unitOfMeasure}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
@@ -568,7 +568,7 @@ export function ProductFormModal({
                         }
                       }}
                     >
-                      <option value="base">{formData.unitOfMeasure || "Unidad base"}</option>
+                      <option value="base">{UNIT_OPTIONS.find((u) => u.value === formData.unitOfMeasure)?.label ?? formData.unitOfMeasure}</option>
                       {formData.presentations.filter(p => p.isActive !== false).map((p) => (
                         <option key={p._id || p.name} value={p._id || p.name}>{p.name}</option>
                       ))}
