@@ -401,7 +401,7 @@ export default function ProductsPage() {
 
         {/* Summary */}
         <p className="mt-3 text-sm text-default-500">
-          {total || safeProducts.length} artículos
+          {total || safeProducts.length} {(total || safeProducts.length) === 1 ? "artículo" : "artículos"}
           {lowStockCount > 0 && (
             <>
               {" · "}

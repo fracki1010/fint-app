@@ -249,7 +249,6 @@ export function ProductFormModal({
       <div className="border-b border-divider/10 px-5 py-5 sm:px-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-default-400">{mode === "create" ? "Alta de Artículo" : "Edicion"}</p>
             <h2 className="mt-1.5 text-xl font-bold tracking-[-0.02em] text-foreground">
               {mode === "create" ? "Nuevo artículo" : "Editar artículo"}
             </h2>
@@ -296,11 +295,6 @@ export function ProductFormModal({
         {/* ═══════ ETIQUETA DEL PRODUCTO ═══════ */}
         {activeTab === "etiqueta" && (
         <div className="space-y-5">
-          <div className="flex items-center gap-2.5">
-            <div className="h-px flex-1 bg-divider/20" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-default-400">Etiqueta del producto</span>
-            <div className="h-px flex-1 bg-divider/20" />
-          </div>
 
           <div className="rounded-2xl border border-divider/20 bg-gradient-to-br from-content1 to-content2/20 p-5 shadow-sm">
             {/* Nombre */}
