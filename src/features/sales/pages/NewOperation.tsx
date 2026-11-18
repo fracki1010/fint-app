@@ -34,6 +34,7 @@ import {
 } from "@features/products/utils/stock";
 import { VoucherSelector } from "@features/vouchers/components/VoucherSelector";
 import { getDefaultVoucherTypes } from "@features/vouchers/utils/voucherUtils";
+import SaleSuccessScreen from "@features/sales/components/SaleSuccessScreen";
 
 interface CartItem {
   product: Product;
@@ -64,6 +65,10 @@ export default function NewOperationPage() {
   const [notes, setNotes] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [selectedVoucherTypes, setSelectedVoucherTypes] = useState<VoucherType[]>([]);
+  const [soldOrder, setSoldOrder] = useState<{
+    items: { productName: string; quantity: number; price: number }[];
+    totalAmount: number;
+  } | null>(null);
   const { searchProducts } = useProductLookupManual();
   const scanHandlerRef = useRef<(code: string) => void>(() => {});
 
@@ -247,13 +252,14 @@ export default function NewOperationPage() {
         vouchersToGenerate: selectedVoucherTypes,
       };
       await createOrder(orderPayload as Parameters<typeof createOrder>[0]);
-      showToast({
-        variant: "success",
-        message: selectedVoucherTypes.length > 0
-          ? `Venta registrada con ${selectedVoucherTypes.length} comprobante(s).`
-          : "Venta registrada correctamente.",
+      setSoldOrder({
+        items: cart.map((item) => ({
+          productName: item.product.name + (item.presentation ? ` (${item.presentation.name})` : ""),
+          quantity: item.quantity,
+          price: item.presentation?.price ?? item.product.price ?? 0,
+        })),
+        totalAmount: total,
       });
-      navigate("/");
     } catch (error) {
       showToast({
         variant: "error",
@@ -302,6 +308,25 @@ export default function NewOperationPage() {
       </div>
     </div>
   );
+
+  if (soldOrder) {
+    return (
+      <SaleSuccessScreen
+        currency={currency}
+        itemCount={soldOrder.items.reduce((acc, i) => acc + i.quantity, 0)}
+        onGoHome={() => navigate("/")}
+        onNewSale={() => {
+          setCart([]);
+          setSelectedClient(null);
+          setNotes("");
+          setPaymentMethod("cash");
+          setSoldOrder(null);
+        }}
+        orderResult={soldOrder}
+        total={soldOrder.totalAmount}
+      />
+    );
+  }
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-36 font-sans lg:max-w-none lg:px-6 lg:pb-8">
