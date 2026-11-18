@@ -53,7 +53,7 @@ export default function InventorySnapshotsPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Inventario — Snapshots
+              Historial de stock
             </h1>
             <p className="text-sm text-default-500 mt-1">
               Registros del estado del inventario en un momento dado
@@ -65,7 +65,7 @@ export default function InventorySnapshotsPage() {
             isLoading={isTriggering}
           >
             <Camera className="w-4 h-4 mr-2" />
-            Tomar Snapshot
+            Tomar foto del stock
           </Button>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function InventorySnapshotsPage() {
               <Camera className="w-12 h-12 text-default-300 mx-auto mb-3" />
               <p>No hay snapshots todavía</p>
               <p className="text-sm text-default-400 mt-1">
-                Tomá un snapshot para registrar el estado actual del inventario
+                Se guarda una foto al hacer el cierre de caja, o podés tomarla ahora
               </p>
             </div>
           ) : (

@@ -161,7 +161,8 @@ function App() {
           <Route element={<ClientsPage />} path="/clients/:clientId" />
           <Route element={<SalesPage />} path="/sales" />
           <Route element={<SalesPage />} path="/sales/:orderId" />
-          <Route element={<CashClosingPage />} path="/cash-closing" />
+          <Route element={<PlanGuard feature="cash_management"><CashClosingPage /></PlanGuard>} path="/cash-closing" />
+          <Route element={<PlanGuard feature="cash_management"><CashMovementsPage /></PlanGuard>} path="/financial/cash-movements" />
           <Route element={<MovementsPage />} path="/movements" />
           <Route
             element={<MovementDetailPage />}
@@ -219,10 +220,6 @@ function App() {
             <Route
               element={<CostCentersPage />}
               path="/financial/cost-centers"
-            />
-            <Route
-              element={<CashMovementsPage />}
-              path="/financial/cash-movements"
             />
             <Route
               element={<IvaReportsPage />}

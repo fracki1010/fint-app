@@ -75,16 +75,16 @@ export default function MobileLayout() {
 
   const stockNav = [
     { path: "/products", label: "Artículos", icon: ClipboardList },
-    { path: "/inventory", label: "Inventario", icon: Package },
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
   const tesoreriaNav = [
     ...(hasFeature("financial_center") ? [{ path: "/financial/treasury", label: "Tesorería", icon: DollarSign }] : []),
-    ...(hasFeature("financial_center") ? [{ path: "/banking", label: "Cuentas", icon: Landmark }] : []),
-    ...(hasFeature("financial_center") ? [{ path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet }] : []),
-    ...(hasFeature("financial_center") ? [{ path: "/cash-closing", label: "Cierre de Caja", icon: Lock }] : []),
+    ...(hasFeature("banking") ? [{ path: "/banking", label: "Cuentas", icon: Landmark }] : []),
+    ...(hasFeature("cash_management") ? [{ path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet }] : []),
+    ...(hasFeature("cash_management") ? [{ path: "/cash-closing", label: "Cierre de Caja", icon: Lock }] : []),
+    ...(hasFeature("cash_management") ? [{ path: "/inventory", label: "Historial de stock", icon: Package }] : []),
   ];
 
   const fullFinancialNav = [
