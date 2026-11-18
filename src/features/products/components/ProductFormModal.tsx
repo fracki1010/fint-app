@@ -359,7 +359,7 @@ export function ProductFormModal({
             )}
 
             {/* Código de barras + SKU */}
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 [&>label]:min-w-0 [&_input]:min-w-0">
               <label className="block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Código de Barras</span>
                 <div className="flex gap-2">
