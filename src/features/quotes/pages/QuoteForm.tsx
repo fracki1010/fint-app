@@ -1,7 +1,7 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Loader2,
   Plus,
   Trash2,
   Calendar,
@@ -201,10 +201,7 @@ export default function QuoteFormPage() {
   if (isEditing && quoteLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-default-400">
-          <Loader2 className="animate-spin" size={32} />
-          <p className="text-sm font-medium">Cargando presupuesto...</p>
-        </div>
+        <DetailSkeleton />
       </div>
     );
   }

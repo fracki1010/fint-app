@@ -1,3 +1,4 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -90,9 +91,7 @@ export default function PricingPage() {
   if (loading) {
     return (
       <SuperAdminLayout>
-        <div className="flex h-96 items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-primary" />
-        </div>
+        <DetailSkeleton />
       </SuperAdminLayout>
     );
   }

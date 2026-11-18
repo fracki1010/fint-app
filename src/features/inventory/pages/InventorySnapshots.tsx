@@ -1,6 +1,6 @@
 import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from "react";
-import { Loader2, Camera, History, AlertCircle } from "lucide-react";
+import { Camera, History, AlertCircle } from "lucide-react";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Modal, ModalContent, ModalBody, ModalHeader } from "@heroui/modal";
@@ -166,9 +166,7 @@ export default function InventorySnapshotsPage() {
         <ModalContent>
           {loadingDetail ? (
             <ModalBody className="p-6">
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-              </div>
+              <MovementsSkeleton />
             </ModalBody>
           ) : snapshotDetail ? (
             <>

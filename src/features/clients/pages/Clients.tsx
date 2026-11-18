@@ -1,3 +1,4 @@
+import { SkeletonRow } from "@shared/components/skeleton/primitives";
 import { SkeletonKpi } from "@shared/components/skeleton/primitives";
 import { ClientsListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
@@ -7,7 +8,6 @@ import {
   ChevronRight,
   FileSpreadsheet,
   Filter,
-  Loader2,
   Mail,
   Search,
   TrendingDown,
@@ -799,9 +799,7 @@ export default function ClientsPage() {
               <>
                 <div ref={loadMoreRef} className="h-4 w-full" />
                 {isFetchingNextPage && (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="animate-spin text-default-400" size={20} />
-                  </div>
+                  <SkeletonRow leading="circle" lines={2} trailing={false} />
                 )}
                 {!hasNextPage && safeClients.length > 0 && (
                   <p className="py-3 text-center text-[11px] text-default-400">Fin del directorio</p>

@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -546,10 +547,7 @@ export function ProductDetailPanel({
               {/* Movement list */}
               <div>
                 {movementsLoading ? (
-                  <div className="stat-card py-8 text-center text-default-400">
-                    <Loader2 className="mx-auto mb-2 animate-spin" size={22} />
-                    <p className="text-sm">Cargando movimientos...</p>
-                  </div>
+                  <SkeletonRowList rows={3} lines={2} leading="tile" trailing={false} />
                 ) : (() => {
                   const filteredMovements = visibleMovements.filter((m) => {
                     if (movementTypeFilter !== "all" && m.type !== movementTypeFilter) return false;

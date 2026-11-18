@@ -1,3 +1,4 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -119,9 +120,7 @@ export default function TenantDetail() {
   if (loading) {
     return (
       <SuperAdminLayout>
-        <div className="flex h-96 items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-blue-400" />
-        </div>
+        <DetailSkeleton />
       </SuperAdminLayout>
     );
   }

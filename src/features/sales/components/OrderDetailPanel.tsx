@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { SaleDetailSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -444,9 +445,7 @@ export function OrderDetailPanel({
                 )}
               </div>
               {vouchersLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 size={20} className="animate-spin text-default-400" />
-                </div>
+                <SkeletonRowList rows={1} lines={1} leading="none" trailing={false} />
               ) : (
                 <VoucherList
                   vouchers={vouchers}

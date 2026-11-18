@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,7 +15,6 @@ import {
   Sparkles,
   Zap,
   MessageCircle,
-  Loader2,
 } from "lucide-react";
 
 import { useComplementCatalog } from "@features/complements/hooks/useComplementCatalog";
@@ -130,9 +130,7 @@ export default function ComplementsPage() {
 
         {/* Complements Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 size={24} className="animate-spin text-primary" />
-          </div>
+          <SkeletonRowList rows={4} lines={2} leading="tile" />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(catalog?.complements || []).map((comp) => {

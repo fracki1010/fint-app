@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useState, useMemo } from 'react';
 import {
   Loader2,
@@ -178,9 +179,7 @@ export default function CandidateSelector({
 
           {/* Loading */}
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-            </div>
+            <SkeletonRowList rows={4} lines={1} leading="none" trailing={false} />
           ) : filteredCandidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Search className="w-12 h-12 text-default-300 mb-3" />

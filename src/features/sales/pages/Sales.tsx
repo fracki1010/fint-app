@@ -1,3 +1,4 @@
+import { SkeletonRow } from "@shared/components/skeleton/primitives";
 import { Skeleton } from "@shared/components/skeleton/primitives";
 import { SalesListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -5,7 +6,6 @@ import {
   Search,
   ShoppingCart,
   Plus,
-  Loader2,
   ReceiptText,
   CircleDollarSign,
   FileDown,
@@ -496,7 +496,7 @@ export default function SalesPage() {
               <>
                 <div ref={loadMoreRef} className="h-4 w-full" />
                 {isFetchingNextPage && (
-                  <div className="flex justify-center py-4"><Loader2 className="animate-spin text-default-400" size={20} /></div>
+                  <SkeletonRow leading="tile" lines={2} trailing={false} />
                 )}
                 {!hasNextPage && safeOrders.length > 0 && (
                   <p className="py-3 text-center text-[11px] text-default-400">Fin del historial</p>

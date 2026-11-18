@@ -1,3 +1,4 @@
+import { SkeletonPanel } from "@shared/components/skeleton/primitives";
 import { Loader2, CheckCircle2, AlertCircle, Banknote, ArrowUpDown } from 'lucide-react';
 import { Button } from '@heroui/button';
 import { Card, CardBody } from '@heroui/card';
@@ -64,9 +65,7 @@ export default function ReconciliationSummary({
 }: ReconciliationSummaryProps) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-default-400" />
-      </div>
+      <SkeletonPanel lines={3} />
     );
   }
 

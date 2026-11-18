@@ -1,3 +1,5 @@
+import { SkeletonRowList, SkeletonPanel } from "@shared/components/skeleton/primitives";
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from 'react';
 import {
   Plus,
@@ -5,7 +7,6 @@ import {
   Unlock,
   History,
   FileText,
-  Loader2,
   AlertCircle,
   TrendingUp,
   TrendingDown,
@@ -182,9 +183,7 @@ export default function CashClosingPage() {
             </p>
           </div>
             {loadingCurrent ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-default-400" />
-              </div>
+              <SkeletonPanel lines={2} />
             ) : hasOpenClosing && currentClosing ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -232,9 +231,7 @@ export default function CashClosingPage() {
               </Button>
             </div>
               {loadingCurrentPreview ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-default-400" />
-                </div>
+                <SkeletonPanel lines={2} />
               ) : !currentPreview || currentPreview.orders.length === 0 ? (
                 <div className="text-center py-8 text-default-500">
                   <FileText className="w-12 h-12 text-default-300 mx-auto mb-3" />
@@ -323,9 +320,7 @@ export default function CashClosingPage() {
             </p>
           </div>
             {loadingClosings ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-default-400" />
-              </div>
+              <SkeletonRowList rows={4} lines={2} leading="tile" />
             ) : closings.length === 0 ? (
               <div className="text-center py-8 text-default-500">
                 <History className="w-12 h-12 text-default-300 mx-auto mb-3" />
@@ -430,9 +425,7 @@ export default function CashClosingPage() {
         <ModalContent>
           <ModalBody className="p-6">
             {loadingZReport ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-              </div>
+              <DetailSkeleton />
             ) : zReport ? (
               <ZReportView
                 report={zReport}

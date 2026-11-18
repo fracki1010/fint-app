@@ -1,3 +1,4 @@
+import { SkeletonPanel } from "@shared/components/skeleton/primitives";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@heroui/input";
@@ -116,9 +117,7 @@ export default function CompanyPage() {
           <h2 className="text-sm font-bold uppercase tracking-wider text-default-500">Datos de la empresa</h2>
 
           {settingsLoading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <SkeletonPanel lines={3} />
           ) : (
             <>
               <Input
@@ -198,9 +197,7 @@ export default function CompanyPage() {
           </div>
 
           {planLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <SkeletonPanel lines={3} />
           ) : planError ? (
             <div className="rounded-2xl border border-danger/20 bg-danger/10 p-4 text-center">
               <p className="text-sm text-danger">{planError}</p>
