@@ -385,7 +385,6 @@ export default function MovementsPage() {
       <header className="hidden lg:block px-8 pt-8 pb-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="section-kicker">Inventario</div>
             <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">
               Movimientos y trazabilidad
             </h1>
@@ -698,7 +697,7 @@ export default function MovementsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-xs text-default-400 tabular-nums font-medium">{movement.stockAfter}</span>
+                          <span className="text-sm font-bold tabular-nums text-foreground">{movement.stockAfter}</span>
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-sm text-default-500 truncate max-w-[200px]">
@@ -714,10 +713,7 @@ export default function MovementsPage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <p className="text-xs text-default-500 whitespace-nowrap">
-                            {new Date(movement.createdAt).toLocaleDateString()}
-                          </p>
-                          <p className="text-[10px] text-default-400">
-                            {new Date(movement.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            {new Date(movement.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </td>
                         <td className="px-4 py-3">
