@@ -467,17 +467,18 @@ export function ProductFormModal({
         {/* ═══════ PRECIOS ═══════ */}
         {activeTab === "precios" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-px flex-1 bg-divider/20" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-default-400">Precios</span>
-            <div className="h-px flex-1 bg-divider/20" />
-          </div>
-
           <div className="rounded-2xl border border-divider/20 bg-gradient-to-br from-content1 to-content2/20 p-5 shadow-sm space-y-4">
             {formData.presentations.length === 0 ? (
               <div className="py-6 text-center">
                 <p className="text-sm font-medium text-default-500">Creá una unidad alternativa primero</p>
-                <p className="mt-1 text-xs text-default-400">Andá a la pestaña "U. Alternativas" y agregá al menos un formato</p>
+                <p className="mt-1 text-xs text-default-400">Los precios se cargan por presentación, por ejemplo una bolsa de 20 kg.</p>
+                <button
+                  className="mt-4 rounded-xl bg-primary/10 px-4 py-2 text-xs font-bold text-primary transition hover:bg-primary/20"
+                  type="button"
+                  onClick={() => setActiveTab("unidades")}
+                >
+                  Agregar unidad alternativa
+                </button>
               </div>
             ) : (
             <>
