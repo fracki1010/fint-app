@@ -4,17 +4,11 @@ import {
   Loader2,
   X,
   FileDown,
-  PackageCheck,
+  Check,
   ReceiptText,
-  ClipboardCheck,
-  CircleDollarSign,
 } from "lucide-react";
-import { Select, SelectItem } from "@heroui/select";
 
 import {
-  DeliveryStatus,
-  PaymentStatus,
-  SalesStatus,
   useOrderDetail,
   useOrders,
 } from "@features/sales/hooks/useOrders";
@@ -35,9 +29,6 @@ import { VoucherType } from "@shared/types";
 
 const MOVEMENTS_PREVIEW_LIMIT = 8;
 
-const SALES_STATUS_OPTIONS: SalesStatus[] = ["Pendiente", "Confirmada", "Cancelada"];
-const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = ["Pendiente", "Parcial", "Pagado"];
-const DELIVERY_STATUS_OPTIONS: DeliveryStatus[] = ["Pendiente", "Preparando", "Entregada"];
 
 interface OrderDetailPanelProps {
   orderId: string;
@@ -94,10 +85,8 @@ export function OrderDetailPanel({
   };
 
   const [notesDraft, setNotesDraft] = useState("");
-  const [salesStatusDraft, setSalesStatusDraft] = useState<SalesStatus>("Pendiente");
-  const [paymentStatusDraft, setPaymentStatusDraft] = useState<PaymentStatus>("Pendiente");
   const [paymentMethodDraft, setPaymentMethodDraft] = useState<string>("cash");
-  const [deliveryStatusDraft, setDeliveryStatusDraft] = useState<DeliveryStatus>("Pendiente");
+  const [changingMethod, setChangingMethod] = useState(false);
   const [showAllMovements, setShowAllMovements] = useState(false);
 
   const movementSummary = useMemo(
@@ -108,19 +97,17 @@ export function OrderDetailPanel({
 
   useEffect(() => {
     if (selectedOrder) {
-      setSalesStatusDraft(selectedOrder.salesStatus || "Pendiente");
-      setPaymentStatusDraft(selectedOrder.paymentStatus || "Pendiente");
       setPaymentMethodDraft((selectedOrder as any).paymentMethod || "cash");
-      setDeliveryStatusDraft(selectedOrder.deliveryStatus || "Pendiente");
       setNotesDraft(selectedOrder.notes || "");
     }
     setShowAllMovements(false);
   }, [selectedOrder, orderId]);
 
-  const handleSave = async () => {
+  const saveOrder = async (patch: Record<string, unknown>) => {
     try {
-      await updateOrder({ id: orderId, orderData: { salesStatus: salesStatusDraft, paymentStatus: paymentStatusDraft, paymentMethod: paymentMethodDraft, deliveryStatus: deliveryStatusDraft, notes: notesDraft } });
+      await updateOrder({ id: orderId, orderData: patch as any });
       showToast({ variant: "success", message: "Venta actualizada." });
+      setChangingMethod(false);
     } catch (error) {
       showToast({ variant: "error", message: getErrorMessage(error, "No se pudo actualizar.") });
     }
@@ -176,9 +163,20 @@ export function OrderDetailPanel({
             </h2>
             {selectedOrder && (
               <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <StatusBadge label={selectedOrder.salesStatus || "Pendiente"} />
-                <StatusBadge label={selectedOrder.paymentStatus || "Pendiente"} />
-                <StatusBadge label={selectedOrder.deliveryStatus || "Pendiente"} />
+                {/* One summary of where the sale stands, same order as the steps */}
+                <StatusBadge
+                  label={
+                    selectedOrder.salesStatus === "Cancelada"
+                      ? "Cancelada"
+                      : selectedOrder.deliveryStatus === "Entregada"
+                        ? "Entregada"
+                        : selectedOrder.paymentStatus === "Pagado"
+                          ? "Cobrada"
+                          : selectedOrder.salesStatus === "Confirmada"
+                            ? "Confirmada"
+                            : "Pendiente"
+                  }
+                />
                 {(selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 0
                   ? selectedOrder.paymentSplits
                   : selectedOrder.paymentMethod
@@ -271,82 +269,139 @@ export function OrderDetailPanel({
               </div>
             </div>
 
-            {/* Status selectors */}
-            <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-default-400">Actualizar estados</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div>
-                  <div className="mb-1.5 flex items-center gap-1.5 text-primary">
-                    <ClipboardCheck size={13} />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Comercial</span>
-                  </div>
-                  <Select
-                    aria-label="Estado comercial"
-                    classNames={{ trigger: "corp-input min-h-[40px] rounded-xl px-3 text-sm text-foreground", value: "text-foreground", popoverContent: "bg-content1 text-foreground" }}
-                    selectedKeys={[salesStatusDraft]}
-                    variant="bordered"
-                    onSelectionChange={(keys) => setSalesStatusDraft(Array.from(keys)[0] as SalesStatus)}
-                  >
-                    {SALES_STATUS_OPTIONS.map((s) => <SelectItem key={s}>{s}</SelectItem>)}
-                  </Select>
+            {/* Status: one path with one action per step */}
+            {(() => {
+              const sales = selectedOrder.salesStatus || "Pendiente";
+              const payment = selectedOrder.paymentStatus || "Pendiente";
+              const delivery = selectedOrder.deliveryStatus || "Pendiente";
+              const cancelled = sales === "Cancelada";
+              const paid = payment === "Pagado";
+              const method = (selectedOrder as any).paymentMethod as PaymentMethod | undefined;
+              const steps = [
+                { label: "Confirmada", done: sales === "Confirmada" || paid || delivery === "Entregada" },
+                { label: "Cobrada", done: paid },
+                { label: "Entregada", done: delivery === "Entregada" },
+              ];
+              const methodOptions = [
+                { key: "cash", label: "Efectivo" },
+                { key: "card", label: "Tarjeta" },
+                { key: "transfer", label: "Transferencia" },
+              ];
+              const methodButtons = (
+                <div className="flex gap-2">
+                  {methodOptions.map((m) => (
+                    <button
+                      key={m.key}
+                      type="button"
+                      className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+                        paymentMethodDraft === m.key ? "bg-primary text-white" : "border border-divider/30 bg-content2/50 text-default-500 hover:bg-content2"
+                      }`}
+                      onClick={() => setPaymentMethodDraft(m.key)}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <div className="mb-1.5 flex items-center gap-1.5 text-success">
-                    <CircleDollarSign size={13} />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Pago</span>
-                  </div>
-                  <Select
-                    aria-label="Estado de pago"
-                    classNames={{ trigger: "corp-input min-h-[40px] rounded-xl px-3 text-sm text-foreground", value: "text-foreground", popoverContent: "bg-content1 text-foreground" }}
-                    selectedKeys={[paymentStatusDraft]}
-                    variant="bordered"
-                    onSelectionChange={(keys) => setPaymentStatusDraft(Array.from(keys)[0] as PaymentStatus)}
-                  >
-                    {PAYMENT_STATUS_OPTIONS.map((s) => <SelectItem key={s}>{s}</SelectItem>)}
-                  </Select>
-                </div>
-                <div>
-                  <div className="mb-1.5 flex items-center gap-1.5 text-warning">
-                    <PackageCheck size={13} />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Entrega</span>
-                  </div>
-                  <Select
-                    aria-label="Estado de entrega"
-                    classNames={{ trigger: "corp-input min-h-[40px] rounded-xl px-3 text-sm text-foreground", value: "text-foreground", popoverContent: "bg-content1 text-foreground" }}
-                    selectedKeys={[deliveryStatusDraft]}
-                    variant="bordered"
-                    onSelectionChange={(keys) => setDeliveryStatusDraft(Array.from(keys)[0] as DeliveryStatus)}
-                  >
-                    {DELIVERY_STATUS_OPTIONS.map((s) => <SelectItem key={s}>{s}</SelectItem>)}
-                  </Select>
-                </div>
+              );
 
-                {/* Payment Method Selector - only visible when payment status is Pagado */}
-                {paymentStatusDraft === "Pagado" && (
-                  <div className="mt-3">
-                    <div className="mb-1.5 flex items-center gap-1.5 text-success">
-                      <CircleDollarSign size={13} />
-                      <span className="text-[11px] font-semibold uppercase tracking-wider">Método de pago</span>
-                    </div>
-                    <div className="flex gap-2">
-                      {(["cash", "card", "transfer"] as const).map((method) => (
-                        <button
-                          key={method}
-                          className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
-                            paymentMethodDraft === method
-                              ? "bg-primary text-white shadow-md shadow-primary/25"
-                              : "border border-divider/30 bg-content2/50 text-default-500 hover:bg-content2"
-                          }`}
-                          onClick={() => setPaymentMethodDraft(method)}
-                        >
-                          {method === "cash" ? "Efectivo" : method === "card" ? "Tarjeta" : "Transferencia"}
-                        </button>
+              return (
+                <div className="space-y-4 rounded-2xl border border-divider/10 bg-content2/50 p-4">
+                  {cancelled ? (
+                    <p className="text-sm font-semibold text-danger">Venta cancelada</p>
+                  ) : (
+                    <ol className="flex items-center gap-2">
+                      {steps.map((step, i) => (
+                        <li key={step.label} className="flex min-w-0 flex-1 items-center gap-2">
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                              step.done ? "bg-success text-white" : "border border-divider/30 bg-content2 text-default-500"
+                            }`}
+                          >
+                            {step.done ? <Check size={12} /> : i + 1}
+                          </span>
+                          <span className={`truncate text-xs font-semibold ${step.done ? "text-foreground" : "text-default-400"}`}>{step.label}</span>
+                        </li>
                       ))}
+                    </ol>
+                  )}
+
+                  {!cancelled && sales === "Pendiente" && (
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white disabled:opacity-50"
+                      disabled={isUpdating}
+                      onClick={() => saveOrder({ salesStatus: "Confirmada" })}
+                    >
+                      Confirmar venta
+                    </button>
+                  )}
+
+                  {!cancelled && sales !== "Pendiente" && !paid && (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold text-default-500">¿Cómo cobraste?</p>
+                      {methodButtons}
+                      <button
+                        type="button"
+                        className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white disabled:opacity-50"
+                        disabled={isUpdating}
+                        onClick={() => saveOrder({ paymentStatus: "Pagado", paymentMethod: paymentMethodDraft })}
+                      >
+                        Registrar cobro
+                      </button>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
+                  )}
+
+                  {!cancelled && paid && delivery !== "Entregada" && (
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white disabled:opacity-50"
+                      disabled={isUpdating}
+                      onClick={() => saveOrder({ deliveryStatus: "Entregada" })}
+                    >
+                      Marcar entregada
+                    </button>
+                  )}
+
+                  {!cancelled && paid && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-default-500">Cobrado{method ? ` en ${getPaymentLabel(method)}` : ""}</span>
+                        {!changingMethod && (
+                          <button type="button" className="font-semibold text-primary" onClick={() => setChangingMethod(true)}>
+                            Cambiar
+                          </button>
+                        )}
+                      </div>
+                      {changingMethod && (
+                        <div className="space-y-3">
+                          {methodButtons}
+                          <button
+                            type="button"
+                            className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                            disabled={isUpdating}
+                            onClick={() => saveOrder({ paymentMethod: paymentMethodDraft })}
+                          >
+                            Guardar método
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!cancelled && delivery !== "Entregada" && (
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-danger"
+                      onClick={() => {
+                        if (window.confirm("¿Cancelar esta venta?")) saveOrder({ salesStatus: "Cancelada" });
+                      }}
+                    >
+                      Cancelar venta
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Payment details */}
             {((selectedOrder.paymentSplits && selectedOrder.paymentSplits.length > 0) || selectedOrder.paymentMethod) && (
@@ -430,6 +485,9 @@ export function OrderDetailPanel({
                 placeholder="Observaciones internas..."
                 value={notesDraft}
                 onChange={(e) => setNotesDraft(e.target.value)}
+                onBlur={() => {
+                  if (notesDraft !== (selectedOrder.notes || "")) saveOrder({ notes: notesDraft });
+                }}
               />
             </div>
 
@@ -481,14 +539,6 @@ export function OrderDetailPanel({
                 onClick={handleDownloadInvoice}
               >
                 <FileDown size={16} /> Descargar factura
-              </button>
-              <button
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white disabled:opacity-50 hover:bg-primary/90 transition"
-                disabled={isUpdating}
-                onClick={handleSave}
-              >
-                {isUpdating && <Loader2 className="animate-spin" size={16} />}
-                Guardar estados
               </button>
             </div>
           </div>
