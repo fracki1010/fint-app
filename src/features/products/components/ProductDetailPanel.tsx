@@ -620,11 +620,12 @@ export function ProductDetailPanel({
                                 </span>
                               </div>
                               <p className="truncate text-[11px] text-default-400">
-                                {movement.reason || movement.source || "Sin detalle"} · {new Date(movement.createdAt).toLocaleString()}
+                                {movement.reason || movement.source || "Sin detalle"} · {new Date(movement.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                               </p>
                             </div>
                             <div className="shrink-0 text-right">
-                              <p className="text-[11px] font-semibold text-default-500 tabular-nums">→ {movement.stockAfter}</p>
+                              <p className="text-[10px] uppercase tracking-wide text-default-400">Saldo</p>
+                              <p className="text-sm font-bold tabular-nums text-foreground">{movement.stockAfter}</p>
                             </div>
                           </div>
                         );
