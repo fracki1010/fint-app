@@ -80,7 +80,9 @@ export default function MobileLayout() {
     ...(isSimple
       ? []
       : [{ path: "/inventory", label: "Inventario", icon: Package }]),
-    { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
+    ...(isSimple
+      ? []
+      : [{ path: "/movements", label: "Movimientos", icon: ArrowRightLeft }]),
     ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
