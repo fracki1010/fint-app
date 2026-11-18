@@ -168,7 +168,7 @@ export function ClientDetailPanel({
           {/* KPIs Grid */}
           <div className="grid grid-cols-2 gap-3">
             <MetricCard
-              label="Total Comprado"
+              label="Comprado"
               value={formatCompactCurrency(metrics.totalSpent, currency)}
               subValue={`${metrics.totalOrders} órdenes`}
               trend={metrics.totalSpent > 0 ? "up" : "neutral"}
@@ -179,7 +179,7 @@ export function ClientDetailPanel({
               label="Deuda"
               value={formatCompactCurrency(Number(selectedClient.debt || 0), currency)}
               subValue={Number(selectedClient.debt || 0) > 0 ? "Pendiente de pago" : "Al día"}
-              trend={Number(selectedClient.debt || 0) > 0 ? "down" : "up"}
+              trend={Number(selectedClient.debt || 0) > 0 ? "down" : undefined}
               icon={Number(selectedClient.debt || 0) > 0 ? AlertCircle : CheckCircle2}
               color={Number(selectedClient.debt || 0) > 0 ? "danger" : "success"}
             />
@@ -222,12 +222,11 @@ export function ClientDetailPanel({
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 { icon: Phone, label: "Teléfono", value: selectedClient.phone },
-                { icon: Mail, label: "Email", value: selectedClient.email || "No definido" },
-                { icon: Building2, label: "Empresa", value: selectedClient.company || "No definida" },
-                { icon: Hash, label: "Doc. fiscal", value: selectedClient.taxId || "No definido" },
-                { icon: MapPin, label: "Dirección", value: selectedClient.address || "No definida" },
-                { icon: MapPin, label: "Dir. fiscal", value: selectedClient.fiscalAddress || "No definida" },
-              ].map(({ icon: Icon, label, value }) => (
+                { icon: Mail, label: "Email", value: selectedClient.email },
+                { icon: Hash, label: "Doc. fiscal", value: selectedClient.taxId },
+                { icon: MapPin, label: "Dirección", value: selectedClient.address },
+                { icon: MapPin, label: "Dir. fiscal", value: selectedClient.fiscalAddress },
+              ].filter(({ label, value }) => label === "Teléfono" || Boolean(value)).map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-2.5">
                   <Icon size={14} className="mt-0.5 shrink-0 text-primary" />
                   <div className="min-w-0">
