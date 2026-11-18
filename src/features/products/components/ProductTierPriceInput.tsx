@@ -110,14 +110,14 @@ export function ProductTierPriceInput({
   return (
     <div className="space-y-4">
       {/* Header + Presentation selector */}
-      <div className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-[0.16em] text-default-400">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs font-bold uppercase tracking-[0.12em] text-default-400">
         <div className="flex items-center gap-2">
           <DollarSign size={14} />
           Precios por lista
         </div>
         {activePres.length > 0 && (
           <div className="flex items-center gap-2">
-            <label className="text-[9px] font-semibold text-default-400 uppercase tracking-wider">Cargar desde:</label>
+            <label className="shrink-0 text-[9px] font-semibold text-default-400 uppercase tracking-wider">Cargar desde:</label>
             <select
               className="rounded-lg border border-divider/30 bg-content1 px-2.5 py-1.5 text-[11px] font-semibold text-foreground"
               value={selectedPresIdx !== null ? selectedPresIdx : ""}
@@ -156,8 +156,8 @@ export function ProductTierPriceInput({
 
           return (
             <div key={tier} className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <label className="flex items-center gap-2 min-w-0">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                <label className="flex min-w-0 items-center gap-2 whitespace-nowrap">
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${TIER_BG_COLORS[tier]} ${TIER_COLORS[tier]}`}
                   >
@@ -173,7 +173,8 @@ export function ProductTierPriceInput({
                   )}
                 </label>
 
-                <div className="flex items-center gap-2 flex-1 max-w-[220px]">
+                <div className="flex w-full items-center gap-2 sm:w-[220px] sm:shrink-0">
+                  <div className="w-[72px] shrink-0">
                   {!value && tier !== "retail" && tierConf?.percentage && (
                     <button
                       type="button"
@@ -192,6 +193,7 @@ export function ProductTierPriceInput({
                       Sugerir
                     </button>
                   )}
+                  </div>
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-default-400">
                       {currency === "USD" ? "$" : "$"}
