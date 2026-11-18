@@ -178,7 +178,11 @@ export default function SalesPage() {
     URL.revokeObjectURL(link.href);
   };
 
-  const totalSales = useMemo(() => safeOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0), [safeOrders]);
+  // Canceled sales are not billed, so they stay out of the total.
+  const totalSales = useMemo(
+    () => safeOrders.reduce((sum, o) => (o.salesStatus === "Cancelada" ? sum : sum + (o.totalAmount || 0)), 0),
+    [safeOrders],
+  );
 
   const confirmedCount = useMemo(() => safeOrders.filter((o) => getCommercialStatus(o) === "Confirmada").length, [safeOrders]);
   const paidCount = useMemo(() => safeOrders.filter((o) => o.paymentStatus === "Pagado").length, [safeOrders]);
