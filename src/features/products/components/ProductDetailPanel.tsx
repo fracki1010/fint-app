@@ -253,9 +253,9 @@ export function ProductDetailPanel({
                   <div className={`stat-card text-center ${isOutOfStock ? "border-danger/30 bg-danger/5" : isLowStock ? "border-warning/30 bg-warning/5" : ""}`}>
                     <p className="stat-card-label">Stock</p>
                     <p className={`stat-card-value mt-2 ${isOutOfStock || isLowStock ? "text-danger" : ""}`}>
-                      {isOutOfStock ? "0" : defaultPres ? getAvailableStock(product, defaultPres) : product.stock}
+                      {isOutOfStock ? "0" : product.stock}
                     </p>
-                    <p className="stat-card-sub">{defaultPres?.unitOfMeasure || product.unitOfMeasure || "unidades"}</p>
+                    <p className="stat-card-sub">{product.unitOfMeasure || "unidades"}</p>
                     {(isOutOfStock || isLowStock) && (
                       <p className={`mt-1 text-[10px] font-bold ${isOutOfStock ? "text-danger" : "text-warning"}`}>
                         {isOutOfStock ? "Sin stock" : `Bajo el mínimo (${product.minStock || 5})`}
