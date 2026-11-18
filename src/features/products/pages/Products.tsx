@@ -492,11 +492,11 @@ export default function ProductsPage() {
               return (
                 <div
                   key={product._id}
-                  className={`list-row flex w-full items-center gap-3 ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
+                  className={`list-row flex w-full flex-col gap-2 ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
                 >
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  className="flex w-full min-w-0 items-center gap-3 text-left"
                   onClick={() => navigate(`/products/${product._id}`)}
                 >
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOut ? "bg-danger/15 text-danger" : isLow ? "bg-warning/15 text-warning" : "bg-primary/12 text-primary"}`}>
@@ -573,13 +573,15 @@ export default function ProductsPage() {
 
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
-                <button
+                <div className="flex justify-end border-t border-divider/10 pt-2">
+                  <button
                     type="button"
-                    className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
+                    className="rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
                     onClick={() => setAdjustProduct(product)}
                   >
                     + Stock
                   </button>
+                </div>
                 </div>
               );
             })}
