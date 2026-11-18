@@ -232,7 +232,7 @@ export function ProductDetailPanel({
                   </div>
                   <div className="stat-card text-center">
                     <p className="stat-card-label flex items-center justify-center gap-1.5">
-                      {defaultPres ? `${product.type === "raw_material" ? "Costo" : "Precio"} (${defaultPres.name})` : "Precio base"}
+                      {defaultPres ? (product.type === "raw_material" ? "Costo" : "Precio") : "Precio base"}
                     </p>
                     <p className="stat-card-value mt-2">
                       {defaultPres
@@ -244,7 +244,7 @@ export function ProductDetailPanel({
                           : "—"}
                     </p>
                     {defaultPres && (
-                      <p className="stat-card-sub">{defaultPres.unitOfMeasure || defaultPres.name}</p>
+                      <p className="stat-card-sub">por {defaultPres.name}</p>
                     )}
                   </div>
                   <div className={`stat-card text-center ${isOutOfStock ? "border-danger/30 bg-danger/5" : isLowStock ? "border-warning/30 bg-warning/5" : ""}`}>
@@ -367,7 +367,7 @@ export function ProductDetailPanel({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-default-400">Stock mínimo</span>
-                  <span className="text-foreground">{product.minStock || 0} {product.unitOfMeasure || "unidades"}</span>
+                  <span className="text-foreground">{product.minStock ? `${product.minStock} ${product.unitOfMeasure || "unidades"}` : "No definido"}</span>
                 </div>
                 {product.description && (
                   <div>
