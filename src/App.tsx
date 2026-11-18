@@ -189,8 +189,8 @@ function App() {
           <Route element={<CompanyPage />} path="/admin/company" />
           <Route element={<ComplementsPage />} path="/complements" />
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/team" />
-          <Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard></ModeGuard>} path="/client-account" />
-          <Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="client_account"><ClientAccountDetailPage /></PlanGuard></ModeGuard>} path="/client-account/:clientId" />
+          <Route element={<PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard>} path="/client-account" />
+          <Route element={<PlanGuard feature="client_account"><ClientAccountDetailPage /></PlanGuard>} path="/client-account/:clientId" />
           <Route element={<SettingsPage />} path="/settings" />
           <Route element={<ModeGuard minMode="full"><PlanGuard feature="financial_center"><FinancialLayout /></PlanGuard></ModeGuard>}>
             <Route

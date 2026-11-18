@@ -13,6 +13,7 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { ClientAccountEntry, ClientEntryType } from "@shared/types";
 import { CreditLimitAlert } from "@features/clients/components/CreditLimitAlert";
 import { AgingChart } from "@features/clients/components/AgingChart";
+import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 
 // Export utilities (inline to avoid import issues)
 const ENTRY_TYPE_LABELS_EXPORT: Record<ClientEntryType, string> = {
@@ -73,6 +74,9 @@ export default function ClientAccountDetailPage() {
   const { client } = useClientDetail(clientId);
   const { entries, balance, loading, createPayment, isCreatingPayment } = useClientAccount(clientId);
   const { aging } = useClientAging(clientId);
+  // Simple mode keeps balance, payments and movements; aging and filters are advanced.
+  const { isSimple } = useExperienceMode();
+  const showAdvanced = !isSimple;
   const { creditStatus } = useClientCreditStatus(clientId);
   
   const [selectedEntry, setSelectedEntry] = useState<ClientAccountEntry | null>(null);
@@ -359,7 +363,7 @@ export default function ClientAccountDetailPage() {
       {/* Content */}
       <div className="flex-1 px-4 py-4 lg:px-6 lg:py-6">
         <div className="mx-auto max-w-4xl">
-          {/* Credit Limit Alert */}
+          {/* Credit Limit Alert */}{showAdvanced && (<>
           {creditStatus && (creditStatus.isNearLimit || creditStatus.isOverLimit) && (
             <div className="mb-4">
               <CreditLimitAlert
@@ -371,7 +375,9 @@ export default function ClientAccountDetailPage() {
             </div>
           )}
 
-          {/* Balance Card with Credit Info */}
+</>)}
+
+                    {/* Balance Card with Credit Info */}
           <div className={`rounded-2xl border p-4 mb-4 ${balance > 0 ? "border-danger/20 bg-danger/10" : "border-success/20 bg-success/10"}`}>
             <div className="flex items-center justify-between">
               <div>
@@ -380,16 +386,16 @@ export default function ClientAccountDetailPage() {
                   {formatCurrency(Math.abs(balance), currency)}
                 </p>
               </div>
-              {client?.creditLimit && client.creditLimit > 0 && (
+              {(client?.creditLimit ?? 0) > 0 && (
                 <div className="text-right">
                   <p className="text-[10px] text-default-500">Límite de crédito</p>
-                  <p className="text-sm font-semibold text-foreground">{formatCurrency(client.creditLimit, currency)}</p>
+                  <p className="text-sm font-semibold text-foreground">{formatCurrency(client?.creditLimit ?? 0, currency)}</p>
                 </div>
               )}
             </div>
             
             {/* Credit Progress Bar */}
-            {client?.creditLimit && client.creditLimit > 0 && (
+            {(client?.creditLimit ?? 0) > 0 && (
               <div className="mt-3">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-default-500">Utilización</span>
@@ -413,7 +419,7 @@ export default function ClientAccountDetailPage() {
             )}
           </div>
 
-          {/* Aging Breakdown */}
+          {/* Aging Breakdown */}{showAdvanced && (<>
           {aging && aging.totalOutstanding > 0 && (
             <div className="rounded-2xl border border-white/10 bg-content2 p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
@@ -567,7 +573,9 @@ export default function ClientAccountDetailPage() {
             </div>
           </div>
 
-          {/* Entries List */}
+</>)}
+
+                    {/* Entries List */}
           <div className="space-y-2 pb-28">
             {loading ? (
               <div className="flex justify-center py-10">
