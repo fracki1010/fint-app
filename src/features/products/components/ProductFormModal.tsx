@@ -336,6 +336,28 @@ export function ProductFormModal({
               </div>
             )}
 
+            {/* Unidad base: defined once here, used by the stock fields in Inventario */}
+            <label className="mt-5 block">
+              <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Unidad base</span>
+              <Select
+                aria-label="Unidad de medida"
+                classNames={{
+                  base: "w-full",
+                  trigger: "corp-input min-h-[42px] rounded-xl border-divider/25 bg-content1 px-4 text-sm text-foreground",
+                  value: "text-foreground",
+                  popoverContent: "bg-content1 text-foreground",
+                  listbox: "bg-content1 text-foreground",
+                }}
+                selectedKeys={[formData.unitOfMeasure]}
+                variant="bordered"
+                onSelectionChange={(keys) => onChange("unitOfMeasure", Array.from(keys)[0] as string)}
+              >
+                {UNIT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value}>{option.label}</SelectItem>
+                ))}
+              </Select>
+            </label>
+
             {/* Precio de venta (simple mode has no price tab) */}
             {mode === "create" && isSimple && (
               <label className="mt-5 block">
@@ -578,26 +600,6 @@ export function ProductFormModal({
                 {formData.presentations.filter(p => p.isActive !== false).length > 0 && (
                   <p className="mt-1 text-[10px] text-default-400">Elegí la unidad de carga; una presentación se convierte a unidad base.</p>
                 )}
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Unidad base</span>
-                <Select
-                  aria-label="Unidad de medida"
-                  classNames={{
-                    base: "w-full",
-                    trigger: "corp-input min-h-[42px] rounded-xl border-divider/25 bg-content1 px-4 text-sm text-foreground",
-                    value: "text-foreground",
-                    popoverContent: "bg-content1 text-foreground",
-                    listbox: "bg-content1 text-foreground",
-                  }}
-                  selectedKeys={[formData.unitOfMeasure]}
-                  variant="bordered"
-                  onSelectionChange={(keys) => onChange("unitOfMeasure", Array.from(keys)[0] as string)}
-                >
-                  {UNIT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value}>{option.label}</SelectItem>
-                  ))}
-                </Select>
               </label>
             </div>
             )}
