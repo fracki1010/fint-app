@@ -225,8 +225,14 @@ export function ProductDetailPanel({
                       )}
                     </p>
                     <p className={`stat-card-value mt-2 ${product.costLocked ? "text-blue-600 dark:text-blue-400" : ""}`}>
-                      {product.costPrice != null ? formatCompactCurrency(product.costPrice, currency) : "—"}
+                      {(() => {
+                        const c = defaultPres
+                          ? (defaultPres.cost ?? (product.costPrice != null ? product.costPrice * (defaultPres.equivalentQty || 1) : null))
+                          : product.costPrice;
+                        return c != null ? formatCompactCurrency(c, currency) : "—";
+                      })()}
                     </p>
+                    {defaultPres && <p className="stat-card-sub">por {defaultPres.name}</p>}
                     {product.costLocked && (
                       <p className="mt-1 text-[10px] text-blue-500/70">
                         Calculado de compras
