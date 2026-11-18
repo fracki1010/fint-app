@@ -171,7 +171,6 @@ export function OrderDetailPanel({
           </div>
         ) : (
           <>
-            <p className="section-kicker">Detalle de venta</p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-foreground">
               {selectedOrder?.orderNumber || `Pedido #${orderId.slice(-6)}`}
             </h2>
@@ -246,7 +245,29 @@ export function OrderDetailPanel({
                 <p className="mt-2 text-xl font-bold tracking-tight text-foreground">
                   {formatCurrency(Number(selectedOrder.totalAmount || 0), currency)}
                 </p>
-                <p className="mt-0.5 text-xs text-default-400">{selectedOrder.items.length} ítem(s)</p>
+                <p className="mt-0.5 text-xs text-default-400">
+                  {selectedOrder.items.length} ítem(s) ·{" "}
+                  {new Date(selectedOrder.createdAt).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false })}
+                  {selectedOrder.source ? ` · ${selectedOrder.source}` : ""}
+                </p>
+              </div>
+            </div>
+
+            {/* Items */}
+            <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
+              <p className="mb-3 text-sm font-bold text-foreground">Items del pedido</p>
+              <div className="space-y-1.5">
+                {selectedOrder.items.map((item, i) => (
+                  <div key={`${item.product}-${i}`} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{item.product}</p>
+                      <p className="text-xs text-default-400">{item.quantity} × {formatCurrency(Number(item.price || 0), currency)}</p>
+                    </div>
+                    <p className="ml-3 shrink-0 text-sm font-bold text-foreground">
+                      {formatCurrency(Number(item.quantity || 0) * Number(item.price || 0), currency)}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -359,24 +380,6 @@ export function OrderDetailPanel({
               </div>
             )}
 
-            {/* Items */}
-            <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
-              <p className="mb-3 text-sm font-bold text-foreground">Items del pedido</p>
-              <div className="space-y-1.5">
-                {selectedOrder.items.map((item, i) => (
-                  <div key={`${item.product}-${i}`} className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2.5">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{item.product}</p>
-                      <p className="text-xs text-default-400">{item.quantity} × {formatCurrency(Number(item.price || 0), currency)}</p>
-                    </div>
-                    <p className="ml-3 shrink-0 text-sm font-bold text-foreground">
-                      {formatCurrency(Number(item.quantity || 0) * Number(item.price || 0), currency)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Vouchers */}
             <div className="rounded-2xl border border-divider/10 bg-content2/50 p-4">
               <div className="mb-3 flex items-center justify-between">
@@ -471,8 +474,8 @@ export function OrderDetailPanel({
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pb-2">
+            {/* Actions: pinned so saving a status change never needs a long scroll */}
+            <div className="sticky bottom-0 -mx-6 flex gap-3 border-t border-divider/10 bg-background px-6 py-3">
               <button
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-divider/12 bg-content2/50 py-3 text-sm font-semibold text-default-600 hover:bg-content2 transition"
                 onClick={handleDownloadInvoice}
