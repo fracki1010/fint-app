@@ -492,7 +492,7 @@ export default function ProductsPage() {
               return (
                 <div
                   key={product._id}
-                  className={`list-row flex w-full flex-col gap-2 ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
+                  className={`list-row flex w-full flex-col items-stretch gap-2 ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
                 >
                 <button
                   type="button"
@@ -505,7 +505,7 @@ export default function ProductsPage() {
 
                   <div className="min-w-0 flex-1 text-left">
                     <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
-                    <div className="mt-0.5 flex items-center gap-2">
+                    <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="font-mono text-xs text-default-400">
                         {product.barcode
                           ? `${product.barcode.slice(0, 13)}`
@@ -573,7 +573,7 @@ export default function ProductsPage() {
 
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
-                <div className="flex justify-end border-t border-divider/10 pt-2">
+                <div className="flex w-full justify-end border-t border-divider/10 pt-2">
                   <button
                     type="button"
                     className="rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
