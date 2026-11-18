@@ -317,7 +317,7 @@ export default function ProductsPage() {
   const handleAddPresentation = () =>
     setFormData((prev) => ({
       ...prev,
-      presentations: [...prev.presentations, emptyPresentation()],
+      presentations: [...prev.presentations, { ...emptyPresentation(), unitOfMeasure: prev.unitOfMeasure || "unidad" }],
     }));
 
   const handleUpdatePresentation = (index: number, field: keyof PresentationFormState, value: string | boolean) =>

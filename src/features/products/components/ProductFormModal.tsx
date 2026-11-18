@@ -7,7 +7,6 @@ import {
   Loader2,
   Trash2,
   ScanBarcode,
-  Calculator,
   Info,
   Package,
 } from "lucide-react";
@@ -169,6 +168,8 @@ export function ProductFormModal({
   const [scanningPresentationIndex, setScanningPresentationIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"etiqueta" | "precios" | "inventario" | "unidades">("etiqueta");
   const { isSimple } = useExperienceMode();
+  const baseUnitLabel =
+    UNIT_OPTIONS.find((u) => u.value === formData.unitOfMeasure)?.label ?? formData.unitOfMeasure;
   // Simple mode has no price tab: a new product needs a sale price or a unit to be sellable.
   const createNeedsPriceOrUnit =
     mode === "create" &&
@@ -610,15 +611,6 @@ export function ProductFormModal({
         {/* ═══════ UNIDADES ALTERNATIVAS ═══════ */}
         {activeTab === "unidades" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="h-px flex-1 bg-divider/20" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-default-400">Unidades alternativas</span>
-            {formData.presentations.length > 0 && (
-              <span className="rounded-full bg-content2/80 px-2 py-0.5 text-[10px] font-bold text-default-500">{formData.presentations.length}</span>
-            )}
-            <div className="h-px flex-1 bg-divider/20" />
-          </div>
-
           {/* Helper banner */}
           {formData.presentations.length === 0 && (
             <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
@@ -661,200 +653,138 @@ export function ProductFormModal({
                 </div>
 
                 <div className="space-y-4">
-                  {/* Nombre y SKU */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Nombre */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-default-500">Nombre *</label>
+                    <input
+                      className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm"
+                      placeholder="Ej: Bolsa 20kg"
+                      value={pres.name}
+                      onChange={(e) => onUpdatePresentation(idx, "name", e.target.value)}
+                    />
+                  </div>
+
+                  {/* Contenido y precio de venta */}
+                  <div className="grid grid-cols-2 gap-3 [&_input]:min-w-0">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-default-500">Nombre *</label>
+                      <label className="text-[11px] font-semibold text-default-500">Contenido</label>
                       <input
                         className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm"
-                        placeholder="Ej: Bolsa 20kg"
-                        value={pres.name}
-                        onChange={(e) => onUpdatePresentation(idx, "name", e.target.value)}
+                        min="0.001"
+                        placeholder="Ej: 20"
+                        step="0.001"
+                        type="number"
+                        value={pres.equivalentQty}
+                        onChange={(e) => onUpdatePresentation(idx, "equivalentQty", e.target.value)}
                       />
+                      <p className="text-[10px] text-default-400">Unidades base ({baseUnitLabel})</p>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-default-500">SKU</label>
-                      <div className="flex gap-2">
-                        <input
-                          className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm font-mono"
-                          placeholder="Auto-generado"
-                          value={pres.sku}
-                          onChange={(e) => onUpdatePresentation(idx, "sku", e.target.value.toUpperCase())}
-                        />
-                        {(() => {
-                          const suggested = buildPresentationSku(formData.sku || formData.name, pres.name, idx);
-                          if (mode === "create" && suggested && pres.sku.toUpperCase() !== suggested) {
-                            return (
-                              <button
-                                className="shrink-0 rounded-xl bg-primary/10 px-3 py-2.5 text-[11px] font-bold text-primary transition hover:bg-primary/20"
-                                type="button"
-                                onClick={() => onUpdatePresentation(idx, "sku", suggested)}
-                              >
-                                Usar
-                              </button>
-                            );
-                          }
-                          return null;
-                        })()}
+                      <label className="text-[11px] font-semibold text-default-500">Precio de venta</label>
+                      <input
+                        className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm"
+                        min="0"
+                        placeholder="Ej: 50000"
+                        step="0.01"
+                        type="number"
+                        value={pres.price}
+                        onChange={(e) => onUpdatePresentation(idx, "price", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Precio unitario y margen: un solo indicador de ganancia */}
+                  {pres.price && Number(pres.price) > 0 && pres.equivalentQty && Number(pres.equivalentQty) > 0 && (
+                    <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 space-y-2">
+                      <p className="text-xs font-bold text-foreground">Precio unitario calculado</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-primary tracking-tight">
+                          {formatCompactCurrency(Number(pres.price) / Number(pres.equivalentQty), currency)}
+                        </span>
+                        <span className="text-sm text-default-500">/ {baseUnitLabel}</span>
                       </div>
-                      {mode === "create" && !pres.sku && buildPresentationSku(formData.sku || formData.name, pres.name, idx) && (
-                        <p className="mt-1 text-[10px] text-primary/70 font-medium">
-                          Sugerido: <span className="font-mono">{buildPresentationSku(formData.sku || formData.name, pres.name, idx)}</span>
+                      {pres.cost && Number(pres.cost) > 0 && (
+                        <p className="text-[11px] text-default-500">
+                          Margen del formato{" "}
+                          <span className={`font-semibold ${Number(pres.price) >= Number(pres.cost) ? "text-success" : "text-danger"}`}>
+                            {(((Number(pres.price) - Number(pres.cost)) / Number(pres.price)) * 100).toFixed(1)}%
+                          </span>
                         </p>
                       )}
                     </div>
-                  </div>
+                  )}
 
-                  {/* Código de barras */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-default-500">Código de barras</label>
-                    <div className="flex gap-2">
-                      <input
-                        className="corp-input flex-1 rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm"
-                        placeholder="Escaneá o escribí el código"
-                        value={pres.barcode}
-                        onChange={(e) => onUpdatePresentation(idx, "barcode", e.target.value.toUpperCase())}
-                      />
-                      <button
-                        className="flex shrink-0 items-center justify-center rounded-xl bg-primary/10 px-3 text-primary transition hover:bg-primary/20"
-                        type="button"
-                        onClick={() => { setScanningPresentationIndex(idx); setShowBarcodeScanner(true); }}
-                      >
-                        <ScanBarcode size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Costo, Precio de venta, Contenido y Unidad */}
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-default-500">Costo de este formato</label>
-                        <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0" step="0.01" placeholder="Ej: 35000" type="number" value={pres.cost} onChange={(e) => onUpdatePresentation(idx, "cost", e.target.value)} />
-                        {pres.cost && Number(pres.cost) > 0 && (
-                          <div className="mt-2 space-y-1.5">
-                            <div className="flex items-center gap-2">
-                              <input
-                                className="corp-input w-24 rounded-lg border-divider/25 bg-content1 px-3 py-2 text-sm font-mono text-right"
-                                min="0" max="500" step="0.001" type="number" placeholder="30"
-                                value={(() => {
-                                  const c = Number(pres.cost);
-                                  const p = Number(pres.price);
-                                  if (c > 0 && p > 0) return Math.round(((p - c) / c) * 1000) / 10;
-                                  return "";
-                                })()}
-                                onChange={(e) => {
-                                  const m = Number(e.target.value);
-                                  const c = Number(pres.cost);
-                                  if (m > 0 && c > 0) {
-                                    onUpdatePresentation(idx, "price", String(Math.round(c * (1 + m / 100) * 100) / 100));
-                                  }
-                                }}
-                              />
-                              <span className="text-xs text-default-400">% Markup (× costo)</span>
-                            </div>
+                  {/* Más opciones: SKU, código de barras y costo */}
+                  <details className="group rounded-xl bg-content2/40 px-3.5 py-2.5">
+                    <summary className="cursor-pointer select-none text-xs font-semibold text-default-500">
+                      Más opciones
+                    </summary>
+                    <div className="mt-4 space-y-4 [&_input]:min-w-0">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-semibold text-default-500">SKU</label>
+                          <div className="flex gap-2">
+                            <input
+                              className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm flex-1 font-mono"
+                              placeholder="Auto-generado"
+                              value={pres.sku}
+                              onChange={(e) => onUpdatePresentation(idx, "sku", e.target.value.toUpperCase())}
+                            />
                             {(() => {
-                              const c = Number(pres.cost);
-                              const p = Number(pres.price);
-                              if (c > 0 && p > 0) {
-                                const markup = ((p - c) / c) * 100;
-                                const margin = ((p - c) / p) * 100;
+                              const suggested = buildPresentationSku(formData.sku || formData.name, pres.name, idx);
+                              if (mode === "create" && suggested && pres.sku.toUpperCase() !== suggested) {
                                 return (
-                                  <p className="text-[11px] text-default-500">
-                                    <span className="font-semibold text-foreground">{markup.toFixed(1)}%</span> <span className="text-default-400">Markup</span>
-                                    <span className="mx-1.5 text-default-300">·</span>
-                                    <span className={`font-semibold ${margin >= 0 ? "text-success" : "text-danger"}`}>{margin.toFixed(1)}%</span> <span className="text-default-400">Margen</span>
-                                  </p>
+                                  <button
+                                    className="shrink-0 rounded-xl bg-primary/10 px-3 py-2.5 text-[11px] font-bold text-primary transition hover:bg-primary/20"
+                                    type="button"
+                                    onClick={() => onUpdatePresentation(idx, "sku", suggested)}
+                                  >
+                                    Usar
+                                  </button>
                                 );
                               }
                               return null;
                             })()}
                           </div>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-default-500">Precio de venta</label>
-                        <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0" step="0.01" placeholder="Ej: 50000" type="number" value={pres.price} onChange={(e) => onUpdatePresentation(idx, "price", e.target.value)} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-default-500">Contenido</label>
-                        <input className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm" min="0.001" step="0.001" placeholder="Ej: 20" type="number" value={pres.equivalentQty} onChange={(e) => onUpdatePresentation(idx, "equivalentQty", e.target.value)} />
-                        <p className="text-[10px] text-default-400">Cantidad de unidades base</p>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-default-500">Unidad base</label>
-                        <Select
-                          aria-label="Unidad de medida de la presentación"
-                          classNames={{
-                            base: "w-full",
-                            trigger: "corp-input min-h-[40px] rounded-xl border-divider/25 bg-content1 px-3 text-sm text-foreground",
-                            value: "text-foreground",
-                            popoverContent: "bg-content1 text-foreground",
-                            listbox: "bg-content1 text-foreground",
-                          }}
-                          selectedKeys={[pres.unitOfMeasure]}
-                          variant="bordered"
-                          onSelectionChange={(keys) => onUpdatePresentation(idx, "unitOfMeasure", Array.from(keys)[0] as string)}
-                        >
-                          {UNIT_OPTIONS.map((option) => (
-                            <SelectItem key={option.value}>{option.label}</SelectItem>
-                          ))}
-                        </Select>
-                        <p className="text-[10px] text-default-400">Ej: kg, litro, unidad</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Margen del formato */}
-                  {pres.price && Number(pres.price) > 0 && pres.cost && Number(pres.cost) > 0 && (
-                    <div className="rounded-lg bg-success/5 border border-success/15 px-4 py-2.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-default-500">Margen del formato</span>
-                        <span className="font-bold text-success">
-                          {((Number(pres.price) - Number(pres.cost)) / Number(pres.price) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Desglose unitario — visible desde el primer momento */}
-                  {pres.price && Number(pres.price) > 0 && pres.equivalentQty && Number(pres.equivalentQty) > 0 && (
-                    <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Calculator size={14} className="text-primary" />
-                        <span className="text-xs font-bold text-foreground">
-                          Precio unitario calculado
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-primary tracking-tight">
-                          {formatCompactCurrency(Number(pres.price) / Number(pres.equivalentQty), currency)}
-                        </span>
-                        <span className="text-sm text-default-500">
-                          / {pres.unitOfMeasure || "unidad"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-default-400">
-                        {formatCompactCurrency(Number(pres.price), currency)} ÷ {pres.equivalentQty} {pres.unitOfMeasure || "unidad"}
-                      </p>
-                      {pres.cost && Number(pres.cost) > 0 && (
-                        <div className="flex items-baseline gap-2 pt-1 border-t border-primary/10">
-                          <span className="text-xs text-default-500">Costo unitario:</span>
-                          <span className="text-lg font-bold text-warning">
-                            {formatCompactCurrency(Number(pres.cost) / Number(pres.equivalentQty), currency)}
-                          </span>
-                          <span className="text-xs text-default-500">
-                            / {pres.unitOfMeasure || "unidad"}
-                          </span>
+                          {mode === "create" && !pres.sku && buildPresentationSku(formData.sku || formData.name, pres.name, idx) && (
+                            <p className="mt-1 text-[10px] text-primary/70 font-medium">
+                              Sugerido: <span className="font-mono">{buildPresentationSku(formData.sku || formData.name, pres.name, idx)}</span>
+                            </p>
+                          )}
                         </div>
-                      )}
-                      <p className="text-[11px] text-primary/70 font-medium">
-                        Este valor se usa automáticamente como precio base del producto
-                      </p>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-semibold text-default-500">Costo de este formato</label>
+                          <input
+                            className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm"
+                            min="0"
+                            placeholder="Ej: 35000"
+                            step="0.01"
+                            type="number"
+                            value={pres.cost}
+                            onChange={(e) => onUpdatePresentation(idx, "cost", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-default-500">Código de barras</label>
+                        <div className="flex gap-2">
+                          <input
+                            className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-3.5 py-2.5 text-sm flex-1"
+                            placeholder="Escaneá o escribí el código"
+                            value={pres.barcode}
+                            onChange={(e) => onUpdatePresentation(idx, "barcode", e.target.value.toUpperCase())}
+                          />
+                          <button
+                            className="flex shrink-0 items-center justify-center rounded-xl bg-primary/10 px-3 text-primary transition hover:bg-primary/20"
+                            type="button"
+                            onClick={() => { setScanningPresentationIndex(idx); setShowBarcodeScanner(true); }}
+                          >
+                            <ScanBarcode size={16} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </details>
 
                   {/* Activo/Inactivo */}
                   <label className="flex items-center gap-2.5 rounded-lg bg-content2/40 px-3.5 py-2.5">
