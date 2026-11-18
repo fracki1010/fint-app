@@ -9,7 +9,7 @@ import {
   Mail,
   Search,
   TrendingDown,
-  TrendingUp,
+  Wallet,
   UserPlus,
   Users,
   X,
@@ -551,8 +551,8 @@ export default function ClientsPage() {
                   label="Deuda Total"
                   value={formatCompactCurrency(totalDebt, currency)}
                   subValue={totalDebt > 0 ? "Pendiente de cobro" : "Sin deudas"}
-                  trend={totalDebt > 0 ? "down" : "up"}
-                  icon={totalDebt > 0 ? TrendingDown : TrendingUp}
+                  trend={totalDebt > 0 ? "down" : undefined}
+                  icon={totalDebt > 0 ? TrendingDown : Wallet}
                   color={totalDebt > 0 ? "danger" : "success"}
                 />
                 <MetricCard
