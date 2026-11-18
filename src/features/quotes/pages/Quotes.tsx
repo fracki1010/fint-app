@@ -1,8 +1,8 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useMemo, useState } from "react";
 import {
   Search,
   Plus,
-  Loader2,
   FileText,
   ChevronRight,
   Calendar,
@@ -238,10 +238,7 @@ export default function QuotesPage() {
           <div className="financial-card !p-0 overflow-hidden">
             <div className="overflow-x-auto">
               {loading && quotes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-default-400">
-                  <Loader2 className="mb-3 animate-spin" size={28} />
-                  <p className="text-sm font-medium">Cargando presupuestos...</p>
-                </div>
+                <SkeletonRowList rows={6} lines={2} leading="tile" />
               ) : displayQuotes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-default-100">
@@ -424,10 +421,7 @@ export default function QuotesPage() {
       {/* List */}
       <div className="flex-1 space-y-3 px-6 pb-28">
         {loading && quotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-divider/10 bg-content2/40 py-16 text-default-400">
-            <Loader2 className="mb-3 animate-spin" size={32} />
-            <p className="text-sm font-medium">Cargando presupuestos...</p>
-          </div>
+          <SkeletonRowList rows={6} lines={2} leading="tile" />
         ) : displayQuotes.length > 0 ? (
           displayQuotes.map((quote, i) => {
             const name = getClientName(quote.client);

@@ -1,3 +1,6 @@
+import QuickStockAdjust from "./QuickStockAdjust";
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive,
@@ -14,6 +17,7 @@ import {
   Search,
   Trash2,
   X,
+  Plus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,6 +50,7 @@ export function ProductDetailPanel({
 }) {
   const navigate = useNavigate();
   const [showAllMovements, setShowAllMovements] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "presentaciones">("general");
   const [defaultPresId, setDefaultPresId] = useState<string | null>(null);
 
@@ -115,6 +120,10 @@ export function ProductDetailPanel({
 
   return (
     <div className="flex flex-col bg-content1">
+      {adjusting && product && (
+        <QuickStockAdjust product={product} isOpen onClose={() => setAdjusting(false)} />
+      )}
+
       {/* Header */}
       <div className="page-header flex items-center gap-3">
         {!isDesktop && (
@@ -136,6 +145,14 @@ export function ProductDetailPanel({
         <div className="flex shrink-0 items-center gap-2">
           {product && (
             <>
+              <button
+                className="flex items-center gap-1.5 rounded-xl bg-success/15 px-3 py-2 text-sm font-semibold text-success transition hover:bg-success/25"
+                onClick={() => setAdjusting(true)}
+                type="button"
+              >
+                <Plus size={14} />
+                + Stock
+              </button>
               <button
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-default-400 transition hover:text-foreground"
                 onClick={onEdit}
@@ -167,10 +184,7 @@ export function ProductDetailPanel({
       {/* Body */}
       <div className="flex-1 space-y-5 p-6">
         {detailLoading ? (
-          <div className="py-20 text-center text-default-400">
-            <Loader2 className="mx-auto mb-3 animate-spin" size={32} />
-            <p className="text-sm">Cargando detalle...</p>
-          </div>
+          <DetailSkeleton />
         ) : detailError ? (
           <div className="py-12 text-center">
             <p className="text-sm font-semibold text-danger">No se pudo cargar el detalle</p>
@@ -548,10 +562,7 @@ export function ProductDetailPanel({
               {/* Movement list */}
               <div>
                 {movementsLoading ? (
-                  <div className="stat-card py-8 text-center text-default-400">
-                    <Loader2 className="mx-auto mb-2 animate-spin" size={22} />
-                    <p className="text-sm">Cargando movimientos...</p>
-                  </div>
+                  <SkeletonRowList rows={3} lines={2} leading="tile" trailing={false} />
                 ) : (() => {
                   const filteredMovements = visibleMovements.filter((m) => {
                     if (movementTypeFilter !== "all" && m.type !== movementTypeFilter) return false;

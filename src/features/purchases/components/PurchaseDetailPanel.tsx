@@ -1,3 +1,4 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useMemo } from "react";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -17,7 +18,6 @@ import {
   CheckCircle2,
   XCircle,
   DollarSign,
-  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Purchase, PurchaseStatus, PaymentCondition, PaymentStatus } from "@shared/types";
@@ -183,10 +183,7 @@ export default function PurchaseDetailPanel({
         </header>
         <div className="flex-1 px-6 pb-28">
           {detailLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-default-400">
-              <Loader2 className="mb-4 animate-spin" size={32} />
-              <p className="text-sm font-medium">Cargando detalle...</p>
-            </div>
+            <DetailSkeleton />
           ) : (
             <div className="flex flex-col items-center justify-center py-20">
               <ShoppingBag className="mb-4 text-default-300" size={48} />

@@ -1,5 +1,6 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useState, useMemo } from 'react';
-import { Search, Loader2, CheckCircle2, Link2, Unlink2 } from 'lucide-react';
+import { Search, CheckCircle2, Link2, Unlink2 } from 'lucide-react';
 import { Button } from '@heroui/button';
 import { Chip } from '@heroui/chip';
 import { Input } from '@heroui/input';
@@ -68,9 +69,7 @@ export default function MatchTable({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-      </div>
+      <SkeletonRowList rows={4} lines={1} leading="none" trailing={false} />
     );
   }
 

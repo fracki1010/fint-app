@@ -1,3 +1,4 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -82,12 +83,7 @@ export function ClientDetailPanel({
 
 
   if (loading && !selectedClient) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={32} />
-        <p className="mt-4 text-sm text-default-500">Cargando información del cliente...</p>
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (error) {

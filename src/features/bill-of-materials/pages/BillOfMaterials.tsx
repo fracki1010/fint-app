@@ -1,8 +1,8 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useMemo, useState } from "react";
 import {
   Search,
   Plus,
-  Loader2,
   X,
   ChefHat,
   FlaskConical,
@@ -195,9 +195,7 @@ export default function BillOfMaterialsPage() {
       {pageView === "history" && (
         <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
           {logsLoading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="animate-spin text-default-400" size={28} />
-            </div>
+            <SkeletonRowList rows={5} lines={2} leading="tile" />
           ) : logs.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
               <History size={40} />
@@ -219,9 +217,7 @@ export default function BillOfMaterialsPage() {
       {/* BOM list */}
       {pageView === "recipes" && <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-6">
         {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-default-400" size={28} />
-          </div>
+          <SkeletonRowList rows={5} lines={2} leading="tile" />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
             <ChefHat size={40} />

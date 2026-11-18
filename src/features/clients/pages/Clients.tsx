@@ -1,3 +1,6 @@
+import { SkeletonRow } from "@shared/components/skeleton/primitives";
+import { SkeletonKpi } from "@shared/components/skeleton/primitives";
+import { ClientsListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   AlertCircle,
@@ -5,7 +8,6 @@ import {
   ChevronRight,
   FileSpreadsheet,
   Filter,
-  Loader2,
   Mail,
   Search,
   TrendingDown,
@@ -528,7 +530,13 @@ export default function ClientsPage() {
         </div>
 
         {/* Stats */}
-        {!isHeaderCompact && (
+        {!isHeaderCompact && (loading && safeClients.length === 0 ? (
+          <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
+            {Array.from({ length: isDesktop ? 4 : 2 }, (_, i) => (
+              <SkeletonKpi key={i} />
+            ))}
+          </div>
+        ) : (
           <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
             <MetricCard
               label="Total Clientes"
@@ -565,7 +573,7 @@ export default function ClientsPage() {
               </>
             )}
           </div>
-        )}
+        ))}
 
         {/* Search and Filters */}
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -668,10 +676,7 @@ export default function ClientsPage() {
       {/* List */}
       <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-5">
         {loading && safeClients.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="animate-spin text-primary" size={32} />
-            <p className="mt-4 text-sm text-default-500">Cargando clientes...</p>
-          </div>
+          <ClientsListSkeleton />
         ) : filteredAndSortedClients.length === 0 ? (
           <EmptyState
             icon={Users}
@@ -794,9 +799,7 @@ export default function ClientsPage() {
               <>
                 <div ref={loadMoreRef} className="h-4 w-full" />
                 {isFetchingNextPage && (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="animate-spin text-default-400" size={20} />
-                  </div>
+                  <SkeletonRow leading="circle" lines={2} trailing={false} />
                 )}
                 {!hasNextPage && safeClients.length > 0 && (
                   <p className="py-3 text-center text-[11px] text-default-400">Fin del directorio</p>

@@ -928,3 +928,70 @@ textarea:focus-visible {
 body:has(input:focus, textarea:focus, select:focus) .mobile-chrome {
   display: none;
 }
+
+/* Sale confirmation: the check draws in, then the details fade up. Kept under 1s. */
+@keyframes sale-ring-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes sale-check-draw {
+  from { stroke-dashoffset: 30; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sale-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.sale-check-ring {
+  animation: sale-ring-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sale-check-mark {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: sale-check-draw 380ms cubic-bezier(0.65, 0, 0.35, 1) 180ms forwards;
+}
+.sale-fade-up {
+  animation: sale-fade-up 320ms cubic-bezier(0.22, 1, 0.36, 1) 380ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sale-check-ring,
+  .sale-check-mark,
+  .sale-fade-up {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Loading placeholders. The shimmer is decorative, so it stops for reduced motion. */
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background-color: rgb(120 100 80 / 0.12);
+}
+.skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.dark .skeleton-block {
+  background-color: rgb(220 180 140 / 0.1);
+}
+.dark .skeleton-block::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+}
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block::after {
+    display: none;
+  }
+}

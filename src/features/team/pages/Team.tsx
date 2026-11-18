@@ -1,6 +1,6 @@
+import { TeamSkeleton } from "@shared/components/skeleton/screens";
 import { useMemo, useState, useEffect } from "react";
 import {
-  Loader2,
   Mail,
   Plus,
   Shield,
@@ -492,9 +492,7 @@ export default function TeamPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="animate-spin text-primary" size={24} />
-        </div>
+        <TeamSkeleton />
       ) : (
         <>
           <div className="space-y-2">

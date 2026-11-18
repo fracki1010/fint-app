@@ -1,6 +1,7 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Save, X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Input } from "@heroui/input";
@@ -145,7 +146,7 @@ export default function PaymentOrderFormPage() {
             <CardBody>
               <p className="text-sm font-bold text-foreground mb-3">Compras pendientes</p>
               {purchasesLoading ? (
-                <Loader2 className="animate-spin mx-auto" size={20} />
+                <SkeletonRowList rows={2} lines={1} leading="none" trailing={false} />
               ) : pendingPurchases.length === 0 ? (
                 <p className="text-sm text-default-500 text-center py-4">Este proveedor no tiene compras pendientes</p>
               ) : (

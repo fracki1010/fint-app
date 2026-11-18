@@ -1,3 +1,4 @@
+import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from "react";
 import { Plus, Loader2, TrendingUp, TrendingDown, Minus, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@heroui/button";
@@ -62,7 +63,7 @@ export default function CostCentersPage() {
           <p className="section-kicker">Centros ({centers.length})</p>
         </div>
         {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <MovementsSkeleton />
           ) : centers.length === 0 ? (
             <p className="text-default-500 text-center py-8">No hay centros de costo. Creá el primero.</p>
           ) : (
@@ -100,7 +101,7 @@ export default function CostCentersPage() {
             </div>
           </div>
         {reportLoading ? (
-            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+            <MovementsSkeleton />
           ) : !report || report.rows.length === 0 ? (
             <p className="text-default-500 text-center py-8">Sin datos para el período seleccionado</p>
           ) : (

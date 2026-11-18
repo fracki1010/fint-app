@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function pageWindow(current: number, total: number, size = 3): number[] {
   const half = Math.floor(size / 2);
@@ -65,7 +66,7 @@ export function PaginationBar({
         ))}
         {loading ? (
           <div className="flex h-7 w-7 items-center justify-center">
-            <Loader2 className="animate-spin text-primary" size={13} />
+            <Skeleton className="h-3 w-3 rounded-full" />
           </div>
         ) : (
           <button

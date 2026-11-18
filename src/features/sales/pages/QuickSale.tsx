@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -330,8 +331,8 @@ export default function QuickSalePage() {
           {showDropdown && (
             <div className="absolute left-4 right-4 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl lg:left-6 lg:right-6">
               {searching ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="animate-spin text-default-400" size={20} />
+                <div className="p-2">
+                  <SkeletonRowList rows={3} lines={2} leading="tile" trailing={false} />
                 </div>
               ) : searchResults.length === 0 ? (
                 <div className="px-4 py-6 text-center text-sm text-default-500">No se encontraron productos</div>

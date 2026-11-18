@@ -1,6 +1,6 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useState, useEffect, useMemo } from "react";
 import {
-  Loader2,
   Check,
   X,
   ShoppingBag,
@@ -93,9 +93,7 @@ export default function ComplementSelectorModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading || pricingLoading ? (
-            <div className="flex h-40 items-center justify-center">
-              <Loader2 size={24} className="animate-spin text-primary" />
-            </div>
+            <SkeletonRowList rows={3} lines={2} leading="tile" trailing={false} />
           ) : catalog?.complements.length === 0 ? (
             <p className="text-center text-sm text-default-500 py-8">
               No hay complementos disponibles

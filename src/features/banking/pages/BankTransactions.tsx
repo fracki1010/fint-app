@@ -1,3 +1,4 @@
+import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -201,9 +202,7 @@ export default function BankTransactionsPage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-          </div>
+          <MovementsSkeleton />
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <AlertCircle className="w-12 h-12 text-danger mb-3" />

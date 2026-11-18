@@ -1,9 +1,9 @@
+import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRightLeft,
-  Loader2,
   AlertCircle,
   CalendarDays,
   CheckCircle2,
@@ -200,9 +200,7 @@ export default function ReconciliationPage() {
 
         {/* Main content: Match Table + Candidates */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-default-400" />
-          </div>
+          <MovementsSkeleton />
         ) : reconciliationData ? (
           <div className="space-y-6">
             {/* Matched Candidates Preview */}

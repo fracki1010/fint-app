@@ -1,3 +1,4 @@
+import { FinancialSkeleton } from "@shared/components/skeleton/screens";
 import {
   ArrowDown,
   ArrowUp,
@@ -247,12 +248,7 @@ export default function PurchasesDashboard() {
   const currency = settings?.currency || "USD";
 
   if (isLoading || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-default-400">
-        <div className="mb-3 h-10 w-10 animate-spin rounded-full border-2 border-default-200 border-t-blue-500" />
-        <p className="text-sm font-medium">Cargando dashboard...</p>
-      </div>
-    );
+    return <FinancialSkeleton />;
   }
 
   const spendDiff = data.lastMonthSpend > 0

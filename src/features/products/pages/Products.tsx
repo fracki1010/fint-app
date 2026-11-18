@@ -1,9 +1,10 @@
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { ProductsListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import {
   Boxes,
   Search,
   Plus,
-  Loader2,
   Layers3,
   X,
   ChevronRight,
@@ -34,7 +35,6 @@ import {
 } from "../components/ProductFormModal";
 import { ProductDetailPanel } from "../components/ProductDetailPanel";
 import ImportProductsModal from "../components/ImportProductsModal";
-import QuickStockAdjust from "../components/QuickStockAdjust";
 
 function slugifyText(value: string) {
   return value
@@ -105,7 +105,6 @@ export default function ProductsPage() {
     unitOfMeasure: settings?.defaultUnitOfMeasure || emptyForm.unitOfMeasure,
   });
   const [showImportModal, setShowImportModal] = useState(false);
-  const [adjustProduct, setAdjustProduct] = useState<Product | null>(null);
 
   const { products, total, totalPages, loading } = usePaginatedProducts({
     page: currentPage,
@@ -399,7 +398,11 @@ export default function ProductsPage() {
 
         {/* Summary */}
         <p className="mt-3 text-sm text-default-500">
-          {total || safeProducts.length} {(total || safeProducts.length) === 1 ? "artículo" : "artículos"}
+          {loading && safeProducts.length === 0 ? (
+            <Skeleton className="inline-block h-3.5 w-28 rounded-md align-middle" />
+          ) : (
+            <>{total || safeProducts.length} {(total || safeProducts.length) === 1 ? "artículo" : "artículos"}</>
+          )}
           {lowStockCount > 0 && (
             <>
               {" · "}
@@ -448,10 +451,7 @@ export default function ProductsPage() {
       {/* Product list */}
       <div className="px-4 pb-28 space-y-2">
         {loading && products.length === 0 ? (
-          <div className="py-16 text-center text-default-400">
-            <Loader2 className="mx-auto mb-3 animate-spin" size={28} />
-            <p className="text-sm">Cargando catálogo...</p>
-          </div>
+          <ProductsListSkeleton />
         ) : products.length > 0 ? (
           <>
             {products.map((product) => {
@@ -571,13 +571,6 @@ export default function ProductsPage() {
 
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
-                <button
-                    type="button"
-                    className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
-                    onClick={() => setAdjustProduct(product)}
-                  >
-                    + Stock
-                  </button>
                 </div>
               );
             })}
@@ -691,13 +684,6 @@ export default function ProductsPage() {
           setShowImportModal(false);
         }}
       />
-      {adjustProduct && (
-        <QuickStockAdjust
-          product={adjustProduct}
-          isOpen={!!adjustProduct}
-          onClose={() => setAdjustProduct(null)}
-        />
-      )}
     </>
   );
 

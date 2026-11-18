@@ -1,5 +1,6 @@
+import { CashSkeleton } from "@shared/components/skeleton/screens";
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Wallet } from "lucide-react";
+import { Plus, Trash2, Wallet } from "lucide-react";
 import { Button } from "@heroui/button";
 import { formatCurrency } from "@shared/utils/currency";
 import { formatDate } from "@shared/utils/date";
@@ -136,9 +137,7 @@ export default function CashMovementsPage() {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
+        <CashSkeleton />
       ) : !data?.movements?.length ? (
         <div className="rounded-2xl border border-default-200 bg-default-50/50 p-8 text-center">
           <p className="text-sm text-default-500">No hay movimientos registrados</p>

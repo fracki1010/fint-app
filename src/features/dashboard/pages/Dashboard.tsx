@@ -1,10 +1,11 @@
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { DashboardSkeleton } from "@shared/components/skeleton/screens";
 import React, { useMemo, useState } from "react";
 import {
   ShoppingCart,
   UserPlus,
   PackagePlus,
   TrendingUp,
-  Loader2,
   ArrowUpRight,
   Boxes,
   ReceiptText,
@@ -223,11 +224,7 @@ export default function DashboardPage() {
   };
 
   if (loading && !dashboard) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!dashboard) {
@@ -313,9 +310,7 @@ export default function DashboardPage() {
 
         <div className="mt-4 h-28 w-full lg:h-32">
           {dailyLoading ? (
-            <div className="flex h-full items-center justify-center">
-              <Loader2 size={16} className="animate-spin text-white/40" />
-            </div>
+            <Skeleton className="h-full w-full rounded-xl" />
           ) : dailySales.length > 0 ? (
             <BarChart
               data={dailySales.map((d) => ({
@@ -341,7 +336,7 @@ export default function DashboardPage() {
         <section className="lg:col-span-12">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="section-kicker">Acciones Rapidas</h2>
-            {loading && <Loader2 className="animate-spin text-primary" size={18} />}
+            <Skeleton className="h-4 w-4 rounded-md" />
           </div>
           <div className="grid grid-cols-3 gap-2 lg:grid-cols-5 lg:gap-3">
             {quickActions.map((action) => {
@@ -658,7 +653,7 @@ export default function DashboardPage() {
                 Exportar PDF
               </button>
               {optionalLoading && (
-                <Loader2 className="animate-spin text-primary" size={16} />
+                <Skeleton className="h-4 w-4 rounded-md" />
               )}
             </div>
           </div>

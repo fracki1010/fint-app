@@ -1,3 +1,4 @@
+import { SkeletonPanel } from "@shared/components/skeleton/primitives";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -28,18 +29,7 @@ export function ReceivablesSummaryCard({ data, currency, loading }: ReceivablesS
   const [showDetails, setShowDetails] = useState(false);
 
   if (loading) {
-    return (
-      <div className="app-panel rounded-[28px] p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="h-5 w-5 animate-pulse rounded bg-content2" />
-          <div className="h-5 w-32 animate-pulse rounded bg-content2" />
-        </div>
-        <div className="space-y-3">
-          <div className="h-16 animate-pulse rounded-xl bg-content2" />
-          <div className="h-8 animate-pulse rounded-xl bg-content2" />
-        </div>
-      </div>
-    );
+    return <SkeletonPanel lines={2} />;
   }
 
   if (!data) {

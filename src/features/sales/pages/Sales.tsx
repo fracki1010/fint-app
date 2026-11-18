@@ -1,9 +1,11 @@
+import { SkeletonRow } from "@shared/components/skeleton/primitives";
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { SalesListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   ShoppingCart,
   Plus,
-  Loader2,
   ReceiptText,
   CircleDollarSign,
   FileDown,
@@ -284,7 +286,7 @@ export default function SalesPage() {
                   <ReceiptText size={13} />
                 </div>
               </div>
-              <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{total || safeOrders.length}</p>
+              {loading && safeOrders.length === 0 ? <Skeleton className="mt-2 h-7 w-16 rounded-md" /> : <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{total || safeOrders.length}</p>}
             </div>
             <div className="stat-card !p-4">
               <div className="flex items-center justify-between">
@@ -293,7 +295,7 @@ export default function SalesPage() {
                   <TrendingUp size={13} />
                 </div>
               </div>
-              <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{formatCompactCurrency(totalSales, currency)}</p>
+              {loading && safeOrders.length === 0 ? <Skeleton className="mt-2 h-7 w-24 rounded-md" /> : <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{formatCompactCurrency(totalSales, currency)}</p>}
             </div>
             {isDesktop && (
               <>
@@ -437,7 +439,7 @@ export default function SalesPage() {
       {/* Order list */}
       <div className={`flex-1 px-4 lg:px-5 ${isDesktop ? '' : 'overflow-y-auto'}`}>
         {loading && safeOrders.length === 0 ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-default-400" size={28} /></div>
+          <SalesListSkeleton />
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
             <ShoppingCart size={36} />
@@ -494,7 +496,7 @@ export default function SalesPage() {
               <>
                 <div ref={loadMoreRef} className="h-4 w-full" />
                 {isFetchingNextPage && (
-                  <div className="flex justify-center py-4"><Loader2 className="animate-spin text-default-400" size={20} /></div>
+                  <SkeletonRow leading="tile" lines={2} trailing={false} />
                 )}
                 {!hasNextPage && safeOrders.length > 0 && (
                   <p className="py-3 text-center text-[11px] text-default-400">Fin del historial</p>

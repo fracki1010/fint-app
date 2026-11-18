@@ -1,3 +1,4 @@
+import { SkeletonRowList } from "@shared/components/skeleton/primitives";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -5,7 +6,6 @@ import {
   Search,
   Plus,
   ChevronRight,
-  Loader2,
 } from "lucide-react";
 import { useTenants } from "@features/superadmin/hooks/useSuperAdmin";
 import SuperAdminLayout from "@features/superadmin/components/SuperAdminLayout";
@@ -112,9 +112,7 @@ export default function TenantList() {
         {/* Table */}
         <div className="rounded-2xl border border-divider bg-content1">
           {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 size={32} className="animate-spin text-primary" />
-            </div>
+            <SkeletonRowList rows={6} lines={2} leading="circle" />
           ) : tenants.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center gap-3">
               <Building2 size={48} className="text-default-300" />

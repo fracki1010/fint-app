@@ -1,5 +1,6 @@
+import { PurchasesListSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useMemo } from "react";
-import { Plus, Loader2, FileText, Search } from "lucide-react";
+import { Plus, FileText, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -103,7 +104,7 @@ export default function PaymentOrdersPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin" size={32} /></div>
+        <PurchasesListSkeleton />
       ) : orders.length === 0 ? (
         <div className="text-center py-12 text-default-500">
           <FileText size={32} className="mx-auto mb-3 text-default-300" />

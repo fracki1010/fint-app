@@ -1,3 +1,4 @@
+import { FinancialSkeleton } from "@shared/components/skeleton/screens";
 import { Building2, TrendingUp, Users, DollarSign, AlertTriangle, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSuperAdminAnalytics, useTenants } from "@features/superadmin/hooks/useSuperAdmin";
@@ -26,12 +27,7 @@ export default function SuperAdminDashboard() {
   if (isLoading) {
     return (
       <SuperAdminLayout>
-        <div className="flex h-96 items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm text-default-400">Cargando dashboard...</p>
-          </div>
-        </div>
+        <FinancialSkeleton />
       </SuperAdminLayout>
     );
   }
