@@ -638,7 +638,7 @@ export default function NewOperationPage() {
         </aside>
       </div>
 
-      <div className="bottom-sheet-surface fixed bottom-[4.5rem] left-1/2 z-20 w-full max-w-md -translate-x-1/2 p-4 lg:hidden">
+      <div className="mobile-chrome bottom-sheet-surface fixed bottom-[4.5rem] left-1/2 z-20 w-full max-w-md -translate-x-1/2 p-4 lg:hidden">
         {blockedReason && <p className="mb-2 text-center text-xs text-default-500">{blockedReason}</p>}
         <div className="flex items-center gap-3">
           <div className="min-w-0">

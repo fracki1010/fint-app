@@ -102,6 +102,17 @@ export default function MobileLayout() {
     ...(user?.isSuperAdmin ? [{ path: "/superadmin", label: "SuperAdmin", icon: Shield }] : []),
   ];
 
+  // On iOS the keyboard overlays the page instead of resizing it: bring the focused field into view.
+  useEffect(() => {
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+      window.setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, []);
+
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTo({ top: 0, behavior: "auto" });
@@ -284,7 +295,7 @@ export default function MobileLayout() {
       {/* Mobile tab bar: three daily destinations, new sale in the middle, the rest in the drawer */}
       <nav
         aria-label="Navegación principal"
-        className="fixed bottom-0 left-0 right-0 z-[50] border-t border-divider/10 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden"
+        className="mobile-chrome fixed bottom-0 left-0 right-0 z-[50] border-t border-divider/10 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pt-1.5 pb-2">
           {[

@@ -923,3 +923,8 @@ textarea:focus-visible {
   .dark .border-divider\/30 { border-color: rgba(220, 180, 140, 0.3) !important; }
   .dark .border-divider\/60 { border-color: rgba(220, 180, 140, 0.6) !important; }
 }
+
+/* Fixed bottom bars would sit on top of the virtual keyboard while a field is focused: hide them then. */
+body:has(input:focus, textarea:focus, select:focus) .mobile-chrome {
+  display: none;
+}
