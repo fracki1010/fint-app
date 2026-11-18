@@ -19,7 +19,7 @@ export default defineConfig({
     tsconfigPaths(),
     tailwindcss(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       includeAssets: ["favicon-32.png", "apple-touch-icon.png"],
       manifest: {
         id: "/",
