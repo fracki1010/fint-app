@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   Search,
+  Filter,
   Package,
   ArrowUp,
   ArrowDown,
@@ -43,6 +44,9 @@ export default function MovementsPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showNewMovement, setShowNewMovement] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const activeFilterCount =
+    (selectedProduct ? 1 : 0) + (selectedType ? 1 : 0) + (selectedSource ? 1 : 0);
   const [newProduct, setNewProduct] = useState<string>("");
   const [newType, setNewType] = useState<
     "ENTRADA" | "SALIDA" | "MERMA" | "AJUSTE"
@@ -156,12 +160,11 @@ export default function MovementsPage() {
       <header className="app-topbar px-6 pt-6 pb-5 lg:hidden">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="section-kicker">Inventario</div>
-            <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-              Movimientos y trazabilidad
+            <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">
+              Movimientos
             </h1>
-            <p className="mt-2 text-sm text-default-500">
-              Consulta entradas, salidas, mermas y ajustes.
+            <p className="mt-1 text-sm text-default-500">
+              Entradas, salidas, mermas y ajustes.
             </p>
           </div>
 
@@ -202,7 +205,21 @@ export default function MovementsPage() {
           ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3">
+        <button
+          className="mt-4 flex items-center gap-2 text-sm font-semibold text-default-600"
+          onClick={() => setShowMobileFilters((prev) => !prev)}
+        >
+          <Filter size={14} />
+          Filtros
+          {activeFilterCount > 0 && (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        {showMobileFilters && (
+        <div className="mt-3 grid grid-cols-1 gap-3">
           <Autocomplete
             isClearable
             className="w-full"
@@ -255,6 +272,7 @@ export default function MovementsPage() {
             </Button>
           </div>
         </div>
+        )}
 
         {statusMessage && (
           <div
