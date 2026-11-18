@@ -84,7 +84,6 @@ export default function MobileLayout() {
     ...(hasFeature("banking") ? [{ path: "/banking", label: "Cuentas", icon: Landmark }] : []),
     ...(hasFeature("cash_management") ? [{ path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet }] : []),
     ...(hasFeature("cash_management") ? [{ path: "/cash-closing", label: "Cierre de Caja", icon: Lock }] : []),
-    ...(hasFeature("cash_management") ? [{ path: "/inventory", label: "Historial de stock", icon: Package }] : []),
   ];
 
   const fullFinancialNav = [

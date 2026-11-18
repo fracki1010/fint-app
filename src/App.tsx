@@ -29,7 +29,6 @@ const ClientAccountPage = lazy(() => import("@features/clients/pages/ClientAccou
 const ClientAccountDetailPage = lazy(() => import("@features/clients/pages/ClientAccountDetail"));
 const SupplierAccountDetailPage = lazy(() => import("@features/purchases/pages/SupplierAccountDetail"));
 const QuickSalePage = lazy(() => import("@features/sales/pages/QuickSale"));
-const InventorySnapshotsPage = lazy(() => import("@features/inventory/pages/InventorySnapshots"));
 const NotFoundPage = lazy(() => import("@features/shared/pages/NotFound"));
 const FinancialDashboardPage = lazy(
   () => import("@features/financial/pages/FinancialDashboard"),
@@ -168,7 +167,6 @@ function App() {
             element={<MovementDetailPage />}
             path="/movements/:movementId"
           />
-          <Route element={<InventorySnapshotsPage />} path="/inventory" />
           <Route element={<QuickSalePage />} path="/quick-sale" />
           <Route element={<NewOperationPage />} path="/new-operation" />
           <Route element={<Navigate replace to="/products?deprecated=supplies" />} path="/supplies" />
