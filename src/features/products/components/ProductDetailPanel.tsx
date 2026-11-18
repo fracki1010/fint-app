@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlertCircle,
   Archive,
   ArrowDownLeft,
   ArrowUpRight,
@@ -127,8 +126,12 @@ export function ProductDetailPanel({
           </button>
         )}
         <div className="min-w-0 flex-1">
-          <p className="section-kicker">Ficha de Artículo</p>
           <h1 className="page-title truncate">{product?.name || "Cargando..."}</h1>
+          {product && (
+            <p className="mt-0.5 truncate text-xs text-default-400">
+              {[product.sku, productCategories.join(", ")].filter(Boolean).join(" · ") || "Sin SKU ni categoría"}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {product && (
@@ -253,6 +256,11 @@ export function ProductDetailPanel({
                       {isOutOfStock ? "0" : defaultPres ? getAvailableStock(product, defaultPres) : product.stock}
                     </p>
                     <p className="stat-card-sub">{defaultPres?.unitOfMeasure || product.unitOfMeasure || "unidades"}</p>
+                    {(isOutOfStock || isLowStock) && (
+                      <p className={`mt-1 text-[10px] font-bold ${isOutOfStock ? "text-danger" : "text-warning"}`}>
+                        {isOutOfStock ? "Sin stock" : `Bajo el mínimo (${product.minStock || 5})`}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -337,33 +345,13 @@ export function ProductDetailPanel({
               </div>
             )}
 
-            {/* Stock alert */}
-            {(isOutOfStock || isLowStock) && (
-              <div className="flex items-center gap-3 rounded-2xl border border-danger/20 bg-danger/8 px-4 py-3">
-                <AlertCircle className="shrink-0 text-danger" size={16} />
-                <p className="text-sm font-semibold text-danger">
-                  {isOutOfStock ? "Sin stock disponible" : `Stock bajo el mínimo (${product.minStock || 5})`}
-                </p>
-              </div>
-            )}
-
             {/* General info */}
             <div className="stat-card space-y-3">
               <p className="text-sm font-bold text-foreground">Información General</p>
               <div className="grid gap-2.5 text-sm text-default-600">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-default-400">SKU</span>
-                  <span className="font-mono text-foreground">{product.sku || "No definido"}</span>
-                </div>
-                <div className="flex items-center justify-between">
                   <span className="font-semibold text-default-400">Código de Barras</span>
                   <span className="font-mono text-foreground">{product.barcode || "—"}</span>
-                </div>
-                <div className="flex items-start justify-between gap-3">
-                  <span className="font-semibold text-default-400">Categorías</span>
-                  <span className="text-right text-foreground">
-                    {productCategories.join(", ") || "Sin categoría"}
-                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-default-400">Stock mínimo</span>
