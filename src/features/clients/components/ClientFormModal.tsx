@@ -99,7 +99,6 @@ export function ClientFormModal({
     const newErrors: Partial<Record<keyof ClientFormState, string>> = {};
     if (!formData.name.trim()) newErrors.name = "El nombre es obligatorio";
     if (!formData.phone.trim()) newErrors.phone = "El teléfono es obligatorio";
-    if (!formData.taxId.trim()) newErrors.taxId = "El documento fiscal es obligatorio";
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Email inválido";
     }
@@ -175,11 +174,10 @@ export function ClientFormModal({
             icon={Phone}
           />
           <Input
-            label="Documento fiscal"
+            label="Documento fiscal (opcional)"
             value={formData.taxId}
             onChange={(v) => onChange("taxId", v)}
             placeholder="CUIT / NIT / RUC"
-            required
             error={errors.taxId}
             icon={Hash}
           />
