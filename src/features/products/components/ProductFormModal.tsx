@@ -169,6 +169,12 @@ export function ProductFormModal({
   const [scanningPresentationIndex, setScanningPresentationIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"etiqueta" | "precios" | "inventario" | "unidades">("etiqueta");
   const { isSimple } = useExperienceMode();
+  // Simple mode has no price tab: a new product needs a sale price or a unit to be sellable.
+  const createNeedsPriceOrUnit =
+    mode === "create" &&
+    isSimple &&
+    formData.presentations.length === 0 &&
+    !(Number(formData.price) > 0);
 
   const {
     state: barcodeState,
@@ -334,6 +340,28 @@ export function ProductFormModal({
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Precio de venta (simple mode has no price tab) */}
+            {mode === "create" && isSimple && (
+              <label className="mt-5 block">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">
+                  Precio de venta
+                </span>
+                <input
+                  className="corp-input w-full rounded-xl border-divider/25 bg-content1 px-4 py-2.5 text-sm font-semibold text-foreground placeholder:text-default-300"
+                  inputMode="decimal"
+                  min="0"
+                  placeholder="0"
+                  step="0.01"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => onChange("price", e.target.value)}
+                />
+                <span className="mt-1.5 block text-xs text-default-400">
+                  Si vende en varias presentaciones, agregalas en U. Alternativas.
+                </span>
+              </label>
             )}
 
             {/* Código de barras + SKU */}
@@ -903,11 +931,16 @@ export function ProductFormModal({
 
       {/* ── Footer ── */}
       <div className="border-t border-divider/10 px-5 py-4 sm:px-7">
+        {createNeedsPriceOrUnit && (
+          <p className="mb-3 text-center text-xs text-default-400">
+            Agregá un precio de venta o una unidad para poder crear el artículo.
+          </p>
+        )}
         <div className="flex gap-3">
           <button className="flex-1 rounded-xl border border-divider/20 px-4 py-3 text-sm font-semibold text-default-600 transition hover:bg-content2/60" onClick={onClose}>
             Cancelar
           </button>
-          <button className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm disabled:opacity-50" disabled={submitting} onClick={onSubmit}>
+          <button className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm disabled:opacity-50" disabled={submitting || createNeedsPriceOrUnit} onClick={onSubmit}>
             <span className="flex items-center justify-center gap-2">
               {submitting && <Loader2 className="animate-spin" size={16} />}
               {mode === "create" ? "Crear artículo" : "Guardar cambios"}
