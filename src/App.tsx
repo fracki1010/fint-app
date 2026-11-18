@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import PlanGuard from "@shared/components/PlanGuard";
-import ModeGuard from "@shared/components/ModeGuard";
 
 import { useAuth } from "@features/auth/hooks/useAuth";
 
@@ -166,24 +165,24 @@ function App() {
           <Route element={<ClientsPage />} path="/clients/:clientId" />
           <Route element={<SalesPage />} path="/sales" />
           <Route element={<SalesPage />} path="/sales/:orderId" />
-          <Route element={<ModeGuard minMode="full"><CashClosingPage /></ModeGuard>} path="/cash-closing" />
-          <Route element={<ModeGuard minMode="intermediate"><MovementsPage /></ModeGuard>} path="/movements" />
+          <Route element={<CashClosingPage />} path="/cash-closing" />
+          <Route element={<MovementsPage />} path="/movements" />
           <Route
-            element={<ModeGuard minMode="intermediate"><MovementDetailPage /></ModeGuard>}
+            element={<MovementDetailPage />}
             path="/movements/:movementId"
           />
-          <Route element={<ModeGuard minMode="intermediate"><InventorySnapshotsPage /></ModeGuard>} path="/inventory" />
+          <Route element={<InventorySnapshotsPage />} path="/inventory" />
           <Route element={<QuickSalePage />} path="/quick-sale" />
           <Route element={<NewOperationPage />} path="/new-operation" />
           <Route element={<Navigate replace to="/products?deprecated=supplies" />} path="/supplies" />
           <Route element={<Navigate replace to="/products?deprecated=supplies" />} path="/supplies/:supplyId" />
-          <Route element={<ModeGuard minMode="intermediate"><PurchasesPage /></ModeGuard>} path="/purchases" />
-          <Route element={<ModeGuard minMode="intermediate"><PurchasesPage /></ModeGuard>} path="/purchases/:purchaseId" />
-<Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="supplier_account"><SupplierAccountPage /></PlanGuard></ModeGuard>} path="/supplier-account" />
-<Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="supplier_account"><SupplierAccountDetailPage /></PlanGuard></ModeGuard>} path="/supplier-account/:supplierId" />
-<Route element={<ModeGuard minMode="full"><PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard></ModeGuard>} path="/recipes" />
-<Route element={<ModeGuard minMode="full"><PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard></ModeGuard>} path="/bill-of-materials" />
-          <Route element={<ModeGuard minMode="intermediate"><SuppliersPage /></ModeGuard>} path="/suppliers" />
+          <Route element={<PurchasesPage />} path="/purchases" />
+          <Route element={<PurchasesPage />} path="/purchases/:purchaseId" />
+<Route element={<PlanGuard feature="supplier_account"><SupplierAccountPage /></PlanGuard>} path="/supplier-account" />
+<Route element={<PlanGuard feature="supplier_account"><SupplierAccountDetailPage /></PlanGuard>} path="/supplier-account/:supplierId" />
+<Route element={<PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard>} path="/recipes" />
+<Route element={<PlanGuard feature="bill_of_materials"><BillOfMaterialsPage /></PlanGuard>} path="/bill-of-materials" />
+          <Route element={<SuppliersPage />} path="/suppliers" />
           <Route element={<AdminDashboard />} path="/admin" />
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/admin/team" />
           <Route element={<CompanyPage />} path="/admin/company" />
@@ -192,7 +191,7 @@ function App() {
           <Route element={<PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard>} path="/client-account" />
           <Route element={<PlanGuard feature="client_account"><ClientAccountDetailPage /></PlanGuard>} path="/client-account/:clientId" />
           <Route element={<SettingsPage />} path="/settings" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="financial_center"><FinancialLayout /></PlanGuard></ModeGuard>}>
+          <Route element={<PlanGuard feature="financial_center"><FinancialLayout /></PlanGuard>}>
             <Route
               element={<Navigate replace to="/financial/dashboard" />}
               path="/financial"
@@ -234,15 +233,15 @@ function App() {
               path="/financial/iva-reports"
             />
           </Route>
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="banking"><BankAccountsPage /></PlanGuard></ModeGuard>} path="/banking" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="banking"><BankTransactionsPage /></PlanGuard></ModeGuard>} path="/banking/:id/transactions" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="banking"><ReconciliationPage /></PlanGuard></ModeGuard>} path="/banking/:id/reconciliation" />
-          <Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="supplier_account"><PaymentOrdersPage /></PlanGuard></ModeGuard>} path="/supplier-payments" />
-          <Route element={<ModeGuard minMode="intermediate"><PlanGuard feature="supplier_account"><PaymentOrderFormPage /></PlanGuard></ModeGuard>} path="/supplier-payments/new" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="quotes"><QuotesPage /></PlanGuard></ModeGuard>} path="/quotes" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard></ModeGuard>} path="/quotes/new" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="quotes"><QuoteDetailPage /></PlanGuard></ModeGuard>} path="/quotes/:id" />
-          <Route element={<ModeGuard minMode="full"><PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard></ModeGuard>} path="/quotes/:id/edit" />
+          <Route element={<PlanGuard feature="banking"><BankAccountsPage /></PlanGuard>} path="/banking" />
+          <Route element={<PlanGuard feature="banking"><BankTransactionsPage /></PlanGuard>} path="/banking/:id/transactions" />
+          <Route element={<PlanGuard feature="banking"><ReconciliationPage /></PlanGuard>} path="/banking/:id/reconciliation" />
+          <Route element={<PlanGuard feature="supplier_account"><PaymentOrdersPage /></PlanGuard>} path="/supplier-payments" />
+          <Route element={<PlanGuard feature="supplier_account"><PaymentOrderFormPage /></PlanGuard>} path="/supplier-payments/new" />
+          <Route element={<PlanGuard feature="quotes"><QuotesPage /></PlanGuard>} path="/quotes" />
+          <Route element={<PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard>} path="/quotes/new" />
+          <Route element={<PlanGuard feature="quotes"><QuoteDetailPage /></PlanGuard>} path="/quotes/:id" />
+          <Route element={<PlanGuard feature="quotes"><QuoteFormPage /></PlanGuard>} path="/quotes/:id/edit" />
           <Route element={<NotFoundPage />} path="*" />
         </Route>
       </Routes>

@@ -13,7 +13,6 @@ import { getErrorMessage } from "@shared/utils/errors";
 import { ClientAccountEntry, ClientEntryType } from "@shared/types";
 import { CreditLimitAlert } from "@features/clients/components/CreditLimitAlert";
 import { AgingChart } from "@features/clients/components/AgingChart";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 
 // Export utilities (inline to avoid import issues)
 const ENTRY_TYPE_LABELS_EXPORT: Record<ClientEntryType, string> = {
@@ -75,8 +74,7 @@ export default function ClientAccountDetailPage() {
   const { entries, balance, loading, createPayment, isCreatingPayment } = useClientAccount(clientId);
   const { aging } = useClientAging(clientId);
   // Simple mode keeps balance, payments and movements; aging and filters are advanced.
-  const { isSimple } = useExperienceMode();
-  const showAdvanced = !isSimple;
+  const showAdvanced = true;
   const { creditStatus } = useClientCreditStatus(clientId);
   
   const [selectedEntry, setSelectedEntry] = useState<ClientAccountEntry | null>(null);

@@ -16,9 +16,6 @@ vi.mock("@features/auth/hooks/usePermissions", () => ({
 vi.mock("@shared/hooks/usePlanFeatures", () => ({
   usePlanFeatures: vi.fn(),
 }));
-vi.mock("@shared/hooks/useExperienceMode", () => ({
-  useExperienceMode: vi.fn(),
-}));
 vi.mock("@shared/stores/themeStore", () => ({
   useThemeStore: vi.fn(),
 }));
@@ -29,36 +26,26 @@ vi.mock("@features/notifications/hooks/useNotifications", () => ({
 import { useAuth } from "@features/auth/hooks/useAuth";
 import { usePermissions } from "@features/auth/hooks/usePermissions";
 import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import { useThemeStore } from "@shared/stores/themeStore";
 import { useNotifications } from "@features/notifications/hooks/useNotifications";
 
 import MobileLayout from "./MobileLayout";
 
-function setupMocks(mode: "simple" | "intermediate" | "full") {
+function setupMocks(enabledFeatures: string[], canViewFinancial = true) {
   (useAuth as any).mockReturnValue({
     user: {
       fullName: "Test User",
       isSuperAdmin: false,
-      tenant: {
-        experienceMode: mode,
-        enabledFeatures: ["client_account", "financial_center"],
-      },
+      tenant: { enabledFeatures },
     },
     logout: vi.fn(),
   });
   (usePermissions as any).mockReturnValue({
-    can: { viewFinancial: true, manageTeam: false },
+    can: { viewFinancial: canViewFinancial, manageTeam: false },
     roleLabel: "Admin",
   });
   (usePlanFeatures as any).mockReturnValue({
-    hasFeature: (f: string) => true,
-  });
-  (useExperienceMode as any).mockReturnValue({
-    mode,
-    isSimple: mode === "simple",
-    isIntermediate: mode === "intermediate",
-    isFull: mode === "full",
+    hasFeature: (f: string) => enabledFeatures.includes(f),
   });
   (useThemeStore as any).mockReturnValue({
     theme: "light",
@@ -72,9 +59,9 @@ function setupMocks(mode: "simple" | "intermediate" | "full") {
   });
 }
 
-describe("MobileLayout — mode gating", () => {
-  it("shows Compras section for intermediate mode", () => {
-    setupMocks("intermediate");
+describe("MobileLayout — plan gating", () => {
+  it("shows Compras in the base plan, without any complement", () => {
+    setupMocks([]);
 
     render(
       <MemoryRouter>
@@ -82,12 +69,11 @@ describe("MobileLayout — mode gating", () => {
       </MemoryRouter>,
     );
 
-    const instances = screen.getAllByText("Compras");
-    expect(instances.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Compras").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("hides Compras section for simple mode", () => {
-    setupMocks("simple");
+  it("shows Centro Financiero only when the plan includes financial_center", () => {
+    setupMocks(["financial_center", "team_management"]);
 
     render(
       <MemoryRouter>
@@ -95,24 +81,11 @@ describe("MobileLayout — mode gating", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.queryAllByText("Compras")).toHaveLength(0);
+    expect(screen.getAllByText("Centro Financiero").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows Centro Financiero section for full mode", () => {
-    setupMocks("full");
-
-    render(
-      <MemoryRouter>
-        <MobileLayout />
-      </MemoryRouter>,
-    );
-
-    const instances = screen.getAllByText("Centro Financiero");
-    expect(instances.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("hides Centro Financiero section for intermediate mode", () => {
-    setupMocks("intermediate");
+  it("hides Centro Financiero when the plan does not include financial_center", () => {
+    setupMocks([]);
 
     render(
       <MemoryRouter>

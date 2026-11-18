@@ -14,6 +14,9 @@ export type Feature =
   | "unlimited_orders"
   | "banking"
   | "quotes"
+  | "accounting"
+  | "cost_centers"
+  | "cash_management"
   | "whatsapp"
   | "bank_reconciliation";
 

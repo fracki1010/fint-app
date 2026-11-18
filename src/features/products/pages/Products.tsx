@@ -34,7 +34,6 @@ import {
 } from "../components/ProductFormModal";
 import { ProductDetailPanel } from "../components/ProductDetailPanel";
 import ImportProductsModal from "../components/ImportProductsModal";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import QuickStockAdjust from "../components/QuickStockAdjust";
 
 function slugifyText(value: string) {
@@ -107,7 +106,6 @@ export default function ProductsPage() {
   });
   const [showImportModal, setShowImportModal] = useState(false);
   const [adjustProduct, setAdjustProduct] = useState<Product | null>(null);
-  const { isSimple } = useExperienceMode();
 
   const { products, total, totalPages, loading } = usePaginatedProducts({
     page: currentPage,
@@ -573,15 +571,13 @@ export default function ProductsPage() {
 
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
-                {isSimple && (
-                  <button
+                <button
                     type="button"
                     className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
                     onClick={() => setAdjustProduct(product)}
                   >
                     + Stock
                   </button>
-                )}
                 </div>
               );
             })}

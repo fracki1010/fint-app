@@ -11,7 +11,6 @@ import {
   Package,
 } from "lucide-react";
 import { useBarcodeScanner } from "@shared/hooks/useBarcodeScanner";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { PriceTier, PriceTiers } from "@shared/types";
 import BarcodeScanner from "@shared/components/scanner/BarcodeScanner";
@@ -167,15 +166,8 @@ export function ProductFormModal({
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [scanningPresentationIndex, setScanningPresentationIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"etiqueta" | "precios" | "inventario" | "unidades">("etiqueta");
-  const { isSimple } = useExperienceMode();
   const baseUnitLabel =
     UNIT_OPTIONS.find((u) => u.value === formData.unitOfMeasure)?.label ?? formData.unitOfMeasure;
-  // Simple mode has no price tab: a new product needs a sale price or a unit to be sellable.
-  const createNeedsPriceOrUnit =
-    mode === "create" &&
-    isSimple &&
-    formData.presentations.length === 0 &&
-    !(Number(formData.price) > 0);
 
   const {
     state: barcodeState,
@@ -265,10 +257,8 @@ export function ProductFormModal({
         <div className="flex gap-1">
           {[
             { id: "etiqueta" as const, label: "Etiqueta" },
-            ...(isSimple ? [] : [
-              { id: "precios" as const, label: "Precios" },
-              { id: "inventario" as const, label: "Inventario" },
-            ]),
+            { id: "precios" as const, label: "Precios" },
+            { id: "inventario" as const, label: "Inventario" },
             { id: "unidades" as const, label: "U. Alternativas" },
           ].map((tab) => (
             <button
@@ -310,7 +300,7 @@ export function ProductFormModal({
             </label>
 
             {/* Tipo (solo crear) */}
-            {mode === "create" && !isSimple && (
+            {mode === "create" && (
               <div className="mt-5">
                 <span className="mb-2.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">Tipo</span>
                 <div className="flex gap-2">
@@ -360,7 +350,7 @@ export function ProductFormModal({
             </label>
 
             {/* Precio de venta (simple mode has no price tab) */}
-            {mode === "create" && isSimple && (
+            {mode === "create" && (
               <label className="mt-5 block">
                 <span className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.1em] text-default-500">
                   Precio de venta
@@ -854,16 +844,11 @@ export function ProductFormModal({
 
       {/* ── Footer ── */}
       <div className="border-t border-divider/10 px-5 py-4 sm:px-7">
-        {createNeedsPriceOrUnit && (
-          <p className="mb-3 text-center text-xs text-default-400">
-            Agregá un precio de venta o una unidad para poder crear el artículo.
-          </p>
-        )}
         <div className="flex gap-3">
           <button className="flex-1 rounded-xl border border-divider/20 px-4 py-3 text-sm font-semibold text-default-600 transition hover:bg-content2/60" onClick={onClose}>
             Cancelar
           </button>
-          <button className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm disabled:opacity-50" disabled={submitting || createNeedsPriceOrUnit} onClick={onSubmit}>
+          <button className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm disabled:opacity-50" disabled={submitting} onClick={onSubmit}>
             <span className="flex items-center justify-center gap-2">
               {submitting && <Loader2 className="animate-spin" size={16} />}
               {mode === "create" ? "Crear artículo" : "Guardar cambios"}

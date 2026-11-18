@@ -12,7 +12,6 @@ export interface TenantInfo {
     maxOrdersPerMonth: number;
   };
   enabledFeatures: string[];
-  experienceMode: "simple" | "intermediate" | "full";
   usage: {
     currentUsers: number;
     currentProducts: number;

@@ -5,7 +5,7 @@ import { PriceTier } from "@shared/types";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { ClientPriceListSelector } from "./ClientPriceListSelector";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
+import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
 
 // ── Types & Constants ────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ export function ClientFormModal({
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormState, string>>>({});
-  const { isSimple } = useExperienceMode();
+  const { hasFeature } = usePlanFeatures();
 
   useEffect(() => {
     if (isDesktop) return;
@@ -151,7 +151,7 @@ export function ClientFormModal({
             error={errors.name}
             icon={Users}
           />
-          {!isSimple && (
+          {hasFeature("accounting") && (
           <Input
             label="Empresa"
             value={formData.company}
@@ -201,7 +201,7 @@ export function ClientFormModal({
           icon={MapPin}
         />
 
-        {!isSimple && (
+        {hasFeature("accounting") && (
         <Input
           label="Dirección fiscal"
           value={formData.fiscalAddress}
@@ -218,7 +218,6 @@ export function ClientFormModal({
             onChange={(v) => onChange("debt", v)}
             type="number"
           />
-          {!isSimple && (
           <Input
             label="Límite de crédito"
             value={formData.creditLimit}
@@ -227,7 +226,6 @@ export function ClientFormModal({
             type="number"
             icon={CreditCard}
           />
-          )}
         </div>
 
         <ClientPriceListSelector

@@ -25,7 +25,6 @@ interface PaymentSummaryProps {
   onCheckout: () => void;
   isCreating: boolean;
   canFinalize: boolean;
-  isSimple?: boolean;
 }
 
 type PaymentCategory = "cash" | "card" | "transfer" | "other";
@@ -70,7 +69,6 @@ export default function PaymentSummary({
   onCheckout,
   isCreating,
   canFinalize,
-  isSimple,
 }: PaymentSummaryProps) {
   const [mode, setMode] = useState<"simple" | "doble">("simple");
   const [expanded, setExpanded] = useState(false);
@@ -383,7 +381,7 @@ export default function PaymentSummary({
           <span>Subtotal</span>
           <span>{formatCurrency(subtotal, currency)}</span>
         </div>
-        {!isSimple && (
+        {(settings?.taxRate || 0) > 0 && (
         <div className="flex items-center justify-between text-default-500">
           <span>IVA {settings?.taxRate || 0}%</span>
           <span>{formatCurrency(tax, currency)}</span>

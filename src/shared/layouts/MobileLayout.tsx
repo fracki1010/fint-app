@@ -4,10 +4,8 @@ import { useNotifications } from "@features/notifications/hooks/useNotifications
 import { useAuth } from "@features/auth/hooks/useAuth";
 import { usePermissions } from "@features/auth/hooks/usePermissions";
 import { usePlanFeatures } from "@shared/hooks/usePlanFeatures";
-import { useExperienceMode } from "@shared/hooks/useExperienceMode";
 import { useDrawerGesture } from "@shared/hooks/useDrawerGesture";
 import PlanLimitBanner from "@shared/components/PlanLimitBanner";
-import { ExperienceModeBanner } from "@shared/components/ExperienceModeBanner";
 import OfflineIndicator from "@shared/components/OfflineIndicator";
 import {
   LayoutGrid,
@@ -50,7 +48,6 @@ export default function MobileLayout() {
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
   const { hasFeature } = usePlanFeatures();
-  const { isSimple, isFull } = useExperienceMode();
   const { theme, toggleTheme } = useThemeStore();
   const { state: drawer, handlers: drawerHandlers, open: openDrawer, close: closeDrawer } = useDrawerGesture();
   const handleDrawerNav = (path: string) => {
@@ -78,12 +75,8 @@ export default function MobileLayout() {
 
   const stockNav = [
     { path: "/products", label: "Artículos", icon: ClipboardList },
-    ...(isSimple
-      ? []
-      : [{ path: "/inventory", label: "Inventario", icon: Package }]),
-    ...(isSimple
-      ? []
-      : [{ path: "/movements", label: "Movimientos", icon: ArrowRightLeft }]),
+    { path: "/inventory", label: "Inventario", icon: Package },
+    { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
@@ -148,13 +141,13 @@ export default function MobileLayout() {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-sidebar">
 
           <NavSection label="Operación" items={operationNav} isActive={isActive} navigate={navigate} />
-          {!isSimple && <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ShoppingCart} />}
+          <NavSection label="Compras" items={comprasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ShoppingCart} />
           <NavSection label="Ventas" items={ventasNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={ReceiptText} />
           <NavSection label="Stock" items={stockNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={Package} />
-          {tesoreriaNav.length > 0 && !isSimple && (
+          {tesoreriaNav.length > 0 && (
             <NavSection label="Tesorería" items={tesoreriaNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} icon={DollarSign} />
           )}
-          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
             <NavSection label="Centro Financiero" items={fullFinancialNav} isActive={isActive} navigate={navigate} accordion defaultOpen={false} />
           )}
           <NavSection label="Administración" items={adminNav} isActive={isActive} navigate={navigate} />
@@ -244,7 +237,6 @@ export default function MobileLayout() {
         </div>
         <div className="px-4 pt-2 lg:px-6 lg:pt-4">
           <PlanLimitBanner />
-          <ExperienceModeBanner />
         </div>
         <Outlet />
       </main>
@@ -365,13 +357,13 @@ export default function MobileLayout() {
         {/* Nav sections — Material3 list style */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 scrollbar-sidebar">
           <NavSection label="Principal" variant="mobile" items={operationNav} isActive={isActive} navigate={handleDrawerNav} />
-          {!isSimple && <NavSection label="Compras" variant="mobile" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />}
+          <NavSection label="Compras" variant="mobile" items={comprasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ShoppingCart} />
           <NavSection label="Ventas" variant="mobile" items={ventasNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={ReceiptText} />
           <NavSection label="Stock" variant="mobile" items={stockNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={Package} />
-          {tesoreriaNav.length > 0 && !isSimple && (
+          {tesoreriaNav.length > 0 && (
             <NavSection label="Tesorería" variant="mobile" items={tesoreriaNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} icon={DollarSign} />
           )}
-          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && isFull && (
+          {can.viewFinancial && hasFeature("financial_center") && hasFeature("team_management") && (
             <NavSection label="Centro Financiero" variant="mobile" items={fullFinancialNav} isActive={isActive} navigate={handleDrawerNav} accordion defaultOpen={false} />
           )}
 

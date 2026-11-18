@@ -29,7 +29,6 @@ export interface Tenant {
     ordersThisMonth: number;
   };
   enabledFeatures: string[];
-  experienceMode?: "simple" | "intermediate" | "full";
   createdAt: string;
   updatedAt: string;
 }
