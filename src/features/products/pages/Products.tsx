@@ -378,7 +378,6 @@ export default function ProductsPage() {
       <div className="page-header">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="section-kicker">Inventario</p>
             <h1 className="page-title">Catálogo de artículos</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -392,7 +391,7 @@ export default function ProductsPage() {
               Importar
             </Button>
             <button
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105"
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(217,119,6,0.35)] transition hover:scale-105 sm:flex"
               onClick={() => { resetForm(); setShowCreateModal(true); }}
             >
               <Plus size={18} />
@@ -400,33 +399,16 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* KPIs */}
-        <div className={`mt-4 grid gap-3 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
-          <div className="stat-card p-3">
-            <p className="stat-card-label">Productos</p>
-            <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{total || safeProducts.length}</p>
-          </div>
-          <div className={`stat-card p-3 ${lowStockCount > 0 ? "border-danger/25 bg-danger/5" : ""}`}>
-            <p className="stat-card-label">Stock Bajo</p>
-            <p className={`mt-1.5 text-2xl font-bold tracking-tight ${lowStockCount > 0 ? "text-danger" : "text-foreground"}`}>
-              {lowStockCount}
-            </p>
-          </div>
-          {isDesktop && (
+        {/* Summary */}
+        <p className="mt-3 text-sm text-default-500">
+          {total || safeProducts.length} artículos
+          {lowStockCount > 0 && (
             <>
-              <div className="stat-card p-3">
-                <p className="stat-card-label">Categorías</p>
-                <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">{categories.length}</p>
-              </div>
-              <div className="stat-card p-3">
-                <p className="stat-card-label">Con costo</p>
-                <p className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">
-                  {safeProducts.filter((p) => p.costPrice != null && p.costPrice > 0).length}
-                </p>
-              </div>
+              {" · "}
+              <span className="font-semibold text-danger">{lowStockCount} con stock bajo</span>
             </>
           )}
-        </div>
+        </p>
 
         {/* Search */}
         <div className="search-bar mt-4">
@@ -504,9 +486,13 @@ export default function ProductsPage() {
               const isSelected = product._id === productId;
 
               return (
-                <button
+                <div
                   key={product._id}
-                  className={`list-row w-full ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
+                  className={`list-row flex w-full items-center gap-3 ${isSelected ? "border-primary/30 bg-primary/8 shadow-sm" : ""}`}
+                >
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
                   onClick={() => navigate(`/products/${product._id}`)}
                 >
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOut ? "bg-danger/15 text-danger" : isLow ? "bg-warning/15 text-warning" : "bg-primary/12 text-primary"}`}>
@@ -550,6 +536,7 @@ export default function ProductsPage() {
 
                   {isDesktop && (
                     <div className="hidden lg:block shrink-0 w-28 text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-default-400">Stock</p>
                       <p className={`text-xs font-semibold ${isOut || isLow ? "text-danger" : "text-default-500"}`}>
                         {isOut ? "Sin stock" : `${displayStock} ${displayUnit}`}
                       </p>
@@ -576,28 +563,18 @@ export default function ProductsPage() {
                     )}
                   </div>
 
-                  {isSimple && (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAdjustProduct(product);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setAdjustProduct(product);
-                        }
-                      }}
-                    >
-                      + Stock
-                    </span>
-                  )}
                   <ChevronRight className={`shrink-0 ${isSelected ? "text-primary" : "text-default-300"}`} size={16} />
                 </button>
+                {isSimple && (
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-xl bg-success/15 px-3 py-1.5 text-xs font-bold text-success hover:bg-success/25 transition"
+                    onClick={() => setAdjustProduct(product)}
+                  >
+                    + Stock
+                  </button>
+                )}
+                </div>
               );
             })}
 
