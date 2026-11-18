@@ -69,6 +69,9 @@ export default function SalesPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("");
   const [deliveryFilter, setDeliveryFilter] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const salesFilterCount =
+    (activeFilter !== "all" ? 1 : 0) + (paymentStatusFilter ? 1 : 0) + (paymentMethodFilter ? 1 : 0) + (deliveryFilter ? 1 : 0) + (sourceFilter ? 1 : 0);
 
   // Date filters
   type DateFilter = "today" | "yesterday" | "7days" | "month" | "90days" | "custom";
@@ -248,20 +251,6 @@ export default function SalesPage() {
               </>
             ) : (
               <>
-                <Link
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/25 transition active:scale-90"
-                  to="/new-operation"
-                  title="Nueva venta"
-                >
-                  <Plus size={18} />
-                </Link>
-                <Link
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider/30 text-default-500 transition active:scale-90"
-                  to="/quick-sale"
-                  title="Venta rápida"
-                >
-                  <ScanBarcode size={18} />
-                </Link>
                 <button
                   className="flex h-10 w-10 items-center justify-center rounded-xl border border-divider/30 text-default-500 transition active:scale-90"
                   onClick={() => setIsImportModalOpen(true)}
@@ -382,7 +371,20 @@ export default function SalesPage() {
           </div>
         )}
 
-        {/* Filter groups row */}
+        {/* Filter groups row: collapsed behind a toggle on mobile */}
+        {!isDesktop && (
+          <button
+            type="button"
+            className="flex w-fit items-center gap-2 rounded-full bg-content2/60 px-3 py-1.5 text-xs font-bold text-default-600"
+            onClick={() => setShowMobileFilters((prev) => !prev)}
+          >
+            Filtros
+            {salesFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-white">{salesFilterCount}</span>
+            )}
+          </button>
+        )}
+        {(isDesktop || showMobileFilters) && (
         <div className="flex flex-wrap gap-1.5">
           {/* Status */}
           <FilterGroup label="Estado" value={activeFilter !== "all" ? activeFilter : null} onClear={() => setActiveFilter("all")}>
@@ -425,6 +427,7 @@ export default function SalesPage() {
             ))}
           </FilterGroup>
         </div>
+        )}
       </div>
 
       {/* Order list */}
@@ -460,7 +463,7 @@ export default function SalesPage() {
                       <div className="mt-0.5 flex items-center gap-1.5">
                         <span className="text-[11px] text-default-400">{order.orderNumber || `#${order._id.slice(-6)}`}</span>
                         <span className="text-[11px] text-default-400">·</span>
-                        <span className="text-[11px] text-default-400">{new Date(order.createdAt).toLocaleDateString()}</span>
+                        <span className="text-[11px] text-default-400">{new Date(order.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}</span>
                         <span className="text-[11px] text-default-400">·</span>
                         <span className="text-[11px] text-default-400">{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         {!isDesktop && <StatusBadge label={order.paymentStatus || "Pendiente"} />}
