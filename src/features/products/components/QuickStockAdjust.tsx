@@ -14,31 +14,45 @@ interface QuickStockAdjustProps {
   onClose: () => void;
 }
 
-const REASONS = [
-  { key: "reposicion", label: "Reposición" },
+// The user states how much is on the shelf; the difference decides the movement.
+const INCREASE_REASONS = [
   { key: "compra", label: "Compra" },
-  { key: "ajuste", label: "Ajuste" },
+  { key: "reposicion", label: "Reposición" },
   { key: "devolucion", label: "Devolución" },
+  { key: "ajuste", label: "Ajuste" },
+];
+
+const DECREASE_REASONS = [
+  { key: "merma", label: "Merma o rotura" },
+  { key: "recuento", label: "Recuento" },
 ];
 
 export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStockAdjustProps) {
-  const [quantity, setQuantity] = useState<number>(0);
-  const [reason, setReason] = useState<string>("reposicion");
+  const currentStock = product.stock ?? 0;
+  const [counted, setCounted] = useState<string>(String(currentStock));
+  const [reasonKey, setReasonKey] = useState<string>("");
   const { createMovement, isCreating } = useStockMovements();
 
   if (!isOpen) return null;
 
-  const currentStock = product.stock ?? 0;
-  const newStock = currentStock + quantity;
+  const countedNumber = Number(counted);
+  const isValidCount = counted.trim() !== "" && Number.isFinite(countedNumber) && countedNumber >= 0;
+  const delta = isValidCount ? countedNumber - currentStock : 0;
+  const reasons = delta < 0 ? DECREASE_REASONS : INCREASE_REASONS;
+  const selectedReason = reasons.find((r) => r.key === reasonKey) ?? reasons[0];
+  const unit = product.unitOfMeasure || "unidades";
 
   const handleSubmit = async () => {
-    if (quantity <= 0) return;
+    if (!isValidCount || delta === 0) return;
+    const isLoss = delta < 0;
     try {
       await createMovement({
         product: product._id,
-        type: "ENTRADA",
-        quantity,
-        reason,
+        type: isLoss
+          ? selectedReason.key === "merma" ? "MERMA" : "SALIDA"
+          : selectedReason.key === "ajuste" ? "AJUSTE" : "ENTRADA",
+        quantity: Math.abs(delta),
+        reason: selectedReason.label,
         source: "Dashboard",
       });
       onClose();
@@ -68,44 +82,56 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
                 {product.name}
               </p>
               <p className="text-xs text-default-500">
-                Stock actual: <span className="font-semibold text-foreground">{currentStock}</span>
+                Hoy hay <span className="font-semibold text-foreground">{currentStock} {unit}</span>
               </p>
             </div>
           </div>
 
-          {/* Quantity */}
-          <div className="space-y-3">
-            <Input
-              label="Cantidad a agregar"
-              type="number"
-              min={1}
-              value={quantity > 0 ? quantity.toString() : ""}
-              variant="bordered"
-              onChange={(e) => setQuantity(Number(e.target.value) || 0)}
-            />
+          {/* Count */}
+          <Input
+            label="¿Cuánto hay ahora?"
+            type="number"
+            min={0}
+            value={counted}
+            variant="bordered"
+            endContent={<span className="text-xs text-default-500">{unit}</span>}
+            onChange={(e) => setCounted(e.target.value)}
+          />
 
-            <Select
-              label="Motivo"
-              selectedKeys={[reason]}
-              variant="bordered"
-              onSelectionChange={(key) => {
-                const selected = key instanceof Set ? [...key][0] : key;
-                if (selected) setReason(String(selected));
-              }}
-            >
-              {REASONS.map((r) => (
-                <SelectItem key={r.key}>{r.label}</SelectItem>
-              ))}
-            </Select>
+          {/* Result of the count */}
+          <div className="mt-4 rounded-2xl bg-content2/50 px-4 py-3">
+            {!isValidCount ? (
+              <p className="text-sm text-default-500">Ingresá una cantidad.</p>
+            ) : delta === 0 ? (
+              <p className="text-sm text-default-500">Sin cambios: el stock ya coincide.</p>
+            ) : (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-default-500">
+                  {delta > 0 ? `Entran ${delta} ${unit}` : `Salen ${Math.abs(delta)} ${unit}`}
+                </span>
+                <span className={`font-bold ${delta > 0 ? "text-success" : "text-danger"}`}>
+                  {delta > 0 ? `+${delta}` : delta}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Preview */}
-          {quantity > 0 && (
-            <div className="mt-4 rounded-2xl bg-content2/50 px-4 py-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-default-500">Stock nuevo</span>
-                <span className="font-bold text-success">{newStock}</span>
-              </div>
+          {/* Reason, only when something changes */}
+          {isValidCount && delta !== 0 && (
+            <div className="mt-4">
+              <Select
+                label="¿Por qué cambia?"
+                selectedKeys={[selectedReason.key]}
+                variant="bordered"
+                onSelectionChange={(keys) => {
+                  const selected = keys instanceof Set ? [...keys][0] : keys;
+                  if (selected) setReasonKey(String(selected));
+                }}
+              >
+                {reasons.map((r) => (
+                  <SelectItem key={r.key}>{r.label}</SelectItem>
+                ))}
+              </Select>
             </div>
           )}
 
@@ -121,7 +147,7 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
             <Button
               className="flex-1 h-11 rounded-2xl font-semibold"
               color="primary"
-              isDisabled={quantity <= 0 || isCreating}
+              isDisabled={!isValidCount || delta === 0 || isCreating}
               startContent={
                 isCreating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -129,7 +155,7 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
               }
               onClick={handleSubmit}
             >
-              Confirmar
+              Guardar stock
             </Button>
           </div>
         </CardBody>
