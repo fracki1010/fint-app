@@ -146,7 +146,7 @@ export function OrderDetailPanel({
   };
 
   return (
-    <div className="flex h-full flex-col bg-content1">
+    <div className={`flex flex-col bg-content1 ${isDesktop ? "h-full" : "min-h-full"}`}>
       {/* Panel header */}
       <div className={`shrink-0 border-b border-[color:rgb(var(--warm-border)/0.12)] px-6 py-4 ${isDesktop ? "bg-background/60 backdrop-blur-sm" : "bg-background"}`}>
         {!isDesktop && (
@@ -203,7 +203,7 @@ export function OrderDetailPanel({
       </div>
 
       {/* Panel body */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
+      <div className={`flex-1 px-6 py-5 ${isDesktop ? "overflow-y-auto" : ""}`}>
         {detailLoading && !selectedOrder ? (
           <div className="flex flex-col items-center justify-center py-20 text-default-400">
             <Loader2 className="animate-spin mb-3" size={28} />

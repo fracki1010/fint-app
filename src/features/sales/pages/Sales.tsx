@@ -197,7 +197,7 @@ export default function SalesPage() {
   // Mobile: show full-screen detail when orderId is set
   if (!isDesktop && orderId) {
     return (
-      <div className="flex h-dvh flex-col bg-background">
+      <div className="flex min-h-dvh flex-col bg-background">
         <OrderDetailPanel
           currency={currency}
           isDesktop={false}
