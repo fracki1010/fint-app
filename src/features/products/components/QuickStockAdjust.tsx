@@ -56,7 +56,7 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
       />
 
       {/* Modal */}
-      <Card className="relative z-10 mx-4 mb-4 w-full max-w-sm rounded-[28px] sm:mb-0">
+      <Card className="relative z-10 mx-4 mb-4 w-full max-w-sm rounded-[28px] animate-sheet-up sm:mb-0">
         <CardBody className="p-6">
           {/* Header */}
           <div className="mb-5 flex items-center gap-3">

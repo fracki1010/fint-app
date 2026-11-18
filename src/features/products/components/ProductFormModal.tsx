@@ -877,7 +877,7 @@ export function ProductFormModal({
   if (!isDesktop) {
     return (
       <div className="fixed inset-0 z-[120] bg-black/45 backdrop-blur-[1px]">
-        <div className="h-[100dvh] w-full max-w-full overflow-hidden bg-background">{formLayout}</div>
+        <div className="h-[100dvh] w-full max-w-full overflow-hidden bg-background animate-sheet-up">{formLayout}</div>
       </div>
     );
   }
