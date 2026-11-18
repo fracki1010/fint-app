@@ -77,7 +77,9 @@ export default function MobileLayout() {
 
   const stockNav = [
     { path: "/products", label: "Artículos", icon: ClipboardList },
-    { path: "/inventory", label: "Inventario", icon: Package },
+    ...(isSimple
+      ? []
+      : [{ path: "/inventory", label: "Inventario", icon: Package }]),
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];

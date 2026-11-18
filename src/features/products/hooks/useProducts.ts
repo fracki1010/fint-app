@@ -81,6 +81,7 @@ export function useProducts(options?: { enabled?: boolean }) {
         product: newProduct,
       });
       queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["products-paginated"] });
     },
   });
 
@@ -104,6 +105,7 @@ export function useProducts(options?: { enabled?: boolean }) {
         product: updatedProduct,
       });
       queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["products-paginated"] });
     },
   });
 
@@ -119,6 +121,7 @@ export function useProducts(options?: { enabled?: boolean }) {
       );
       queryClient.removeQueries({ queryKey: ["product", deletedId] });
       queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["products-paginated"] });
     },
   });
 
