@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useClientDetail } from "@features/clients/hooks/useClients";
+import { useClientOrders } from "@features/clients/hooks/useClientOrders";
 import { Badge } from "@shared/components/Badge";
 import { formatCompactCurrency } from "@shared/utils/currency";
 import { Button } from "./Button";
@@ -64,18 +65,21 @@ export function ClientDetailPanel({
 }) {
   const { client: selectedClient, orders, metrics, loading, error } = useClientDetail(clientId);
 
-  // Filter orders: last 5 max; for Consumidor Final, only today's
+  // Orders are paged on the server; Consumidor Final keeps its local "today" view.
   const isGenericClient = selectedClient?.name === "Consumidor Final";
+  const [ordersPage, setOrdersPage] = useState(1);
+  const pagedOrders = useClientOrders(clientId, ordersPage, !isGenericClient);
   const displayOrders = useMemo(() => {
     if (isGenericClient) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return orders
-        .filter((o) => new Date(o.createdAt) >= today)
-        .slice(0, 5);
+      return orders.filter((o) => new Date(o.createdAt) >= today).slice(0, 5);
     }
-    return orders.slice(0, 5);
-  }, [orders, isGenericClient]);
+    return pagedOrders.data?.orders ?? [];
+  }, [orders, isGenericClient, pagedOrders.data]);
+  const ordersTotal = isGenericClient ? displayOrders.length : pagedOrders.data?.total ?? 0;
+  const ordersTotalPages = isGenericClient ? 1 : pagedOrders.data?.totalPages ?? 1;
+
 
   if (loading && !selectedClient) {
     return (
@@ -263,7 +267,7 @@ export function ClientDetailPanel({
                 Ventas relacionadas
               </h3>
               <Badge variant="default" size="sm">
-                {displayOrders.length} registros
+                {ordersTotal} registros
               </Badge>
             </div>
             <div className="space-y-2">
@@ -311,6 +315,29 @@ export function ClientDetailPanel({
                 <p className="text-sm text-default-500">Sin ventas registradas.</p>
               )}
             </div>
+            {!isGenericClient && ordersTotalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  disabled={ordersPage <= 1}
+                  onClick={() => setOrdersPage((p) => Math.max(1, p - 1))}
+                  className="rounded-xl border border-divider/30 px-3 py-2 text-xs font-bold text-default-500 transition hover:bg-content2/60 disabled:opacity-30"
+                >
+                  Anterior
+                </button>
+                <span className="text-xs font-semibold text-default-500">
+                  Página {ordersPage} de {ordersTotalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={ordersPage >= ordersTotalPages}
+                  onClick={() => setOrdersPage((p) => p + 1)}
+                  className="rounded-xl border border-divider/30 px-3 py-2 text-xs font-bold text-default-500 transition hover:bg-content2/60 disabled:opacity-30"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </Card>
 
           {/* Actions */}
