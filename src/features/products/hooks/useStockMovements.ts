@@ -128,6 +128,7 @@ export function useStockMovements(
       reason?: string;
       order?: string;
       source?: "WhatsApp" | "Dashboard" | "Sistema";
+      expectedStock?: number;
     }) => {
       const response = await api.post<StockMovement>(
         "/stock-movements",
@@ -138,7 +139,10 @@ export function useStockMovements(
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stockMovements"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] }); // Invalidar productos porque el stock cambia
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products-paginated"] });
+      queryClient.invalidateQueries({ queryKey: ["products-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] }); // Invalidar productos porque el stock cambia
     },
   });
 
