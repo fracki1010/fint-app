@@ -533,7 +533,7 @@ export function OrderDetailPanel({
             </div>
 
             {/* Actions: pinned so saving a status change never needs a long scroll */}
-            <div className="sticky bottom-0 -mx-6 flex gap-3 border-t border-divider/10 bg-background px-6 py-3">
+            <div className="sticky bottom-[4.5rem] -mx-6 flex gap-3 border-t border-divider/10 bg-background px-6 py-3 lg:bottom-0">
               <button
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-divider/12 bg-content2/50 py-3 text-sm font-semibold text-default-600 hover:bg-content2 transition"
                 onClick={handleDownloadInvoice}

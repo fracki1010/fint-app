@@ -36,6 +36,7 @@ import {
   Moon,
   Lock,
   Menu,
+  Plus,
 } from "lucide-react";
 import { useThemeStore } from "@shared/stores/themeStore";
 import logo from "@/assets/logo-ambar-7.svg";
@@ -224,13 +225,7 @@ export default function MobileLayout() {
       >
         {/* Mobile top bar — hamburguesa, logo centrado, campana */}
         <div className="sticky top-0 z-30 flex items-center justify-between border-b border-divider/10 bg-background/80 backdrop-blur-xl px-4 py-3 lg:hidden safe-top">
-          <button
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-default-500 hover:bg-content2/80 hover:text-foreground active:scale-95 transition"
-            onClick={openDrawer}
-            aria-label="Abrir menú"
-          >
-            <Menu size={22} strokeWidth={2.5} />
-          </button>
+          <div aria-hidden className="h-11 w-11" />
           <div className="flex h-8 w-8 overflow-hidden rounded-lg">
             <img src={logo} alt="Fint" className="h-[42px] w-[42px] -m-[5px] object-cover" />
           </div>
@@ -293,6 +288,52 @@ export default function MobileLayout() {
         style={{ opacity: drawer.progress * 0.9 }}
         onClick={closeDrawer}
       />
+
+      {/* Mobile tab bar: three daily destinations, new sale in the middle, the rest in the drawer */}
+      <nav
+        aria-label="Navegación principal"
+        className="fixed bottom-0 left-0 right-0 z-[50] border-t border-divider/10 bg-background/90 backdrop-blur-xl safe-bottom lg:hidden"
+      >
+        <ul className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pt-1.5 pb-2">
+          {[
+            { key: "home", label: "Inicio", icon: LayoutGrid, path: "/" },
+            { key: "sales", label: "Ventas", icon: ReceiptText, path: "/sales" },
+            { key: "new", label: "Nueva venta", icon: Plus, path: "/new-operation" },
+            { key: "stock", label: "Stock", icon: Package, path: "/products" },
+          ].map((tab) => {
+            const active = isActive(tab.path);
+            const isCenter = tab.key === "new";
+            const Icon = tab.icon;
+
+            return (
+              <li key={tab.key} className="flex justify-center">
+                <button
+                  aria-current={active ? "page" : undefined}
+                  aria-label={isCenter ? tab.label : undefined}
+                  className={isCenter
+                    ? "-mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_12px_28px_rgba(217,119,6,0.35)] transition active:scale-95"
+                    : `flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold transition active:scale-95 ${active ? "text-primary" : "text-default-500"}`}
+                  onClick={() => navigate(tab.path)}
+                  type="button"
+                >
+                  <Icon size={isCenter ? 24 : 20} strokeWidth={2.2} />
+                  {!isCenter && tab.label}
+                </button>
+              </li>
+            );
+          })}
+          <li className="flex justify-center">
+            <button
+              className="flex min-h-12 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold text-default-500 transition active:scale-95"
+              onClick={openDrawer}
+              type="button"
+            >
+              <Menu size={20} strokeWidth={2.2} />
+              Más
+            </button>
+          </li>
+        </ul>
+      </nav>
 
       {/* Drawer panel — Material3 Navigation Drawer */}
       <div
