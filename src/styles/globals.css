@@ -130,6 +130,11 @@ body {
   border-radius: 999px;
 }
 
+/* Arrow buttons add clutter on classic scrollbars; keep only the thumb. */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
