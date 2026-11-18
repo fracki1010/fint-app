@@ -995,3 +995,8 @@ body:has(input:focus, textarea:focus, select:focus) .mobile-chrome {
     display: none;
   }
 }
+
+/* A modal sheet owns the screen: hide the bottom navigation while one is open. */
+body:has([aria-modal="true"]) .mobile-chrome {
+  display: none;
+}

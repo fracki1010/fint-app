@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Boxes, Loader2 } from "lucide-react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
@@ -113,8 +114,9 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
     </button>
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+  // Rendered on <body>: inside the page scroll container the sheet was clipped by the bottom bar.
+  return createPortal(
+    <div aria-modal="true" className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
 
@@ -241,6 +243,7 @@ export default function QuickStockAdjust({ product, isOpen, onClose }: QuickStoc
           </div>
         </CardBody>
       </Card>
-    </div>
+    </div>,
+    document.body,
   );
 }
