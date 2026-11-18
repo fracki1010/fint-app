@@ -146,14 +146,6 @@ export function ProductDetailPanel({
           {product && (
             <>
               <button
-                className="flex items-center gap-1.5 rounded-xl bg-success/15 px-3 py-2 text-sm font-semibold text-success transition hover:bg-success/25"
-                onClick={() => setAdjusting(true)}
-                type="button"
-              >
-                <Plus size={14} />
-                + Stock
-              </button>
-              <button
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-default-400 transition hover:text-foreground"
                 onClick={onEdit}
               >
@@ -281,6 +273,14 @@ export function ProductDetailPanel({
                         {isOutOfStock ? "Sin stock" : `Bajo el mínimo (${product.minStock || 5})`}
                       </p>
                     )}
+                    <button
+                      className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl bg-success/15 px-2 py-1.5 text-[11px] font-semibold text-success transition hover:bg-success/25"
+                      onClick={() => setAdjusting(true)}
+                      type="button"
+                    >
+                      <Plus size={12} />
+                      Ajustar
+                    </button>
                   </div>
                 </div>
 
