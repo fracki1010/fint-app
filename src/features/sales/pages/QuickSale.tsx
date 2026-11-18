@@ -261,742 +261,459 @@ export default function QuickSalePage() {
     );
   }
 
+
+  const tierOptions: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
+  const tierLabel = (tier: PriceTier) =>
+    tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : tier === "distributor" ? "Distribuidor" : tier;
+  const tierShort = (tier: PriceTier) =>
+    ({ retail: "R", wholesale: "W", distributor: "D", premium: "P", especial: "E" }[tier] ?? tier.charAt(0).toUpperCase());
+
+  const recentClients = clients.filter((c) => c._id !== genericClient?._id).slice(0, 5);
+  const isGenericClient = selectedClient?._id === genericClient?._id;
+
   return (
-    <div className={`flex min-h-dvh flex-col bg-background ${isDesktop ? "lg:overflow-hidden lg:h-dvh" : ""}`}>
-      {/* Loading overlay during order creation */}
+    <div className="relative flex min-h-dvh flex-col bg-background lg:grid lg:h-dvh lg:grid-cols-[minmax(0,1fr)_420px] lg:overflow-hidden">
       {isCreating && (
         <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
-          <Loader2 className="animate-spin text-primary mb-4" size={48} />
+          <Loader2 className="mb-4 animate-spin text-primary" size={48} />
           <p className="text-sm font-semibold text-foreground">Procesando venta...</p>
           <p className="mt-1 text-xs text-default-500">Generando comprobantes y actualizando stock</p>
         </div>
       )}
-      {/* ── Mobile layout ── */}
-      <div className={`flex min-h-dvh flex-col bg-background ${isDesktop ? "lg:hidden" : ""}`}>
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-divider/60 bg-background/80 px-4 py-3 backdrop-blur-lg">
-        <div className="flex items-center gap-3">
-          {isDesktop && (
+
+      {/* Left column (mobile: first in flow; desktop: left grid column) */}
+      <div className="flex min-w-0 flex-col lg:min-h-0">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-divider/60 bg-background/80 px-4 py-3 backdrop-blur-lg lg:static lg:px-6 lg:py-4">
+          <div className="flex min-w-0 items-center gap-3">
             <button
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:text-foreground"
+              aria-label="Volver"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl text-default-500 hover:text-foreground lg:flex"
               onClick={() => navigate("/")}
+              type="button"
             >
               <ArrowLeft size={18} />
             </button>
-          )}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">Venta Rápida</p>
-            <h1 className="text-base font-bold text-foreground">
-              {itemCount > 0 ? `${itemCount} producto(s)` : "Escaneá productos"}
-            </h1>
-          </div>
-        </div>
-        <button
-          className="flex h-9 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary"
-          onClick={() => setShowScanner(true)}
-        >
-          <ScanBarcode size={15} />
-          {isDesktop ? "Escanear" : ""}
-        </button>
-      </header>
-
-      {/* Search input with dropdown */}
-      <div className="relative border-b border-divider/60 px-4 py-3">
-        <div className="relative">
-          <SearchIcon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
-          <input
-            ref={searchRef}
-            className="corp-input w-full rounded-2xl py-3 pl-9 pr-4 text-sm text-foreground placeholder:text-default-400"
-            placeholder="Buscá producto por nombre, código o SKU..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-            autoComplete="off"
-          />
-        </div>
-
-        {showDropdown && (
-          <div className="absolute left-4 right-4 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
-            {searching ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="animate-spin text-default-400" size={20} />
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="px-4 py-6 text-center text-sm text-default-400">
-                No se encontraron productos
-              </div>
-            ) : (
-              searchResults.map((p) => {
-                const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
-                const hasPresentations = activePresentations.length > 0;
-
-                const baseAvailable = getAvailableStock(p);
-                const baseInCart = items
-                  .filter((i) => i.product._id === p._id && !i.presentation)
-                  .reduce((s, i) => s + i.quantity, 0);
-                const baseOutOfStock = baseAvailable <= 0;
-
-                return (
-                  <div key={p._id} className="border-b border-divider/60 last:border-0">
-                    {/* Product header */}
-                    <div className="flex w-full items-center justify-between px-4 py-3 pointer-events-none">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
-                        <p className="text-[11px] text-default-400">
-                          {p.barcode || p.sku || "Sin código"}
-                        </p>
-                        {/* Tier prices preview */}
-                        <div className="mt-1 flex items-center gap-2 text-[10px]">
-                          {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
-                            const tierPrice = resolveProductPrice(p, tier);
-                            const isActive = tier === priceTier;
-                            return (
-                              <span
-                                key={tier}
-                                className={`rounded px-1.5 py-0.5 font-semibold ${
-                                  isActive
-                                    ? "bg-primary/10 text-primary"
-                                    : tierPrice > 0
-                                      ? "bg-default-100 text-default-500"
-                                      : "hidden"
-                                }`}
-                              >
-                                {tier === "retail" ? "R" : tier === "wholesale" ? "W" : "D"}${formatCurrency(tierPrice, currency)}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      {!hasPresentations && (
-                        <div className="ml-3 shrink-0 text-right">
-                          <p className="text-sm font-bold text-primary">{formatCurrency(resolveProductPrice(p, priceTier), currency)}</p>
-                          <p className={`mt-0.5 text-[11px] font-semibold ${
-                            baseOutOfStock ? "text-danger" : baseAvailable > 0 && baseAvailable <= (p.minStock || 5) ? "text-warning" : "text-success"
-                          }`}>
-                            {baseOutOfStock ? "Sin stock" : `${baseAvailable} en stock`}
-                            {baseInCart > 0 && ` · ${baseInCart} en carrito`}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Presentations — shown as sub-options when any exist */}
-                    {hasPresentations && (
-                      <div className="space-y-1 px-4 pb-3">
-                        {activePresentations.map((pr) => {
-                          const prAvailable = getAvailableStock(p, pr);
-                          const prInCart = items
-                            .filter((i) => i.product._id === p._id && i.presentation?._id === pr._id)
-                            .reduce((s, i) => s + i.quantity, 0);
-                          const prCantAdd = prInCart >= prAvailable || prAvailable <= 0;
-                          const prLowStock = prAvailable > 0 && prAvailable <= (p.minStock || 5);
-
-                          return (
-                            <button
-                              key={pr._id}
-                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
-                                prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"
-                              }`}
-                              disabled={prCantAdd}
-                              onMouseDown={() => {
-                                if (!prCantAdd) addProductToCart(p, pr);
-                              }}
-                            >
-                              <div className="min-w-0 flex-1">
-                                <span className="font-semibold text-foreground">{pr.name}</span>
-                                <span className="ml-2 text-default-400">
-                                  {pr.equivalentQty} {pr.unitOfMeasure || p.unitOfMeasure || "u."}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[11px] font-semibold ${prAvailable <= 0 ? "text-danger" : prLowStock ? "text-warning" : "text-success"}`}>
-                                  {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}
-                                  {prInCart > 0 && ` · ${prInCart} en carrito`}
-                                </span>
-                                <span className="text-sm font-bold text-primary">{formatCurrency(pr.price, currency)}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Client selector */}
-      <div className="border-b border-divider/60 px-4 py-3">
-        <button
-          className="flex w-full items-center gap-2 text-left"
-          onClick={() => setShowClientSearch(!showClientSearch)}
-        >
-          <User size={15} className="shrink-0 text-default-400" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-default-500">Cliente</p>
-              <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
-              <div className="relative">
-                <button
-                  className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                    tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowTierMenu(!showTierMenu);
-                  }}
-                >
-                  ▼
-                </button>
-                {showTierMenu && (
-                  <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
-                    {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
-                      const active = (overrideTier || clientPriceTier) === tier;
-                      return (
-                        <button
-                          key={tier}
-                          className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition-colors ${
-                            active
-                              ? "bg-primary/10 text-primary"
-                              : "text-default-500 hover:bg-content2/60"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOverrideTier(tier);
-                            setShowTierMenu(false);
-                          }}
-                        >
-                          <Tags size={12} />
-                          <span>{tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}</span>
-                          {active && <span className="ml-auto text-primary">✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold text-foreground">Venta rápida</h1>
+              <p className="text-xs text-default-500">
+                {itemCount > 0 ? `${itemCount} producto(s) en el carrito` : "Escaneá o buscá productos"}
+              </p>
             </div>
-            <p className="truncate text-sm font-semibold text-foreground">
-              {selectedClient?.name || "Consumidor Final"}
-              {tierOverridden && (
-                <span className="ml-2 text-[10px] text-warning font-medium">
-                  ({priceTier === "wholesale" ? "Mayorista" : priceTier === "distributor" ? "Distribuidor" : "Minorista"})
-                </span>
-              )}
-            </p>
           </div>
-          <span className="text-xs text-primary">Cambiar</span>
-        </button>
+          <button
+            aria-label="Escanear código"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary transition hover:bg-primary/20"
+            onClick={() => setShowScanner(true)}
+            type="button"
+          >
+            <ScanBarcode size={15} />
+            <span className="hidden lg:inline">Escanear</span>
+          </button>
+        </header>
 
-        {/* Quick-select: recent clients */}
-        {!showClientSearch && (() => {
-          const recentClients = clients
-            .filter((c) => c._id !== genericClient?._id)
-            .slice(0, 5);
-          if (recentClients.length === 0) return null;
-          const isGeneric = selectedClient?._id === genericClient?._id;
-          return (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {isGeneric && recentClients.map((c) => (
-                <button
-                  key={c._id}
-                  className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-600 transition hover:border-primary/30 hover:text-primary"
-                  onClick={() => { setSelectedClient(c); }}
-                >
-                  {c.name}
-                </button>
-              ))}
-              {!isGeneric && (
-                <button
-                  className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-500 transition hover:border-primary/30 hover:text-primary"
-                  onClick={() => { setSelectedClient(genericClient); }}
-                >
-                  Consumidor Final
-                </button>
-              )}
-            </div>
-          );
-        })()}
-
-        {showClientSearch && (
-          <div className="mt-3">
-            <div className="relative">
-              <SearchIcon size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
-              <input
-                className="corp-input w-full rounded-xl py-2.5 pl-9 pr-3 text-sm"
-                placeholder="Buscar cliente..."
-                value={clientSearch}
-                onChange={(e) => setClientSearch(e.target.value)}
-                autoFocus
-              />
-            </div>
-            {clientSearch && (
-              <div className="mt-2 max-h-40 overflow-y-auto rounded-xl border border-divider/70 bg-content1 shadow-lg">
-                {filteredClients
-                  .filter((c) => c.name !== "Consumidor Final" || c.phone !== "0000000000")
-                  .slice(0, 10)
-                  .map((c) => (
-                    <button
-                      key={c._id}
-                      className="w-full border-b border-divider/60 px-4 py-2.5 text-left text-sm hover:bg-content2/60 last:border-0"
-                      onClick={() => {
-                        setSelectedClient(c);
-                        setShowClientSearch(false);
-                        setClientSearch("");
-                      }}
-                    >
-                      <span className="font-semibold text-foreground">{c.name}</span>
-                      <span className="ml-2 text-xs text-default-400">{c.phone}</span>
-                    </button>
-                  ))}
-                <button
-                  className="w-full px-4 py-2.5 text-left text-sm font-semibold text-primary hover:bg-content2/60"
-                  onClick={() => {
-                    setSelectedClient(genericClient);
-                    setShowClientSearch(false);
-                    setClientSearch("");
-                  }}
-                >
-                  Usar Consumidor Final
-                </button>
-              </div>
-            )}
+        {/* Search with dropdown */}
+        <div className="relative border-b border-divider/60 px-4 py-3 lg:px-6 lg:py-4">
+          <div className="relative">
+            <SearchIcon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
+            <input
+              ref={searchRef}
+              autoComplete="off"
+              className="corp-input w-full rounded-2xl py-3 pl-9 pr-4 text-sm text-foreground placeholder:text-default-400"
+              placeholder="Buscá producto por nombre, código o SKU..."
+              value={searchQuery}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+            />
           </div>
-        )}
-      </div>
 
-      {/* Items list */}
-      <div className="flex-1 px-4 py-3">
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-default-400">
-            <ShoppingCart size={40} className="mb-3" />
-            <p className="text-sm font-semibold text-foreground">Carrito vacío</p>
-            <p className="mt-1 text-xs">Buscá productos arriba para comenzar</p>
-          </div>
-        ) : (
-          <>
-            {stockErrors.length > 0 && (
-              <div className="mb-3 rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3">
-                <p className="text-xs font-bold text-danger">
-                  Stock insuficiente en {stockErrors.length} producto(s)
-                </p>
-                {stockErrors.map((e) => (
-                  <p key={e.productId} className="mt-1 text-xs text-danger/80">
-                    {e.productName}: pediste {e.requested}, disponible {e.available}
-                  </p>
-                ))}
-              </div>
-            )}
-            <div className="space-y-2">
-              {items.map((item) => {
-                const available = getAvailableStock(item.product, item.presentation);
-                const error = stockErrors.find(
-                  (e) =>
-                    e.productId === item.product._id &&
-                    (item.presentation ? e.productName.includes(item.presentation.name) : true),
-                );
-                const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                const itemPrice = calcItemPrice(item, priceTier);
-                return (
-                  <CartItem
-                    key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                    item={item}
-                    currency={currency}
-                    available={available}
-                    error={error}
-                    isWarning={isWarning}
-                    itemPrice={itemPrice}
-                    onUpdateQuantity={updateQuantity}
-                    onRemove={removeItem}
-                    onTierChange={updateItemTier}
-                  />
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Credit Limit Warning */}
-      {creditCheck.isWarning && creditCheck.creditStatus && (
-        <div className="px-4 pt-2">
-          <CreditLimitAlert
-            creditStatus={creditCheck.creditStatus}
-            currency={currency}
-            showDismiss={false}
-            variant="banner"
-          />
-        </div>
-      )}
-
-      {/* Voucher Selection */}
-      {items.length > 0 && !isSimple && (
-        <div className="px-4 py-3 border-t border-divider/60">
-          <VoucherSelector
-            selectedTypes={selectedVoucherTypes}
-            onChange={setSelectedVoucherTypes}
-            paymentStatus="Pagado"
-          />
-        </div>
-      )}
-
-      {/* Payment + total */}
-      <div className="sticky bottom-0 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg space-y-3">
-        <PaymentSummary
-          splits={splits}
-          onSplitsChange={setSplits}
-          subtotal={subtotal}
-          tax={tax}
-          total={total}
-          currency={currency}
-          settings={settings}
-          onCheckout={handleFinalize}
-          isCreating={isCreating}
-          canFinalize={canFinalize}
-          isSimple={isSimple}
-        />
-      </div>
-
-      </div>
-
-      {/* ── Desktop layout ── */}
-      {isDesktop && (
-        <div className="hidden lg:flex h-dvh overflow-hidden">
-          {/* Left panel: Search + Items */}
-          <div className="flex flex-1 flex-col min-w-0">
-            {/* Header */}
-            <header className="flex items-center justify-between border-b border-divider/60 bg-background/80 px-6 py-4 backdrop-blur-lg shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-default-500 hover:text-foreground"
-                  onClick={() => navigate("/")}
-                >
-                  <ArrowLeft size={18} />
-                </button>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-default-400">Venta Rápida</p>
-                  <h1 className="text-base font-bold text-foreground">
-                    {itemCount > 0 ? `${itemCount} producto(s)` : "Escaneá productos"}
-                  </h1>
+          {showDropdown && (
+            <div className="absolute left-4 right-4 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl lg:left-6 lg:right-6">
+              {searching ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="animate-spin text-default-400" size={20} />
                 </div>
-              </div>
-              <button
-                className="flex h-9 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-xs font-bold text-primary"
-                onClick={() => setShowScanner(true)}
-              >
-                <ScanBarcode size={15} />
-                Escanear
-              </button>
-            </header>
+              ) : searchResults.length === 0 ? (
+                <div className="px-4 py-6 text-center text-sm text-default-500">No se encontraron productos</div>
+              ) : (
+                searchResults.map((p) => {
+                  const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
+                  const hasPresentations = activePresentations.length > 0;
+                  const baseAvailable = getAvailableStock(p);
+                  const baseInCart = items
+                    .filter((i) => i.product._id === p._id && !i.presentation)
+                    .reduce((s, i) => s + i.quantity, 0);
+                  const baseOutOfStock = baseAvailable <= 0;
 
-            {/* Search + Results */}
-            <div className="relative border-b border-divider/60 px-6 py-4 shrink-0">
-              <div className="relative">
-                <SearchIcon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
-                <input
-                  ref={searchRef}
-                  className="corp-input w-full rounded-2xl py-3 pl-9 pr-4 text-sm text-foreground placeholder:text-default-400"
-                  placeholder="Buscá producto por nombre, código o SKU..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                  autoComplete="off"
-                />
-              </div>
-
-              {showDropdown && (
-                <div className="absolute left-6 right-6 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
-                  {searching ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="animate-spin text-default-400" size={20} />
-                    </div>
-                  ) : searchResults.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-sm text-default-400">No se encontraron productos</div>
-                  ) : (
-                    searchResults.map((p) => {
-                      const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
-                      const hasPresentations = activePresentations.length > 0;
-                      return (
-                        <div key={p._id} className="border-b border-divider/60 last:border-0">
-                          <div className="flex w-full items-center justify-between px-4 py-3 pointer-events-none">
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
-                              <p className="text-[11px] text-default-400">{p.barcode || p.sku || "Sin código"}</p>
-                              <div className="mt-1 flex items-center gap-2 text-[10px]">
-                                {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
-                                  const tierPrice = resolveProductPrice(p, tier);
-                                  const isActive = tier === priceTier;
-                                  return (
-                                    <span key={tier} className={`rounded px-1.5 py-0.5 font-semibold ${isActive ? "bg-primary/10 text-primary" : tierPrice > 0 ? "bg-default-100 text-default-500" : "hidden"}`}>
-                                      {tier === "retail" ? "R" : tier === "wholesale" ? "W" : "D"} {formatCurrency(tierPrice, currency)}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            </div>
+                  return (
+                    <div key={p._id} className="border-b border-divider/60 last:border-0">
+                      <div className="pointer-events-none flex w-full items-center justify-between px-4 py-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
+                          <p className="text-xs text-default-500">{p.barcode || p.sku || "Sin código"}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                            {tierOptions.map((tier) => {
+                              const tierPrice = resolveProductPrice(p, tier);
+                              const isActive = tier === priceTier;
+                              if (!isActive && tierPrice <= 0) return null;
+                              return (
+                                <span
+                                  key={tier}
+                                  className={`rounded px-1.5 py-0.5 font-semibold tabular-nums ${
+                                    isActive ? "bg-primary/10 text-primary" : "bg-default-100 text-default-500"
+                                  }`}
+                                >
+                                  {tierShort(tier)} {formatCurrency(tierPrice, currency)}
+                                </span>
+                              );
+                            })}
                           </div>
-
-                          {hasPresentations && (
-                            <div className="space-y-1 px-4 pb-3">
-                              {activePresentations.map((pr) => {
-                                const prAvailable = getAvailableStock(p, pr);
-                                const prInCart = items.filter((i) => i.product._id === p._id && i.presentation?._id === pr._id).reduce((s, i) => s + i.quantity, 0);
-                                const prCantAdd = prInCart >= prAvailable || prAvailable <= 0;
-                                const prLowStock = prAvailable > 0 && prAvailable <= (p.minStock || 5);
-                                return (
-                                  <button key={pr._id}
-                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"}`}
-                                    disabled={prCantAdd}
-                                    onMouseDown={() => { if (!prCantAdd) addProductToCart(p, pr); }}
-                                  >
-                                    <div className="min-w-0 flex-1">
-                                      <span className="font-semibold text-foreground">{pr.name}</span>
-                                      <span className="ml-2 text-default-400">{pr.equivalentQty} {pr.unitOfMeasure || p.unitOfMeasure || "u."}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className={`text-[11px] font-semibold ${prAvailable <= 0 ? "text-danger" : prLowStock ? "text-warning" : "text-success"}`}>
-                                        {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}{prInCart > 0 && ` · ${prInCart} en carrito`}
-                                      </span>
-                                      <span className="text-sm font-bold text-primary">{formatCurrency(pr.price, currency)}</span>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-            </div>
+                        {!hasPresentations && (
+                          <div className="ml-3 shrink-0 text-right">
+                            <p className="text-sm font-bold tabular-nums text-primary">
+                              {formatCurrency(resolveProductPrice(p, priceTier), currency)}
+                            </p>
+                            <p
+                              className={`mt-0.5 text-[11px] font-semibold ${
+                                baseOutOfStock
+                                  ? "text-danger"
+                                  : baseAvailable <= (p.minStock || 5)
+                                    ? "text-warning"
+                                    : "text-success"
+                              }`}
+                            >
+                              {baseOutOfStock ? "Sin stock" : `${baseAvailable} en stock`}
+                              {baseInCart > 0 && ` · ${baseInCart} en carrito`}
+                            </p>
+                          </div>
+                        )}
+                      </div>
 
-            {/* Client selector */}
-            <div className="border-b border-divider/60 px-6 py-3 shrink-0">
-              <button className="flex w-full items-center gap-2 text-left" onClick={() => setShowClientSearch(!showClientSearch)}>
-                <User size={15} className="shrink-0 text-default-400" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-default-500">Cliente</p>
-                    <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
-                    <div className="relative">
-                      <button
-                        className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                          tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowTierMenu(!showTierMenu);
-                        }}
-                      >
-                        ▼
-                      </button>
-                      {showTierMenu && (
-                        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
-                          {(["retail", "wholesale", "distributor", "premium", "especial"] as PriceTier[]).map((tier) => {
-                            const active = (overrideTier || clientPriceTier) === tier;
+                      {hasPresentations && (
+                        <div className="space-y-1 px-4 pb-3">
+                          {activePresentations.map((pr) => {
+                            const prAvailable = getAvailableStock(p, pr);
+                            const prInCart = items
+                              .filter((i) => i.product._id === p._id && i.presentation?._id === pr._id)
+                              .reduce((s, i) => s + i.quantity, 0);
+                            const prCantAdd = prInCart >= prAvailable || prAvailable <= 0;
+                            const prLowStock = prAvailable > 0 && prAvailable <= (p.minStock || 5);
+
                             return (
                               <button
-                                key={tier}
-                                className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition-colors ${
-                                  active
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-default-500 hover:bg-content2/60"
+                                key={pr._id}
+                                className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-xs transition ${
+                                  prCantAdd ? "cursor-not-allowed opacity-50" : "bg-content2/30 hover:bg-content2/60"
                                 }`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOverrideTier(tier);
-                                  setShowTierMenu(false);
+                                disabled={prCantAdd}
+                                onMouseDown={() => {
+                                  if (!prCantAdd) addProductToCart(p, pr);
                                 }}
+                                type="button"
                               >
-                                <Tags size={12} />
-                                <span>{tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : "Distribuidor"}</span>
-                                {active && <span className="ml-auto text-primary">✓</span>}
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-semibold text-foreground">{pr.name}</span>
+                                  <span className="ml-2 text-default-500">
+                                    {pr.equivalentQty} {pr.unitOfMeasure || p.unitOfMeasure || "u."}
+                                  </span>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <span
+                                    className={`text-[11px] font-semibold ${
+                                      prAvailable <= 0 ? "text-danger" : prLowStock ? "text-warning" : "text-success"
+                                    }`}
+                                  >
+                                    {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}
+                                    {prInCart > 0 && ` · ${prInCart} en carrito`}
+                                  </span>
+                                  <span className="text-sm font-bold tabular-nums text-primary">
+                                    {formatCurrency(pr.price, currency)}
+                                  </span>
+                                </div>
                               </button>
                             );
                           })}
                         </div>
                       )}
                     </div>
-                  </div>
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {selectedClient?.name || "Consumidor Final"}
-                    {tierOverridden && (
-                      <span className="ml-2 text-[10px] text-warning font-medium">
-                        ({priceTier === "wholesale" ? "Mayorista" : priceTier === "distributor" ? "Distribuidor" : "Minorista"})
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <span className="text-xs text-primary">Cambiar</span>
-              </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
 
-              {/* Quick-select chips (desktop) */}
-              {!showClientSearch && (() => {
-                const recentClients = clients.filter((c) => c._id !== genericClient?._id).slice(0, 5);
-                if (recentClients.length === 0) return null;
-                const isGeneric = selectedClient?._id === genericClient?._id;
-                return (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {isGeneric && recentClients.map((c) => (
-                      <button key={c._id} className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-600 transition hover:border-primary/30 hover:text-primary" onClick={() => { setSelectedClient(c); }}>
-                        {c.name}
+        {/* Client */}
+        <div className="border-b border-divider/60 px-4 py-3 lg:px-6">
+          <button
+            className="flex w-full items-center gap-2 text-left"
+            onClick={() => setShowClientSearch(!showClientSearch)}
+            type="button"
+          >
+            <User size={15} className="shrink-0 text-default-400" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-default-500">Cliente</p>
+                <TierBadge tier={priceTier} size="sm" tierConfig={settings?.priceTierConfig} />
+                <div className="relative">
+                  <button
+                    aria-label="Cambiar lista de precios"
+                    className={`min-h-6 px-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowTierMenu(!showTierMenu);
+                    }}
+                    type="button"
+                  >
+                    ▼
+                  </button>
+                  {showTierMenu && (
+                    <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-divider/20 bg-content1 py-1 shadow-xl">
+                      {tierOptions.map((tier) => {
+                        const active = (overrideTier || clientPriceTier) === tier;
+                        return (
+                          <button
+                            key={tier}
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                              active ? "bg-primary/10 text-primary" : "text-default-500 hover:bg-content2/60"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOverrideTier(tier);
+                              setShowTierMenu(false);
+                            }}
+                            type="button"
+                          >
+                            <Tags size={12} />
+                            <span>{tierLabel(tier)}</span>
+                            {active && <span className="ml-auto text-primary">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {selectedClient?.name || "Consumidor Final"}
+                {tierOverridden && (
+                  <span className="ml-2 text-[11px] font-medium text-warning">({tierLabel(priceTier)})</span>
+                )}
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-primary">Cambiar</span>
+          </button>
+
+          {!showClientSearch && recentClients.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {isGenericClient
+                ? recentClients.map((c) => (
+                    <button
+                      key={c._id}
+                      className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-600 transition hover:border-primary/30 hover:text-primary"
+                      onClick={() => setSelectedClient(c)}
+                      type="button"
+                    >
+                      {c.name}
+                    </button>
+                  ))
+                : (
+                    <button
+                      className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-500 transition hover:border-primary/30 hover:text-primary"
+                      onClick={() => setSelectedClient(genericClient)}
+                      type="button"
+                    >
+                      Consumidor Final
+                    </button>
+                  )}
+            </div>
+          )}
+
+          {showClientSearch && (
+            <div className="mt-3">
+              <div className="relative">
+                <SearchIcon size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
+                <input
+                  autoFocus
+                  className="corp-input w-full rounded-xl py-2.5 pl-9 pr-3 text-sm"
+                  placeholder="Buscar cliente..."
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                />
+              </div>
+              {clientSearch && (
+                <div className="mt-2 max-h-48 overflow-y-auto rounded-xl border border-divider/70 bg-content1 shadow-lg">
+                  {filteredClients
+                    .filter((c) => c.name !== "Consumidor Final" || c.phone !== "0000000000")
+                    .slice(0, 10)
+                    .map((c) => (
+                      <button
+                        key={c._id}
+                        className="w-full border-b border-divider/60 px-4 py-2.5 text-left text-sm last:border-0 hover:bg-content2/60"
+                        onClick={() => {
+                          setSelectedClient(c);
+                          setShowClientSearch(false);
+                          setClientSearch("");
+                        }}
+                        type="button"
+                      >
+                        <span className="font-semibold text-foreground">{c.name}</span>
+                        <span className="ml-2 text-xs text-default-500">{c.phone}</span>
                       </button>
                     ))}
-                    {!isGeneric && (
-                      <button className="rounded-full border border-divider/30 bg-content2/40 px-2.5 py-1 text-[11px] font-semibold text-default-500 transition hover:border-primary/30 hover:text-primary" onClick={() => { setSelectedClient(genericClient); }}>
-                        Consumidor Final
-                      </button>
-                    )}
+                  <button
+                    className="w-full px-4 py-2.5 text-left text-sm font-semibold text-primary hover:bg-content2/60"
+                    onClick={() => {
+                      setSelectedClient(genericClient);
+                      setShowClientSearch(false);
+                      setClientSearch("");
+                    }}
+                    type="button"
+                  >
+                    Usar Consumidor Final
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Cart */}
+        <div className="flex-1 px-4 py-3 lg:min-h-0 lg:overflow-y-auto lg:px-6 lg:py-4">
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center text-default-500">
+              <ShoppingCart size={40} className="mb-3" />
+              <p className="text-sm font-semibold text-foreground">Carrito vacío</p>
+              <p className="mt-1 text-xs">Buscá productos arriba para comenzar</p>
+            </div>
+          ) : (
+            <>
+              {stockErrors.length > 0 && (
+                <div className="mb-3 rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3">
+                  <p className="text-xs font-bold text-danger">Stock insuficiente en {stockErrors.length} producto(s)</p>
+                  {stockErrors.map((e) => (
+                    <p key={e.productId} className="mt-1 text-xs text-danger/80">
+                      {e.productName}: pediste {e.requested}, disponible {e.available}
+                    </p>
+                  ))}
+                </div>
+              )}
+              <div className="space-y-2">
+                {items.map((item) => {
+                  const available = getAvailableStock(item.product, item.presentation);
+                  const error = stockErrors.find(
+                    (e) =>
+                      e.productId === item.product._id &&
+                      (item.presentation ? e.productName.includes(item.presentation.name) : true),
+                  );
+                  const isWarning =
+                    !!error ||
+                    (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
+                  const itemPrice = calcItemPrice(item, priceTier);
+                  return (
+                    <CartItem
+                      key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                      item={item}
+                      currency={currency}
+                      available={available}
+                      error={error}
+                      isWarning={isWarning}
+                      itemPrice={itemPrice}
+                      onUpdateQuantity={updateQuantity}
+                      onRemove={removeItem}
+                      onTierChange={updateItemTier}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Right column (mobile: after the cart; desktop: summary column) */}
+      <aside className="flex flex-col border-t border-divider/60 bg-content2/20 lg:min-h-0 lg:border-l lg:border-t-0">
+        <div className="hidden flex-1 overflow-y-auto px-6 py-6 lg:block">
+          <h2 className="mb-4 text-sm font-bold text-foreground">Resumen del pedido</h2>
+          {items.length === 0 ? (
+            <p className="py-8 text-center text-sm text-default-500">Agregá productos al carrito</p>
+          ) : (
+            <div className="space-y-3">
+              {items.map((item) => {
+                const itemPrice = calcItemPrice(item, priceTier);
+                return (
+                  <div
+                    key={`sum-${item.product._id}-${item.presentation?._id || "base"}`}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-foreground">
+                        {item.product.name}
+                        {item.presentation && (
+                          <span className="text-xs font-normal text-default-500"> ({item.presentation.name})</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-default-500">
+                        {item.quantity} × {formatCurrency(itemPrice, currency)}
+                      </p>
+                    </div>
+                    <p className="ml-3 font-bold tabular-nums text-foreground">
+                      {formatCurrency(itemPrice * item.quantity, currency)}
+                    </p>
                   </div>
                 );
-              })()}
-
-              {showClientSearch && (
-                <div className="mt-3">
-                  <div className="relative">
-                    <SearchIcon size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400" />
-                    <input className="corp-input w-full rounded-xl py-2.5 pl-9 pr-3 text-sm" placeholder="Buscar cliente..." value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} autoFocus />
-                  </div>
-                  {clientSearch && (
-                    <div className="mt-2 max-h-40 overflow-y-auto rounded-xl border border-divider/70 bg-content1 shadow-lg">
-                      {filteredClients.filter((c) => c.name !== "Consumidor Final" || c.phone !== "0000000000").slice(0, 10).map((c) => (
-                        <button key={c._id} className="w-full border-b border-divider/60 px-4 py-2.5 text-left text-sm hover:bg-content2/60 last:border-0" onClick={() => { setSelectedClient(c); setShowClientSearch(false); setClientSearch(""); }}>
-                          <span className="font-semibold text-foreground">{c.name}</span>
-                          <span className="ml-2 text-xs text-default-400">{c.phone}</span>
-                        </button>
-                      ))}
-                      <button className="w-full px-4 py-2.5 text-left text-sm font-semibold text-primary hover:bg-content2/60" onClick={() => { setSelectedClient(genericClient); setShowClientSearch(false); setClientSearch(""); }}>
-                        Usar Consumidor Final
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              })}
             </div>
-
-            {/* Items list */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center text-default-400">
-                  <ShoppingCart size={40} className="mb-3" />
-                  <p className="text-sm font-semibold text-foreground">Carrito vacío</p>
-                  <p className="mt-1 text-xs">Buscá productos arriba para comenzar</p>
-                </div>
-              ) : (
-                <>
-                  {stockErrors.length > 0 && (
-                    <div className="mb-3 rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3">
-                      <p className="text-xs font-bold text-danger">Stock insuficiente en {stockErrors.length} producto(s)</p>
-                      {stockErrors.map((e) => <p key={e.productId} className="mt-1 text-xs text-danger/80">{e.productName}: pediste {e.requested}, disponible {e.available}</p>)}
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    {items.map((item) => {
-                      const available = getAvailableStock(item.product, item.presentation);
-                      const error = stockErrors.find((e) => e.productId === item.product._id && (item.presentation ? e.productName.includes(item.presentation.name) : true));
-                       const isWarning = !!error || (available > 0 && available <= (item.product.minStock || 5) && item.quantity >= available * 0.8);
-                       const itemPrice = calcItemPrice(item, priceTier);
-                       return (
-                          <CartItem
-                            key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                            item={item}
-                            currency={currency}
-                            available={available}
-                            error={error}
-                            isWarning={isWarning}
-                            itemPrice={itemPrice}
-                            onUpdateQuantity={updateQuantity}
-                            onRemove={removeItem}
-                            onTierChange={updateItemTier}
-                          />
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Right panel: Order summary + Payment */}
-          <div className="w-[420px] shrink-0 border-l border-divider/60 bg-content2/20 flex flex-col">
-            {/* Order summary */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-              <h2 className="text-sm font-bold text-foreground mb-4">Resumen del pedido</h2>
-              {items.length === 0 ? (
-                <p className="text-sm text-default-400 text-center py-8">Agregá productos al carrito</p>
-              ) : (
-                <div className="space-y-3">
-                   {items.map((item) => {
-                    const itemPrice = calcItemPrice(item, priceTier);
-                    return (
-                      <div key={`sum-${item.product._id}-${item.presentation?._id || "base"}`} className="flex items-center justify-between text-sm">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-foreground">
-                            {item.product.name}
-                            {item.presentation && <span className="text-xs font-normal text-default-400"> ({item.presentation.name})</span>}
-                          </p>
-                          <p className="text-xs text-default-400">{item.quantity} × {formatCurrency(itemPrice, currency)}</p>
-                        </div>
-                        <p className="ml-3 font-bold text-foreground">{formatCurrency(itemPrice * item.quantity, currency)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Credit Limit Warning */}
-            {creditCheck.isWarning && creditCheck.creditStatus && (
-              <div className="px-6 pt-4">
-                <CreditLimitAlert
-                  creditStatus={creditCheck.creditStatus}
-                  currency={currency}
-                  showDismiss={false}
-                  variant="banner"
-                />
-              </div>
-            )}
-
-            {/* Voucher Selection */}
-            {items.length > 0 && !isSimple && (
-              <div className="px-6 py-4 border-t border-divider/60">
-                <VoucherSelector
-                  selectedTypes={selectedVoucherTypes}
-                  onChange={setSelectedVoucherTypes}
-                  paymentStatus="Pagado"
-                />
-              </div>
-            )}
-
-            {/* Payment + total */}
-            <div className="border-t border-divider/60 px-6 py-5 space-y-4 bg-background/80">
-              <PaymentSummary
-                splits={splits}
-                onSplitsChange={setSplits}
-                subtotal={subtotal}
-                tax={tax}
-                total={total}
-                currency={currency}
-                settings={settings}
-                onCheckout={handleFinalize}
-                isCreating={isCreating}
-                canFinalize={canFinalize}
-                isSimple={isSimple}
-              />
-            </div>
-          </div>
+          )}
         </div>
-      )}
+
+        {creditCheck.isWarning && creditCheck.creditStatus && (
+          <div className="px-4 pt-2 lg:px-6 lg:pt-4">
+            <CreditLimitAlert
+              creditStatus={creditCheck.creditStatus}
+              currency={currency}
+              showDismiss={false}
+              variant="banner"
+            />
+          </div>
+        )}
+
+        {items.length > 0 && !isSimple && (
+          <div className="border-t border-divider/60 px-4 py-3 lg:px-6 lg:py-4">
+            <VoucherSelector
+              selectedTypes={selectedVoucherTypes}
+              onChange={setSelectedVoucherTypes}
+              paymentStatus="Pagado"
+            />
+          </div>
+        )}
+
+        <div className="sticky bottom-[4.5rem] z-10 space-y-3 border-t border-divider/60 bg-background/95 px-4 py-4 backdrop-blur-lg lg:static lg:bottom-auto lg:space-y-4 lg:bg-background/80 lg:px-6 lg:py-5 lg:backdrop-blur-none">
+          <PaymentSummary
+            splits={splits}
+            onSplitsChange={setSplits}
+            subtotal={subtotal}
+            tax={tax}
+            total={total}
+            currency={currency}
+            settings={settings}
+            onCheckout={handleFinalize}
+            isCreating={isCreating}
+            canFinalize={canFinalize}
+            isSimple={isSimple}
+          />
+        </div>
+      </aside>
 
       <BarcodeScanner
         isOpen={showScanner}
-        onClose={() => { setShowScanner(false); stopCameraScanner(); }}
+        onClose={() => {
+          setShowScanner(false);
+          stopCameraScanner();
+        }}
         onScan={() => {}}
         setVideoContainer={setVideoContainer}
         state={scannerState}
