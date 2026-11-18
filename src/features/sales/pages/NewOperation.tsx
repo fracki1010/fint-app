@@ -9,8 +9,8 @@ import {
   Loader2,
   Plus,
   Minus,
-  Receipt,
   ScanBarcode,
+  X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -41,6 +41,12 @@ interface CartItem {
   quantity: number;
 }
 
+const PAYMENT_METHODS: PaymentMethod[] = ["cash", "card", "transfer", "mercadopago", "check", "other"];
+
+const LABEL_CLASS = "mb-2 block text-sm font-semibold text-foreground";
+const SECTION_HEADING_CLASS = "mb-4 flex items-center gap-3 border-b border-divider/60 pb-3";
+const SECTION_TITLE_CLASS = "text-[15px] font-semibold tracking-tight text-foreground";
+
 export default function NewOperationPage() {
   const navigate = useNavigate();
   const { clients } = useClients();
@@ -54,7 +60,7 @@ export default function NewOperationPage() {
   const [productSearch, setProductSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [notes, setNotes] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [selectedVoucherTypes, setSelectedVoucherTypes] = useState<VoucherType[]>([]);
@@ -119,6 +125,17 @@ export default function NewOperationPage() {
   const taxRate = (settings?.taxRate || 0) / 100;
   const tax = subtotal * taxRate;
   const total = subtotal + tax;
+  const itemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  const voucherPaymentStatus =
+    paymentMethod === "cash" ? "Pagado" : settings?.defaultPaymentStatus || "Pendiente";
+
+  const blockedReason = !selectedClient
+    ? "Elegí un cliente para registrar la venta."
+    : cart.length === 0
+      ? "Agregá al menos un producto."
+      : null;
+  const canRegister = !isCreating && blockedReason === null;
 
   const addToCart = (product: Product, presentation?: Presentation) => {
     if (!canAddProductToCart(cart, product, presentation)) {
@@ -223,7 +240,7 @@ export default function NewOperationPage() {
         salesStatus: settings?.defaultSalesStatus || "Pendiente",
         paymentStatus: paymentMethod === "cash" ? "Pagado" : (settings?.defaultPaymentStatus || "Pendiente"),
         paymentMethod,
-        paymentSplits: [{ method: paymentMethod as PaymentMethod, amount: total }],
+        paymentSplits: [{ method: paymentMethod, amount: total }],
         deliveryStatus: settings?.defaultDeliveryStatus || "Pendiente",
         notes: notes || undefined,
         source: "Dashboard",
@@ -263,438 +280,381 @@ export default function NewOperationPage() {
     }
   };
 
-  return (
-    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-28 font-sans lg:max-w-none lg:px-6 lg:pb-8">
-      <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Link
-              className="app-panel-soft flex h-11 w-11 items-center justify-center rounded-2xl text-default-600 transition hover:text-foreground"
-              to="/"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <div>
-              <div className="section-kicker">Operacion Comercial</div>
-              <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-foreground">
-                Nueva Venta
-              </h1>
-              <p className="mt-2 text-sm text-default-500">
-                Construye el pedido, asocia cliente y confirma el importe.
-              </p>
-            </div>
-          </div>
+  const paymentMethodPicker = (
+    <div>
+      <span className={LABEL_CLASS}>Método de pago</span>
+      <div className="flex flex-wrap gap-2">
+        {PAYMENT_METHODS.map((m) => (
+          <button
+            key={m}
+            aria-pressed={paymentMethod === m}
+            className={`min-h-9 rounded-xl px-3.5 text-xs font-semibold transition ${
+              paymentMethod === m
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
+            }`}
+            onClick={() => setPaymentMethod(m)}
+            type="button"
+          >
+            {getPaymentLabel(m)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
-          <div className="app-panel-soft flex h-11 w-11 items-center justify-center rounded-2xl text-primary">
-            <Receipt size={20} />
+  return (
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background pb-36 font-sans lg:max-w-none lg:px-6 lg:pb-8">
+      <header className="app-topbar sticky top-0 z-10 px-6 pt-6 pb-5">
+        <div className="flex items-center gap-4">
+          <Link
+            aria-label="Volver"
+            className="app-panel-soft flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-default-600 transition hover:text-foreground"
+            to="/"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-foreground">Nueva venta</h1>
+            <p className="mt-1 text-sm text-default-500">Elegí el cliente, sumá productos y cobrá.</p>
           </div>
         </div>
       </header>
 
-      <div className="space-y-5 px-4 py-5 lg:grid lg:grid-cols-12 lg:gap-6 lg:space-y-0 lg:px-0">
-        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start">
-          <div className="mb-4 flex items-center gap-3 border-b border-divider/60 pb-3">
-            <User className="text-primary" size={20} strokeWidth={2.4} />
-            <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
-              Cliente
-            </h2>
-          </div>
+      <div className="space-y-5 px-4 py-5 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0 lg:px-0">
+        <div className="space-y-5 lg:col-span-8">
+          <section className="app-panel rounded-[28px] p-5">
+            <div className={SECTION_HEADING_CLASS}>
+              <User className="text-primary" size={20} strokeWidth={2.4} />
+              <h2 className={SECTION_TITLE_CLASS}>Cliente</h2>
+            </div>
 
-          {!selectedClient ? (
-            <div className="relative">
-              <label
-                className="section-kicker block pb-2"
-                htmlFor="client-search"
-              >
-                Seleccionar
-              </label>
+            {!selectedClient ? (
               <div className="relative">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
-                  size={18}
-                />
-                <input
-                  className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
-                  id="client-search"
-                  placeholder="Buscar por nombre o telefono..."
-                  type="text"
-                  value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)}
-                />
-              </div>
-
-              {filteredClients.length > 0 && (
-                <div className="absolute z-[70] mt-2 max-h-48 w-full overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
-                  {filteredClients.map((c) => (
-                    <button
-                      key={c._id}
-                      className="w-full border-b border-divider/60 px-4 py-3 text-left transition hover:bg-content2/60 last:border-0"
-                      onClick={() => {
-                        setSelectedClient(c);
-                        setClientSearch("");
-                      }}
-                    >
-                      <span className="text-sm font-semibold text-foreground">
-                        {c.name}
-                      </span>
-                      <span className="block pt-1 text-xs text-default-400">
-                        {c.phone}
-                      </span>
-                    </button>
-                  ))}
+                <label className={LABEL_CLASS} htmlFor="client-search">
+                  Buscar cliente
+                </label>
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+                    size={18}
+                  />
+                  <input
+                    autoComplete="off"
+                    className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
+                    id="client-search"
+                    inputMode="search"
+                    placeholder="Nombre o teléfono"
+                    type="text"
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="rounded-[24px] border border-primary/20 bg-primary/8 p-4">
-              <p className="section-kicker">Cliente Asignado</p>
-              <p className="mt-2 text-base font-semibold text-foreground">
-                {selectedClient.name}
-              </p>
-              <p className="mt-1 text-sm text-default-500">
-                {selectedClient.phone}
-              </p>
-              <button
-                className="mt-3 text-xs font-semibold text-danger"
-                onClick={() => setSelectedClient(null)}
-              >
-                Cambiar cliente
-              </button>
-            </div>
-          )}
 
-          <Link
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary/10 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15"
-            to="/clients"
-          >
-            <UserPlus size={18} strokeWidth={2.4} />
-            Nuevo Cliente
-          </Link>
-        </section>
-
-        <section className="app-panel rounded-[28px] p-5 lg:col-span-8 lg:row-span-2">
-          <div className="mb-4 flex items-center gap-3 border-b border-divider/60 pb-3">
-            <Package className="text-primary" size={20} strokeWidth={2.4} />
-            <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
-              Productos
-            </h2>
-          </div>
-
-          <div className="relative">
-            <div className="relative flex gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
-                  size={18}
-                />
-                <input
-                  className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
-                  placeholder="Buscar producto..."
-                  type="text"
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                />
-              </div>
-              <button
-                className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition hover:bg-primary/20"
-                onClick={() => {
-                  setShowScanner(true);
-                  if (!isDesktop) setTimeout(() => startCameraScanner(), 100);
-                }}
-                type="button"
-              >
-                <ScanBarcode size={20} />
-              </button>
-            </div>
-
-            {filteredProducts.length > 0 && (
-              <div className="absolute z-[70] mt-2 max-h-48 w-full overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
-                {filteredProducts.map((p) => {
-                  const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
-                  const singlePresentation = activePresentations.length === 1 ? activePresentations[0] : null;
-                  const hasMultiplePresentations = activePresentations.length > 1;
-
-                  return (
-                    <div key={p._id} className="border-b border-divider/60 last:border-0">
+                {filteredClients.length > 0 && (
+                  <div className="absolute z-[70] mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
+                    {filteredClients.map((c) => (
                       <button
-                        className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
-                          hasMultiplePresentations
-                            ? ""
-                            : getAvailableStock(p, singlePresentation ?? undefined) <= 0
-                              ? "cursor-not-allowed opacity-60"
-                              : "hover:bg-content2/60"
-                        }`}
-                        disabled={!hasMultiplePresentations && getAvailableStock(p, singlePresentation ?? undefined) <= 0}
+                        key={c._id}
+                        className="w-full border-b border-divider/60 px-4 py-3 text-left transition hover:bg-content2/60 last:border-0"
                         onClick={() => {
-                          if (hasMultiplePresentations) return;
-                          if (singlePresentation) addToCart(p, singlePresentation);
-                          else addToCart(p);
+                          setSelectedClient(c);
+                          setClientSearch("");
                         }}
+                        type="button"
                       >
-                        <div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {p.name}
-                          </span>
-                          <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                            SKU {p.sku || "No definido"}
-                          </p>
-                          {!hasMultiplePresentations && (
-                            <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                              Stock {getAvailableStock(p, singlePresentation ?? undefined)}
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-sm font-semibold text-primary">
-                          {formatCompactCurrency(singlePresentation ? singlePresentation.price : (p.price ?? 0), currency)}
-                        </span>
+                        <span className="block text-sm font-semibold text-foreground">{c.name}</span>
+                        <span className="block pt-0.5 text-xs text-default-500">{c.phone}</span>
                       </button>
+                    ))}
+                  </div>
+                )}
 
-                      {hasMultiplePresentations && (
-                        <div className="space-y-1 px-4 pb-3">
-                          {activePresentations.map((pr) => {
-                            const prAvailable = getAvailableStock(p, pr);
-                            const prCantAdd = prAvailable <= 0;
-
-                            return (
-                              <button
-                                key={pr._id}
-                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
-                                  prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60 bg-content2/30"
-                                }`}
-                                disabled={prCantAdd}
-                                onClick={() => {
-                                  if (!prCantAdd) addToCart(p, pr);
-                                }}
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <span className="font-semibold text-foreground">{pr.name}</span>
-                                  <span className="ml-2 text-default-400">
-                                    {pr.equivalentQty} {pr.unitOfMeasure || p.unitOfMeasure || "u."}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-[11px] font-semibold ${prAvailable <= 0 ? "text-danger" : "text-success"}`}>
-                                    {prAvailable <= 0 ? "Sin stock" : `${prAvailable} disp.`}
-                                  </span>
-                                  <span className="text-sm font-bold text-primary">{formatCompactCurrency(pr.price, currency)}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                <Link
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary/10 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15"
+                  to="/clients"
+                >
+                  <UserPlus size={18} strokeWidth={2.4} />
+                  Nuevo cliente
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-content2/60 p-4">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-foreground">{selectedClient.name}</p>
+                  <p className="mt-0.5 text-sm text-default-500">{selectedClient.phone}</p>
+                </div>
+                <button
+                  aria-label="Quitar cliente"
+                  className="flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-danger transition hover:bg-danger/10"
+                  onClick={() => setSelectedClient(null)}
+                  type="button"
+                >
+                  <X size={14} />
+                  Cambiar
+                </button>
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="mt-4 overflow-hidden rounded-[24px] border border-divider/70">
-            <div className="grid grid-cols-[3fr_1.4fr_1.5fr] bg-content2/60 p-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-default-500">
-              <span>Producto</span>
-              <span className="text-center">Cant.</span>
-              <span className="text-right">Total</span>
+          <section className="app-panel rounded-[28px] p-5">
+            <div className={SECTION_HEADING_CLASS}>
+              <Package className="text-primary" size={20} strokeWidth={2.4} />
+              <h2 className={SECTION_TITLE_CLASS}>Productos</h2>
+              <span className="ml-auto text-xs text-default-500">
+                {itemCount} {itemCount === 1 ? "unidad" : "unidades"}
+              </span>
             </div>
 
-            <div className="divide-y divide-divider/70">
-              {cart.length > 0 ? (
-                cart.map((item) => {
-                  const itemPrice = item.presentation?.price ?? item.product.price;
-                  return (
-                    <div
-                      key={`${item.product._id}-${item.presentation?._id || "base"}`}
-                      className="grid grid-cols-[3fr_1.4fr_1.5fr] items-center gap-2 p-3"
-                    >
-                      <div>
-                        <h4 className="text-[13px] font-semibold text-foreground">
-                          {item.product.name}
-                          {item.presentation && (
-                            <span className="ml-1 text-[10px] font-normal text-default-400">({item.presentation.name})</span>
-                          )}
-                        </h4>
-                        <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                          SKU {item.product.sku || "N/A"}
-                        </p>
-                        <p className="pt-1 text-[10px] uppercase tracking-[0.16em] text-default-400">
-                          Disponible {getAvailableStock(item.product, item.presentation)}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-center gap-1 rounded-xl bg-content2/70 py-1 border border-divider/60">
+            <div className="relative">
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <Search
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-default-400"
+                    size={18}
+                  />
+                  <input
+                    autoComplete="off"
+                    className="corp-input w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-foreground"
+                    placeholder="Buscar por nombre o SKU"
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                  />
+                </div>
+                <button
+                  aria-label="Escanear código"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition hover:bg-primary/20"
+                  onClick={() => {
+                    setShowScanner(true);
+                    if (!isDesktop) setTimeout(() => startCameraScanner(), 100);
+                  }}
+                  type="button"
+                >
+                  <ScanBarcode size={20} />
+                </button>
+              </div>
+
+              {filteredProducts.length > 0 && (
+                <div className="absolute z-[70] mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-divider/70 bg-content1 shadow-xl">
+                  {filteredProducts.map((p) => {
+                    const activePresentations = (p.presentations || []).filter((pr) => pr.isActive !== false);
+                    const singlePresentation = activePresentations.length === 1 ? activePresentations[0] : null;
+                    const hasMultiplePresentations = activePresentations.length > 1;
+                    const singleAvailable = getAvailableStock(p, singlePresentation ?? undefined);
+
+                    return (
+                      <div key={p._id} className="border-b border-divider/60 last:border-0">
                         <button
-                          className="text-default-400 hover:text-danger"
-                          onClick={() => updateQuantity(item.product._id, -1, item.presentation?._id)}
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition ${
+                            hasMultiplePresentations
+                              ? ""
+                              : singleAvailable <= 0
+                                ? "cursor-not-allowed opacity-60"
+                                : "hover:bg-content2/60"
+                          }`}
+                          disabled={!hasMultiplePresentations && singleAvailable <= 0}
+                          onClick={() => {
+                            if (hasMultiplePresentations) return;
+                            if (singlePresentation) addToCart(p, singlePresentation);
+                            else addToCart(p);
+                          }}
+                          type="button"
                         >
-                          <Minus size={14} />
+                          <div className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-foreground">{p.name}</span>
+                            <span className="block pt-0.5 text-xs text-default-500">
+                              SKU {p.sku || "no definido"}
+                              {!hasMultiplePresentations && ` · Stock ${singleAvailable}`}
+                            </span>
+                          </div>
+                          <span className="shrink-0 text-sm font-semibold text-primary">
+                            {formatCompactCurrency(singlePresentation ? singlePresentation.price : (p.price ?? 0), currency)}
+                          </span>
                         </button>
-                        <span className="w-6 text-center text-[13px] font-semibold">
-                          {item.quantity}
-                        </span>
-                        <button
-                          className="text-default-400 hover:text-primary"
-                          onClick={() => updateQuantity(item.product._id, 1, item.presentation?._id)}
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <div className="text-right text-[14px] font-semibold text-foreground">
-                        {formatCompactCurrency(
-                          itemPrice * item.quantity,
-                          currency,
+
+                        {hasMultiplePresentations && (
+                          <div className="space-y-1 px-4 pb-3">
+                            {activePresentations.map((pr) => {
+                              const prAvailable = getAvailableStock(p, pr);
+                              const prCantAdd = prAvailable <= 0;
+
+                              return (
+                                <button
+                                  key={pr._id}
+                                  className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-xl bg-content2/30 px-3 py-2 text-left text-xs transition ${
+                                    prCantAdd ? "cursor-not-allowed opacity-50" : "hover:bg-content2/60"
+                                  }`}
+                                  disabled={prCantAdd}
+                                  onClick={() => {
+                                    if (!prCantAdd) addToCart(p, pr);
+                                  }}
+                                  type="button"
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <span className="font-semibold text-foreground">{pr.name}</span>
+                                    <span className="ml-2 text-default-500">
+                                      {pr.equivalentQty} {pr.unitOfMeasure || p.unitOfMeasure || "u."}
+                                    </span>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-2">
+                                    <span className={`text-[11px] font-semibold ${prCantAdd ? "text-danger" : "text-success"}`}>
+                                      {prCantAdd ? "Sin stock" : `${prAvailable} disp.`}
+                                    </span>
+                                    <span className="text-sm font-bold text-primary">{formatCompactCurrency(pr.price, currency)}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="p-8 text-center text-sm italic text-default-400">
-                  No hay productos agregados
+                    );
+                  })}
                 </div>
               )}
             </div>
-          </div>
-        </section>
 
-        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start">
-          <label
-            className="section-kicker block pb-3"
-            htmlFor="operation-notes"
-          >
-            Notas Comerciales
-          </label>
-          <textarea
-            className="corp-input min-h-28 w-full resize-none rounded-2xl p-4 text-sm text-foreground"
-            id="operation-notes"
-            placeholder="Añadir observaciones de entrega, garantia o acuerdo comercial..."
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </section>
+            <div className="mt-4 overflow-hidden rounded-[24px] border border-divider/70">
+              {cart.length > 0 ? (
+                <div className="divide-y divide-divider/70">
+                  {cart.map((item) => {
+                    const itemPrice = item.presentation?.price ?? item.product.price;
+                    const available = getAvailableStock(item.product, item.presentation);
 
-        <section className="app-panel rounded-[28px] p-5 lg:col-span-4 lg:self-start lg:sticky lg:top-24 space-y-5">
-          {/* Voucher Selection */}
-          {cart.length > 0 && (
-            <>
-              {/* Payment Method */}
-              <div className="pb-4 border-b border-divider/70">
-                <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-default-500">
-                  Método de Pago
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
-                    <button
-                      key={m}
-                      className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
-                        paymentMethod === m
-                          ? "bg-primary text-primary-foreground shadow-md"
-                          : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
-                      }`}
-                      onClick={() => setPaymentMethod(m)}
-                    >
-                      {getPaymentLabel(m)}
-                    </button>
-                  ))}
+                    return (
+                      <div
+                        key={`${item.product._id}-${item.presentation?._id || "base"}`}
+                        className="grid grid-cols-[1fr_auto] items-center gap-3 p-4"
+                      >
+                        <div className="min-w-0">
+                          <h4 className="truncate text-sm font-semibold text-foreground">
+                            {item.product.name}
+                            {item.presentation && (
+                              <span className="ml-1.5 text-xs font-normal text-default-500">({item.presentation.name})</span>
+                            )}
+                          </h4>
+                          <p className="pt-0.5 text-xs text-default-500">
+                            {formatCompactCurrency(itemPrice, currency)} c/u · {available} {available === 1 ? "disponible" : "disponibles"}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1 rounded-xl border border-divider/60 bg-content2/60 p-1">
+                          <button
+                            aria-label={`Quitar una unidad de ${item.product.name}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-default-500 transition hover:bg-content1 hover:text-danger"
+                            onClick={() => updateQuantity(item.product._id, -1, item.presentation?._id)}
+                            type="button"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold tabular-nums">{item.quantity}</span>
+                          <button
+                            aria-label={`Agregar una unidad de ${item.product.name}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-default-500 transition hover:bg-content1 hover:text-primary"
+                            onClick={() => updateQuantity(item.product._id, 1, item.presentation?._id)}
+                            type="button"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+
+                        <p className="col-span-2 -mt-1 text-right text-sm font-semibold tabular-nums text-foreground">
+                          {formatCompactCurrency(itemPrice * item.quantity, currency)}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-              <div className="border-b border-divider/70 pb-5 mt-4">
-                <VoucherSelector
-                  selectedTypes={selectedVoucherTypes}
-                  onChange={setSelectedVoucherTypes}
-                  paymentStatus={paymentMethod === "cash" ? "Pagado" : settings?.defaultPaymentStatus || "Pendiente"}
-                />
-              </div>
-            </>
-          )}
+              ) : (
+                <p className="p-8 text-center text-sm text-default-500">Todavía no agregaste productos.</p>
+              )}
+            </div>
+          </section>
 
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-default-500">Subtotal</span>
-            <span className="font-medium text-foreground">
-              {formatCompactCurrency(subtotal, currency)}
-            </span>
-          </div>
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <span className="text-default-500">
-              IVA {settings?.taxRate ?? 0}%
-            </span>
-            <span className="font-medium text-foreground">
-              {formatCompactCurrency(tax, currency)}
-            </span>
-          </div>
-          <div className="mt-4 flex items-center justify-between border-t border-divider/70 pt-4">
-            <span className="text-base font-semibold text-foreground">
-              Total a cobrar
-            </span>
-            <span className="text-2xl font-semibold tracking-[-0.04em] text-primary">
-              {formatCompactCurrency(total, currency)}
-            </span>
-          </div>
+          <section className="app-panel rounded-[28px] p-5">
+            <label className={LABEL_CLASS} htmlFor="operation-notes">
+              Notas
+            </label>
+            <textarea
+              className="corp-input min-h-24 w-full resize-none rounded-2xl p-4 text-sm text-foreground"
+              id="operation-notes"
+              placeholder="Entrega, garantía o acuerdo comercial (opcional)"
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </section>
+        </div>
 
-          <div className="mt-5 hidden gap-3 lg:flex">
-            <button
-              className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
-              disabled={isCreating || cart.length === 0 || !selectedClient}
-              onClick={handleRegisterSale}
-            >
-              <span className="flex items-center justify-center gap-2">
-                {isCreating ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <ShoppingCart size={20} strokeWidth={2.4} />
-                )}
-                {isCreating ? "Registrando..." : "Registrar Venta"}
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
+          <section className="app-panel rounded-[28px] p-5 space-y-5">
+            {cart.length > 0 ? (
+              <>
+                {paymentMethodPicker}
+                <div className="border-t border-divider/70 pt-5">
+                  <VoucherSelector
+                    selectedTypes={selectedVoucherTypes}
+                    onChange={setSelectedVoucherTypes}
+                    paymentStatus={voucherPaymentStatus}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-default-500">Agregá productos para elegir el pago y los comprobantes.</p>
+            )}
+
+            <div className="space-y-2 border-t border-divider/70 pt-5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">Subtotal</span>
+                <span className="font-medium tabular-nums text-foreground">{formatCompactCurrency(subtotal, currency)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-default-500">IVA {settings?.taxRate ?? 0}%</span>
+                <span className="font-medium tabular-nums text-foreground">{formatCompactCurrency(tax, currency)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-end justify-between gap-3 border-t border-divider/70 pt-4">
+              <span className="text-base font-semibold text-foreground">Total</span>
+              <span className="text-3xl font-semibold tracking-[-0.04em] tabular-nums text-primary">
+                {formatCompactCurrency(total, currency)}
               </span>
-            </button>
-          </div>
-        </section>
+            </div>
+
+            <div className="hidden space-y-2 lg:block">
+              {blockedReason && <p className="text-xs text-default-500">{blockedReason}</p>}
+              <button
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
+                disabled={!canRegister}
+                onClick={handleRegisterSale}
+                type="button"
+              >
+                {isCreating ? <Loader2 className="animate-spin" size={20} /> : <ShoppingCart size={20} strokeWidth={2.4} />}
+                {isCreating ? "Registrando..." : "Registrar venta"}
+              </button>
+            </div>
+          </section>
+        </aside>
       </div>
 
-      {/* Mobile Payment + Voucher Selection */}
-      {cart.length > 0 && (
-        <div className="px-4 py-3 border-t border-divider/60 lg:hidden space-y-3">
-          <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-default-500">
-              Método de Pago
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {(["cash", "card", "transfer", "mercadopago", "check", "other"] as PaymentMethod[]).map((m) => (
-                <button
-                  key={m}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,opacity,transform] ${
-                    paymentMethod === m
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-content2/60 text-default-500 hover:bg-content2 hover:text-foreground"
-                  }`}
-                  onClick={() => setPaymentMethod(m)}
-                >
-                  {getPaymentLabel(m)}
-                </button>
-              ))}
-            </div>
+      <div className="bottom-sheet-surface fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 p-4 lg:hidden">
+        {blockedReason && <p className="mb-2 text-center text-xs text-default-500">{blockedReason}</p>}
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-default-500">Total</p>
+            <p className="truncate text-xl font-semibold tabular-nums text-foreground">
+              {formatCompactCurrency(total, currency)}
+            </p>
           </div>
-          <VoucherSelector
-            selectedTypes={selectedVoucherTypes}
-            onChange={setSelectedVoucherTypes}
-            paymentStatus={paymentMethod === "cash" ? "Pagado" : settings?.defaultPaymentStatus || "Pendiente"}
-          />
-        </div>
-      )}
-
-      <div className="bottom-sheet-surface fixed bottom-0 w-full max-w-md p-4 lg:hidden">
-        <div className="flex gap-3">
           <button
-            className="flex-1 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
-            disabled={isCreating || cart.length === 0 || !selectedClient}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_34px_rgba(217,119,6,0.35)] transition hover:opacity-90 disabled:opacity-50"
+            disabled={!canRegister}
             onClick={handleRegisterSale}
+            type="button"
           >
-            <span className="flex items-center justify-center gap-2">
-              {isCreating ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                <ShoppingCart size={20} strokeWidth={2.4} />
-              )}
-              {isCreating ? "Registrando..." : "Registrar Venta"}
-            </span>
+            {isCreating ? <Loader2 className="animate-spin" size={20} /> : <ShoppingCart size={20} strokeWidth={2.4} />}
+            {isCreating ? "Registrando..." : "Registrar venta"}
           </button>
         </div>
       </div>
