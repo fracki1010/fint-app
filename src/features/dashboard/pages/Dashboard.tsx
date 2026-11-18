@@ -1,3 +1,4 @@
+import { DashboardSkeleton } from "@shared/components/skeleton/screens";
 import React, { useMemo, useState } from "react";
 import {
   ShoppingCart,
@@ -223,11 +224,7 @@ export default function DashboardPage() {
   };
 
   if (loading && !dashboard) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!dashboard) {

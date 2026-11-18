@@ -963,3 +963,35 @@ body:has(input:focus, textarea:focus, select:focus) .mobile-chrome {
     transform: none;
   }
 }
+
+/* Loading placeholders. The shimmer is decorative, so it stops for reduced motion. */
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background-color: rgb(120 100 80 / 0.12);
+}
+.skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.dark .skeleton-block {
+  background-color: rgb(220 180 140 / 0.1);
+}
+.dark .skeleton-block::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+}
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block::after {
+    display: none;
+  }
+}

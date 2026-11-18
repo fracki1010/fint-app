@@ -1,3 +1,4 @@
+import { SettingsSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useEffect } from "react";
 import {
   Save,
@@ -240,11 +241,7 @@ export default function SettingsPage() {
     whatsappConnectionStatus;
 
   if (loading && !settings) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   const sectionTitleMap: Record<SettingsSectionKey, string> = {

@@ -1,4 +1,5 @@
-import { ArrowLeft, Loader2, Package } from "lucide-react";
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
+import { ArrowLeft, Package } from "lucide-react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,11 +16,7 @@ export default function MovementDetailPage() {
   const { movement, loading, error } = useStockMovementDetail(movementId);
 
   if (loading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (error || !movement) {

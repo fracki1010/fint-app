@@ -1,5 +1,5 @@
+import { AppShellSkeleton } from "@shared/components/skeleton/screens";
 import { lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import PlanGuard from "@shared/components/PlanGuard";
 
@@ -78,11 +78,7 @@ const QuoteDetailPage = lazy(() => import("@features/quotes/pages/QuoteDetail"))
 const QuoteFormPage = lazy(() => import("@features/quotes/pages/QuoteForm"));
 
 function FullScreenLoader() {
-  return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  );
+  return <AppShellSkeleton />;
 }
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
+import { ClientAccountSkeleton } from "@shared/components/skeleton/screens";
 import { useMemo, useState } from "react";
 import {
   Search,
-  Loader2,
   X,
   CreditCard,
 } from "lucide-react";
@@ -78,9 +78,7 @@ export default function SupplierAccountPage() {
       {/* List */}
       <div className="flex-1 px-4 py-4 lg:px-6">
         {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-default-400" size={28} />
-          </div>
+          <ClientAccountSkeleton />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center text-default-400">
             <CreditCard size={36} />

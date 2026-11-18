@@ -1,9 +1,10 @@
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { ProductsListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import {
   Boxes,
   Search,
   Plus,
-  Loader2,
   Layers3,
   X,
   ChevronRight,
@@ -399,7 +400,11 @@ export default function ProductsPage() {
 
         {/* Summary */}
         <p className="mt-3 text-sm text-default-500">
-          {total || safeProducts.length} {(total || safeProducts.length) === 1 ? "artículo" : "artículos"}
+          {loading && safeProducts.length === 0 ? (
+            <Skeleton className="inline-block h-3.5 w-28 rounded-md align-middle" />
+          ) : (
+            <>{total || safeProducts.length} {(total || safeProducts.length) === 1 ? "artículo" : "artículos"}</>
+          )}
           {lowStockCount > 0 && (
             <>
               {" · "}
@@ -448,10 +453,7 @@ export default function ProductsPage() {
       {/* Product list */}
       <div className="px-4 pb-28 space-y-2">
         {loading && products.length === 0 ? (
-          <div className="py-16 text-center text-default-400">
-            <Loader2 className="mx-auto mb-3 animate-spin" size={28} />
-            <p className="text-sm">Cargando catálogo...</p>
-          </div>
+          <ProductsListSkeleton />
         ) : products.length > 0 ? (
           <>
             {products.map((product) => {

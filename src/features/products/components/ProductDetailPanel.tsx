@@ -1,3 +1,4 @@
+import { DetailSkeleton } from "@shared/components/skeleton/screens";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive,
@@ -167,10 +168,7 @@ export function ProductDetailPanel({
       {/* Body */}
       <div className="flex-1 space-y-5 p-6">
         {detailLoading ? (
-          <div className="py-20 text-center text-default-400">
-            <Loader2 className="mx-auto mb-3 animate-spin" size={32} />
-            <p className="text-sm">Cargando detalle...</p>
-          </div>
+          <DetailSkeleton />
         ) : detailError ? (
           <div className="py-12 text-center">
             <p className="text-sm font-semibold text-danger">No se pudo cargar el detalle</p>

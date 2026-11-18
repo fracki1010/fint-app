@@ -1,12 +1,8 @@
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { FinancialSkeleton } from "@shared/components/skeleton/screens";
 
 export function FinancialLoadingState() {
-  return (
-    <div className="financial-card flex min-h-44 items-center justify-center gap-3">
-      <Loader2 className="financial-icon animate-spin text-primary" />
-      <span className="text-sm text-default-500">Cargando datos financieros...</span>
-    </div>
-  );
+  return <FinancialSkeleton />;
 }
 
 export function FinancialErrorState({ message }: { message: string }) {

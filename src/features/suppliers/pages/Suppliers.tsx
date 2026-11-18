@@ -1,10 +1,11 @@
+import { Skeleton } from "@shared/components/skeleton/primitives";
+import { SuppliersListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Building2,
   CreditCard,
-  Loader2,
   Mail,
   MapPin,
   Pencil,
@@ -611,7 +612,13 @@ export default function Suppliers() {
           >
             Proveedores
           </h1>
-          <p className="text-xs text-default-400">{suppliers.length} registrados</p>
+          <p className="text-xs text-default-400">
+            {loading && suppliers.length === 0 ? (
+              <Skeleton className="inline-block h-2.5 w-20 rounded-md align-middle" />
+            ) : (
+              `${suppliers.length} registrados`
+            )}
+          </p>
         </div>
         <button
           className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90"
@@ -648,9 +655,7 @@ export default function Suppliers() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="animate-spin text-primary" size={24} />
-        </div>
+        <SuppliersListSkeleton />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-default-400">
           <Building2 size={36} strokeWidth={1.5} />

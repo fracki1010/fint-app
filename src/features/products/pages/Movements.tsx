@@ -1,3 +1,4 @@
+import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useMemo, useEffect } from "react";
 import {
   Search,
@@ -7,7 +8,6 @@ import {
   ArrowDown,
   Minus,
   RotateCcw,
-  Loader2,
   Plus,
   ChevronRight,
 } from "lucide-react";
@@ -616,9 +616,7 @@ export default function MovementsPage() {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <MovementsSkeleton />
         ) : filteredMovements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Package className="w-16 h-16 text-default-400 mb-4" />

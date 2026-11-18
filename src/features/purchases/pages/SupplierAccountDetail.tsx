@@ -1,3 +1,4 @@
+import { MovementsSkeleton } from "@shared/components/skeleton/screens";
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, CreditCard, ArrowUpRight, ArrowDownLeft, FileText, AlertCircle, Filter, X, Search, Plus, FileDown } from "lucide-react";
@@ -579,9 +580,7 @@ export default function SupplierAccountDetailPage() {
           {/* Entries List */}
           <div className="space-y-2 pb-28">
             {loading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="animate-spin text-default-400" size={28} />
-              </div>
+              <MovementsSkeleton />
             ) : filteredEntries.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-16 text-center text-default-400">
                 <CreditCard size={40} />

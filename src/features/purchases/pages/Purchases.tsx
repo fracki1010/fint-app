@@ -1,3 +1,4 @@
+import { PurchasesListSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -828,10 +829,7 @@ export default function PurchasesPage() {
 
             <div className="overflow-x-auto">
               {loading && purchases.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-default-400">
-                  <Loader2 className="mb-3 animate-spin" size={28} />
-                  <p className="text-sm font-medium">Cargando compras...</p>
-                </div>
+                <PurchasesListSkeleton />
               ) : filteredPurchases.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-default-100">
@@ -1001,7 +999,7 @@ export default function PurchasesPage() {
                   }`}
                   onClick={() => setActiveFilter(filter.key)}
                 >
-                  {filter.label} ({count})
+                  {filter.label}{loading && purchases.length === 0 ? "" : ` (${count})`}
                 </button>
               );
             })}
@@ -1010,10 +1008,7 @@ export default function PurchasesPage() {
 
         <div className="flex-1 space-y-3 px-6 pb-28">
           {loading && purchases.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-divider/10 bg-content2/40 py-16 text-default-400">
-              <Loader2 className="mb-3 animate-spin" size={32} />
-              <p className="text-sm font-medium">Cargando compras...</p>
-            </div>
+            <PurchasesListSkeleton />
           ) : filteredPurchases.length > 0 ? (
             filteredPurchases.map((purchase, i) => (
               <button

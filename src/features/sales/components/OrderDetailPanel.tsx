@@ -1,3 +1,4 @@
+import { SaleDetailSkeleton } from "@shared/components/skeleton/screens";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -152,10 +153,7 @@ export function OrderDetailPanel({
           </div>
         )}
         {detailLoading && !selectedOrder ? (
-          <div className="flex items-center gap-2 text-default-400">
-            <Loader2 className="animate-spin" size={16} />
-            <span className="text-sm">Cargando...</span>
-          </div>
+          <SaleDetailSkeleton />
         ) : (
           <>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-foreground">
@@ -203,10 +201,7 @@ export function OrderDetailPanel({
       {/* Panel body */}
       <div className={`flex-1 px-6 py-5 ${isDesktop ? "overflow-y-auto" : ""}`}>
         {detailLoading && !selectedOrder ? (
-          <div className="flex flex-col items-center justify-center py-20 text-default-400">
-            <Loader2 className="animate-spin mb-3" size={28} />
-            <p className="text-sm">Cargando detalle de la venta...</p>
-          </div>
+          <SaleDetailSkeleton />
         ) : detailError && !selectedOrder ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-sm font-semibold text-danger">No se pudo cargar la venta</p>
