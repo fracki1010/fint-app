@@ -185,7 +185,7 @@ export default function PaymentSummary({
             return (
               <button
                 key={key}
-                className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-bold transition ${
+                className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-bold transition ${
                   active
                     ? "bg-primary text-white shadow-sm shadow-primary/25"
                     : "bg-content2/70 text-default-500 hover:bg-content2/90 active:scale-95"
@@ -203,7 +203,7 @@ export default function PaymentSummary({
         {rowSubOptions.length > 0 && (
           <div>
             <button
-              className="flex w-full items-center justify-between rounded-lg bg-content2/50 px-2.5 py-1 text-[10px] font-semibold text-default-500"
+              className="flex w-full items-center justify-between rounded-lg bg-content2/50 px-2.5 py-1 text-xs font-semibold text-default-500"
               onClick={() => setExpandedRow((prev) => ({ ...prev, [index]: !isRowExpanded }))}
             >
               <span className="flex items-center gap-1">
@@ -217,7 +217,7 @@ export default function PaymentSummary({
                 {rowSubOptions.map((method) => (
                   <button
                     key={method}
-                    className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold transition ${
+                    className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition ${
                       split.method === method
                         ? "bg-primary/10 text-primary border border-primary/20"
                         : "bg-content2/30 text-default-500 hover:bg-content2/50 border border-transparent"
@@ -254,7 +254,7 @@ export default function PaymentSummary({
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-default-500 shrink-0">Monto</span>
+            <span className="text-xs font-semibold text-default-500 shrink-0">Monto</span>
             <input
               className="corp-input flex-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold"
               placeholder="0"
@@ -344,7 +344,7 @@ export default function PaymentSummary({
               />
               {primarySplit.amount > total && (
                 <div className="shrink-0 text-right">
-                  <p className="text-[10px] text-default-400">Cambio</p>
+                  <p className="text-xs text-default-400">Cambio</p>
                   <p className="text-xs font-bold text-success">{formatCurrency(primarySplit.amount - total, currency)}</p>
                 </div>
               )}
@@ -369,7 +369,7 @@ export default function PaymentSummary({
 
       {/* ── Toggle mode ── */}
       <button
-        className="flex w-full items-center justify-center gap-1 text-[10px] font-semibold text-default-400 hover:text-primary transition"
+        className="flex w-full items-center justify-center gap-1 text-xs font-semibold text-default-400 hover:text-primary transition"
         onClick={toggleMode}
       >
         {mode === "simple" ? "+ Pago doble" : "− Pago simple"}
