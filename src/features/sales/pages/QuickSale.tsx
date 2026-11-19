@@ -266,8 +266,6 @@ export default function QuickSalePage() {
   const tierOptions: PriceTier[] = ["retail", "wholesale", "distributor", "premium", "especial"];
   const tierLabel = (tier: PriceTier) =>
     tier === "retail" ? "Minorista" : tier === "wholesale" ? "Mayorista" : tier === "distributor" ? "Distribuidor" : tier;
-  const tierShort = (tier: PriceTier) =>
-    ({ retail: "R", wholesale: "W", distributor: "D", premium: "P", especial: "E" }[tier] ?? tier.charAt(0).toUpperCase());
 
   const recentClients = clients.filter((c) => c._id !== genericClient?._id).slice(0, 5);
   const isGenericClient = selectedClient?._id === genericClient?._id;
@@ -352,23 +350,7 @@ export default function QuickSalePage() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
                           <p className="text-xs text-default-500">{p.barcode || p.sku || "Sin código"}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-                            {tierOptions.map((tier) => {
-                              const tierPrice = resolveProductPrice(p, tier);
-                              const isActive = tier === priceTier;
-                              if (!isActive && tierPrice <= 0) return null;
-                              return (
-                                <span
-                                  key={tier}
-                                  className={`rounded px-1.5 py-0.5 font-semibold tabular-nums ${
-                                    isActive ? "bg-primary/10 text-primary" : "bg-default-100 text-default-500"
-                                  }`}
-                                >
-                                  {tierShort(tier)} {formatCurrency(tierPrice, currency)}
-                                </span>
-                              );
-                            })}
-                          </div>
+                          <p className="mt-0.5 text-xs font-semibold text-primary">{tierLabel(priceTier)}</p>
                         </div>
                         {!hasPresentations && (
                           <div className="ml-3 shrink-0 text-right">
@@ -447,11 +429,7 @@ export default function QuickSalePage() {
 
         {/* Client */}
         <div className="border-b border-divider/60 px-4 py-3 lg:px-6">
-          <button
-            className="flex w-full items-center gap-2 text-left"
-            onClick={() => setShowClientSearch(!showClientSearch)}
-            type="button"
-          >
+          <div className="flex w-full items-center gap-2">
             <User size={15} className="shrink-0 text-default-400" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -460,7 +438,7 @@ export default function QuickSalePage() {
                 <div className="relative">
                   <button
                     aria-label="Cambiar lista de precios"
-                    className={`min-h-6 px-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    className={`flex min-h-11 min-w-11 items-center justify-center text-[11px] font-bold transition-colors ${
                       tierOverridden ? "text-warning" : "text-default-400 hover:text-primary"
                     }`}
                     onClick={(e) => {
@@ -498,15 +476,17 @@ export default function QuickSalePage() {
                   )}
                 </div>
               </div>
-              <p className="truncate text-sm font-semibold text-foreground">
+              <button className="block w-full truncate text-left text-sm font-semibold text-foreground" onClick={() => setShowClientSearch(!showClientSearch)} type="button">
                 {selectedClient?.name || "Consumidor Final"}
                 {tierOverridden && (
                   <span className="ml-2 text-[11px] font-medium text-warning">({tierLabel(priceTier)})</span>
                 )}
-              </p>
+              </button>
             </div>
-            <span className="text-xs font-semibold text-primary">Cambiar</span>
-          </button>
+            <button className="shrink-0 text-xs font-semibold text-primary" onClick={() => setShowClientSearch(!showClientSearch)} type="button">
+              Cambiar
+            </button>
+          </div>
 
           {!showClientSearch && recentClients.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">

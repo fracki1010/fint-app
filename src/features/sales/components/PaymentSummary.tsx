@@ -393,7 +393,12 @@ export default function PaymentSummary({
         </div>
       </div>
 
-      {/* Checkout button */}
+      {/* Say why the sale cannot be charged yet, instead of a silently disabled button */}
+      {!canFinalize && !isCreating && (
+        <p className="text-center text-xs font-semibold text-default-500">
+          {total > 0 ? "Ingresá el efectivo recibido para cobrar." : "Agregá productos para cobrar."}
+        </p>
+      )}
       <button
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:opacity-90 disabled:opacity-40"
         disabled={!canFinalize || isCreating}
