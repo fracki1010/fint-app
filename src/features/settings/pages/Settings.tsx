@@ -119,16 +119,6 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.taxId?.trim() || !formData.fiscalCondition?.trim()) {
-      showToast({
-        variant: "warning",
-        message:
-          "Completa CUIT/NIT y condicion fiscal en Empresa para poder emitir facturas.",
-      });
-
-      return;
-    }
-
     setSaving(true);
     try {
       await updateSettings(formData);
