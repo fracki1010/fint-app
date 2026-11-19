@@ -28,6 +28,7 @@ export interface Setting {
   email: string;
   supportEmail?: string;
   invoiceTerms?: string;
+  logoDataUrl?: string;
   taxRate: number;
   currency: string;
   theme: "light" | "dark";
