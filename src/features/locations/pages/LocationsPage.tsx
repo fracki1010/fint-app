@@ -119,13 +119,10 @@ export default function LocationsPage() {
   const closeDrawer = () => setDrawer(null);
 
   const { data: locations = [], isLoading } = useLocations();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: stock = [], isLoading: stockLoading } = useLocationStock(selectedId);
 
   const { products } = useProducts();
   const deposits = locations.filter((l) => l.kind === "deposito");
   const branches = locations.filter((l) => l.kind === "sucursal");
-  const selected = locations.find((l) => l._id === selectedId) ?? null;
 
   // Create
   const createLocation = useCreateLocation();
@@ -300,11 +297,9 @@ export default function LocationsPage() {
               <button
                 key={loc._id}
                 type="button"
-                onClick={() => setSelectedId(loc._id)}
+                onClick={() => navigate(`/locations/${loc._id}`)}
                 className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${
-                  selectedId === loc._id
-                    ? "border-primary bg-primary/5"
-                    : "border-divider hover:border-primary/30"
+                  "border-divider hover:border-primary/30 hover:bg-primary/5"
                 }`}
               >
                 <MapPin size={18} className="mt-0.5 text-primary" />
@@ -320,32 +315,6 @@ export default function LocationsPage() {
           </div>
         )}
       </section>
-
-      {/* Stock of the selected place */}
-      {selected && (
-        <section className="rounded-2xl border border-default-200 bg-content1 p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <Package size={16} className="text-primary" />
-            <h2 className="text-sm font-bold text-foreground">Stock en {selected.name}</h2>
-          </div>
-          {stockLoading ? (
-            <p className="text-sm text-default-500">Cargando stock...</p>
-          ) : stock.length === 0 ? (
-            <p className="text-sm text-default-500">No hay stock en este lugar.</p>
-          ) : (
-            <ul className="divide-y divide-divider">
-              {stock.map((row) => (
-                <li key={row.productId} className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-foreground">{row.name}</span>
-                  <span className="font-semibold text-foreground">
-                    {row.stock} {row.unitOfMeasure}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
 
       {isAdmin && drawer === "create" && (
         <ActionDrawer title="Nuevo lugar" busy={createLocation.isPending} busyText="Creando lugar..." onClose={closeDrawer}>
