@@ -8,6 +8,7 @@ export interface CreateTeamMemberPayload {
   email: string;
   password: string;
   role: UserRole;
+  locationId?: string;
 }
 
 export interface UpdateTeamMemberPayload {

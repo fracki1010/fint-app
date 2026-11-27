@@ -6,6 +6,7 @@ import { useAppToast } from "@features/notifications/components/AppToast";
 import { useProducts } from "@features/products/hooks/useProducts";
 import {
   useCreateLocation,
+  useLoadStock,
   useLocationStock,
   useLocations,
   useTransferStock,
@@ -38,6 +39,10 @@ export default function LocationsPage() {
 
   const createLocation = useCreateLocation();
   const transfer = useTransferStock();
+  const loadStock = useLoadStock();
+  const [loadDepositId, setLoadDepositId] = useState("");
+  const [loadProductId, setLoadProductId] = useState("");
+  const [loadQuantity, setLoadQuantity] = useState("");
 
   const [newName, setNewName] = useState("");
   const [newKind, setNewKind] = useState<LocationKind>("sucursal");
@@ -65,6 +70,21 @@ export default function LocationsPage() {
         },
         onError: (error) =>
           showToast({ variant: "error", message: errorMessage(error, "No se pudo crear el lugar") }),
+      },
+    );
+  };
+
+  const handleLoad = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadStock.mutate(
+      { depositId: loadDepositId, productId: loadProductId, quantity: Number(loadQuantity) },
+      {
+        onSuccess: () => {
+          showToast({ variant: "success", message: "Stock cargado en el depósito" });
+          setLoadQuantity("");
+        },
+        onError: (error) =>
+          showToast({ variant: "error", message: errorMessage(error, "No se pudo cargar el stock") }),
       },
     );
   };
@@ -193,6 +213,45 @@ export default function LocationsPage() {
                 className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50 sm:col-span-3 sm:justify-self-end"
               >
                 Crear lugar
+              </button>
+            </form>
+          </section>
+
+          {/* Owner loads stock received into a deposit */}
+          <section className="rounded-2xl border border-default-200 bg-content1 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <Package size={16} className="text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Cargar stock en un depósito</h2>
+            </div>
+            <form onSubmit={handleLoad} className="grid gap-3 sm:grid-cols-2">
+              <select className={inputClass} value={loadDepositId} onChange={(e) => setLoadDepositId(e.target.value)} required>
+                <option value="">Depósito</option>
+                {deposits.map((l) => (
+                  <option key={l._id} value={l._id}>{l.name}</option>
+                ))}
+              </select>
+              <select className={inputClass} value={loadProductId} onChange={(e) => setLoadProductId(e.target.value)} required>
+                <option value="">Producto</option>
+                {products.map((p) => (
+                  <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+              </select>
+              <input
+                className={inputClass}
+                type="number"
+                min="0"
+                step="any"
+                placeholder="Cantidad recibida"
+                value={loadQuantity}
+                onChange={(e) => setLoadQuantity(e.target.value)}
+                required
+              />
+              <button
+                type="submit"
+                disabled={loadStock.isPending}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50 sm:justify-self-end"
+              >
+                Cargar stock
               </button>
             </form>
           </section>

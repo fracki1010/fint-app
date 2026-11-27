@@ -1,3 +1,4 @@
+import { useLocations } from "@features/locations/hooks/useLocations";
 import { TeamSkeleton } from "@shared/components/skeleton/screens";
 import { useMemo, useState, useEffect } from "react";
 import {
@@ -24,9 +25,11 @@ const ROLES: { value: UserRole; label: string; description: string }[] = [
   { value: "deposito", label: "Depósito", description: "Insumos, compras y recetas" },
   { value: "contabilidad", label: "Contabilidad", description: "Centro financiero y reportes" },
   { value: "lectura", label: "Solo lectura", description: "Puede ver todo, no modificar" },
+  { value: "sucursal", label: "Sucursal", description: "Vende y ve el stock de un solo lugar" },
 ];
 
 const ROLE_COLORS: Record<UserRole, string> = {
+  sucursal: "bg-primary/15 text-primary",
   admin: "bg-primary/15 text-primary",
   ventas: "bg-success/15 text-success",
   deposito: "bg-warning/15 text-warning",
@@ -108,11 +111,14 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
   const [email, setEmail] = useState(initial?.email ?? "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>(initial?.role ?? "lectura");
+  const [locationId, setLocationId] = useState(initial?.locationId ?? "");
+  const { data: locations = [] } = useLocations();
+  const branches = locations.filter((l) => l.kind === "sucursal");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "create") {
-      await onSave({ fullName, email, password, role });
+      await onSave({ fullName, email, password, role, ...(role === "sucursal" && { locationId }) });
     } else {
       const update: UpdateTeamMemberPayload = { fullName, role };
       if (password) update.password = password;
@@ -122,6 +128,24 @@ function MemberForm({ mode, initial, saving, onSave, onCancel }: MemberFormProps
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      {role === "sucursal" && (
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold text-foreground">
+            Sucursal <span className="text-danger">*</span>
+          </label>
+          <select
+            required
+            className="corp-input w-full"
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+          >
+            <option value="">Elegí una sucursal</option>
+            {branches.map((b) => (
+              <option key={b._id} value={b._id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div>
         <label className="mb-1.5 block text-sm font-semibold text-foreground">
           Nombre completo <span className="text-danger">*</span>
