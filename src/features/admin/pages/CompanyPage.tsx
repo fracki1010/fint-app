@@ -27,7 +27,7 @@ const FEATURE_LABELS_ES: Record<string, string> = {
   api_access: "API REST",
   bill_of_materials: "Lista de materiales",
   recipes: "Producción",
-  multi_location: "Listas de precios",
+  multi_location: "Múltiples lugares",
   bank_reconciliation: "Conciliación bancaria",
   whatsapp: "Asistente por WhatsApp",
 };

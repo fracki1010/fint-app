@@ -15,6 +15,7 @@ import {
   Sparkles,
   Zap,
   MessageCircle,
+  MapPin,
 } from "lucide-react";
 
 import { useComplementCatalog } from "@features/complements/hooks/useComplementCatalog";
@@ -36,7 +37,7 @@ const FEATURE_LABELS_ES: Record<string, string> = {
   api_access: "API REST",
   bill_of_materials: "Lista de materiales",
   recipes: "Producción",
-  multi_location: "Listas de precios",
+  multi_location: "Múltiples lugares",
   bank_reconciliation: "Conciliación bancaria",
   whatsapp: "WhatsApp",
 };
@@ -52,6 +53,7 @@ const COMPLEMENT_ICONS: Record<string, React.ElementType> = {
   api: Globe,
   reportes: FileText,
   listas_precios: DollarSign,
+  multi_location: MapPin,
   centros_costo: TrendingUp,
   conciliacion: Landmark,
   whatsapp: MessageCircle,

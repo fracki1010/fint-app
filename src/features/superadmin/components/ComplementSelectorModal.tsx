@@ -27,6 +27,7 @@ const COMPLEMENT_ICONS: Record<string, string> = {
   api: "🔌",
   reportes: "📈",
   listas_precios: "🏷️",
+  multi_location: "📍",
   centros_costo: "🎯",
   conciliacion: "🏦",
   whatsapp: "💬",
