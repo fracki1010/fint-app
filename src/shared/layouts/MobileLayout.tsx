@@ -24,6 +24,7 @@ import {
   UserCog,
   LogOut,
   Building2,
+  MapPin,
   Landmark,
   Shield,
   DollarSign,
@@ -64,6 +65,7 @@ export default function MobileLayout() {
     { path: "/purchases", label: "Órdenes de Compra", icon: ShoppingCart },
     { path: "/suppliers", label: "Proveedores", icon: Truck },
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 }] : []),
+    ...(hasFeature("multi_location") ? [{ path: "/locations", label: "Lugares", icon: MapPin }] : []),
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-payments", label: "Órdenes de Pago", icon: DollarSign }] : []),
   ];
 

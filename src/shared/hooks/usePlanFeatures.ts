@@ -18,7 +18,8 @@ export type Feature =
   | "cost_centers"
   | "cash_management"
   | "whatsapp"
-  | "bank_reconciliation";
+  | "bank_reconciliation"
+  | "multi_location";
 
 export function usePlanFeatures() {
   const { user } = useAuth();

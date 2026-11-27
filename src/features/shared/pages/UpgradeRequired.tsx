@@ -21,6 +21,7 @@ const FEATURE_LABELS: Record<Feature, string> = {
   quotes: "Presupuestos",
   whatsapp: "Asistente por WhatsApp",
   bank_reconciliation: "Conciliación Bancaria Avanzada",
+  multi_location: "Múltiples Lugares",
 };
 
 /**
