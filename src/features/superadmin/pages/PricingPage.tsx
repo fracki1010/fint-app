@@ -28,6 +28,7 @@ const FEATURE_LABELS_ES: Record<string, string> = {
   produccion: "Módulo de Producción",
   api: "API Access",
   reportes: "Reportes Avanzados",
+  multi_location: "Múltiples Lugares",
   listas_precios: "Múltiples Listas de Precios",
   centros_costo: "Centros de Costo",
   conciliacion: "Conciliación Bancaria",
