@@ -15,6 +15,16 @@ export interface LocationStockRow {
   stock: number;
 }
 
+// One page of a place stock. Totals cover the whole place, not only the page.
+export interface LocationStockPage {
+  items: LocationStockRow[];
+  total: number;
+  page: number;
+  pages: number;
+  totalProducts: number;
+  totalUnits: number;
+}
+
 export interface CreateLocationInput {
   name: string;
   kind: LocationKind;

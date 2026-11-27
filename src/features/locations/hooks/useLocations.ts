@@ -3,6 +3,7 @@ import api from "@shared/api/axios";
 import type {
   CreateLocationInput,
   Location,
+  LocationStockPage,
   LocationStockRow,
   TransferInput,
 } from "@features/locations/types";
@@ -22,6 +23,23 @@ export function useLocationStock(locationId: string | null) {
     enabled: Boolean(locationId),
     queryFn: async () =>
       (await api.get<LocationStockRow[]>(`/locations/${locationId}/stock`)).data,
+  });
+}
+
+export function useLocationStockPage(
+  locationId: string | null,
+  { q, page, limit }: { q: string; page: number; limit: number },
+) {
+  return useQuery<LocationStockPage>({
+    queryKey: ["locations", locationId, "stock-page", q, page, limit],
+    enabled: Boolean(locationId),
+    placeholderData: (previous) => previous,
+    queryFn: async () =>
+      (
+        await api.get<LocationStockPage>(`/locations/${locationId}/stock`, {
+          params: { q: q || undefined, page, limit },
+        })
+      ).data,
   });
 }
 

@@ -1,13 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Package, Search } from "lucide-react";
-import { useLocationStock, useLocations } from "@features/locations/hooks/useLocations";
+import { useLocationStockPage, useLocations } from "@features/locations/hooks/useLocations";
 
 const PAGE_SIZE = 25;
+const SEARCH_DELAY_MS = 300;
 
 const KIND_LABELS = { deposito: "Depósito", sucursal: "Sucursal" } as const;
 
-// Stock of one place. Searchable and paginated, so a long catalog stays readable.
+// Stock of one place. Search and paging run on the server, so large catalogs stay light.
 export default function LocationDetailPage() {
   const { locationId = "" } = useParams();
   const navigate = useNavigate();
@@ -15,20 +16,28 @@ export default function LocationDetailPage() {
   const { data: locations = [], isLoading: locationsLoading } = useLocations();
   const location = locations.find((l) => l._id === locationId) ?? null;
 
-  const { data: rows = [], isLoading: stockLoading, isError } = useLocationStock(locationId || null);
-
   const [query, setQuery] = useState("");
+  const [term, setTerm] = useState("");
   const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    return term ? rows.filter((r) => r.name.toLowerCase().includes(term)) : rows;
-  }, [rows, query]);
+  // Wait for a pause in typing before asking the server again.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setTerm(query.trim());
+      setPage(1);
+    }, SEARCH_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const totalUnits = useMemo(() => rows.reduce((sum, r) => sum + r.stock, 0), [rows]);
+  const { data, isLoading: stockLoading, isError, isFetching } = useLocationStockPage(locationId || null, {
+    q: term,
+    page,
+    limit: PAGE_SIZE,
+  });
+
+  const rows = data?.items ?? [];
+  const currentPage = data?.page ?? page;
+  const pageCount = data?.pages ?? 1;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-4 lg:px-6">
@@ -60,11 +69,11 @@ export default function LocationDetailPage() {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-default-200 bg-content1 p-4">
           <p className="text-xs text-default-500">Productos con stock</p>
-          <p className="text-2xl font-bold text-foreground">{rows.length}</p>
+          <p className="text-2xl font-bold text-foreground">{data?.totalProducts ?? 0}</p>
         </div>
         <div className="rounded-2xl border border-default-200 bg-content1 p-4">
           <p className="text-xs text-default-500">Unidades totales</p>
-          <p className="text-2xl font-bold text-foreground">{totalUnits}</p>
+          <p className="text-2xl font-bold text-foreground">{data?.totalUnits ?? 0}</p>
         </div>
       </div>
 
@@ -80,10 +89,7 @@ export default function LocationDetailPage() {
             className="w-full rounded-xl border border-divider bg-background py-2 pl-9 pr-3 text-sm text-foreground focus:border-primary focus:outline-none"
             placeholder="Buscar producto por nombre"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </div>
 
@@ -91,14 +97,14 @@ export default function LocationDetailPage() {
           <p className="text-sm text-danger">No se pudo cargar el stock de este lugar.</p>
         ) : stockLoading ? (
           <p className="text-sm text-default-500">Cargando stock...</p>
-        ) : filtered.length === 0 ? (
+        ) : rows.length === 0 ? (
           <p className="text-sm text-default-500">
-            {rows.length === 0 ? "No hay stock en este lugar." : "Ningún producto coincide con la búsqueda."}
+            {term ? "Ningún producto coincide con la búsqueda." : "No hay stock en este lugar."}
           </p>
         ) : (
-          <>
+          <div className={isFetching ? "opacity-60 transition-opacity" : "transition-opacity"}>
             <ul className="divide-y divide-divider">
-              {visible.map((row) => (
+              {rows.map((row) => (
                 <li key={row.productId} className="flex items-center justify-between gap-3 py-3 text-sm">
                   <span className="min-w-0 truncate text-foreground">{row.name}</span>
                   <span className="shrink-0 font-semibold text-foreground">
@@ -109,7 +115,7 @@ export default function LocationDetailPage() {
             </ul>
 
             {pageCount > 1 && (
-              <div className="flex items-center justify-between gap-3 pt-2">
+              <div className="flex items-center justify-between gap-3 pt-4">
                 <button
                   type="button"
                   disabled={currentPage === 1}
@@ -119,7 +125,7 @@ export default function LocationDetailPage() {
                   Anterior
                 </button>
                 <span className="text-xs text-default-500">
-                  Página {currentPage} de {pageCount} · {filtered.length} productos
+                  Página {currentPage} de {pageCount} · {data?.total ?? 0} productos
                 </span>
                 <button
                   type="button"
@@ -131,7 +137,7 @@ export default function LocationDetailPage() {
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </section>
     </div>
