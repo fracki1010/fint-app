@@ -27,6 +27,7 @@ const AdminDashboard = lazy(() => import("@features/admin/pages/AdminDashboard")
 const CompanyPage = lazy(() => import("@features/admin/pages/CompanyPage"));
 const ComplementsPage = lazy(() => import("@features/admin/pages/ComplementsPage"));
 const LocationsPage = lazy(() => import("@features/locations/pages/LocationsPage"));
+const LocationDetailPage = lazy(() => import("@features/locations/pages/LocationDetailPage"));
 const ClientAccountPage = lazy(() => import("@features/clients/pages/ClientAccount"));
 const ClientAccountDetailPage = lazy(() => import("@features/clients/pages/ClientAccountDetail"));
 const SupplierAccountDetailPage = lazy(() => import("@features/purchases/pages/SupplierAccountDetail"));
@@ -193,6 +194,14 @@ function App() {
               </PlanGuard>
             }
             path="/locations"
+          />
+          <Route
+            element={
+              <PlanGuard feature="multi_location">
+                <LocationDetailPage />
+              </PlanGuard>
+            }
+            path="/locations/:locationId"
           />
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/team" />
           <Route element={<PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard>} path="/client-account" />
