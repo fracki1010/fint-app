@@ -26,6 +26,7 @@ const TeamPage = lazy(() => import("@features/team/pages/Team"));
 const AdminDashboard = lazy(() => import("@features/admin/pages/AdminDashboard"));
 const CompanyPage = lazy(() => import("@features/admin/pages/CompanyPage"));
 const ComplementsPage = lazy(() => import("@features/admin/pages/ComplementsPage"));
+const LocationsPage = lazy(() => import("@features/locations/pages/LocationsPage"));
 const ClientAccountPage = lazy(() => import("@features/clients/pages/ClientAccount"));
 const ClientAccountDetailPage = lazy(() => import("@features/clients/pages/ClientAccountDetail"));
 const SupplierAccountDetailPage = lazy(() => import("@features/purchases/pages/SupplierAccountDetail"));
@@ -185,6 +186,14 @@ function App() {
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/admin/team" />
           <Route element={<CompanyPage />} path="/admin/company" />
           <Route element={<ComplementsPage />} path="/complements" />
+          <Route
+            element={
+              <PlanGuard feature="multi_location">
+                <LocationsPage />
+              </PlanGuard>
+            }
+            path="/locations"
+          />
           <Route element={<PlanGuard feature="team_management"><TeamPage /></PlanGuard>} path="/team" />
           <Route element={<PlanGuard feature="client_account"><ClientAccountPage /></PlanGuard>} path="/client-account" />
           <Route element={<PlanGuard feature="client_account"><ClientAccountDetailPage /></PlanGuard>} path="/client-account/:clientId" />
