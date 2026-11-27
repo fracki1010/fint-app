@@ -7,6 +7,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   deposito: "Depósito",
   contabilidad: "Contabilidad",
   lectura: "Solo lectura",
+  sucursal: "Sucursal",
 };
 
 export function usePermissions() {

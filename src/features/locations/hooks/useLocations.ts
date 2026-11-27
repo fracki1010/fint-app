@@ -34,6 +34,15 @@ export function useCreateLocation() {
   });
 }
 
+export function useLoadStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ depositId, productId, quantity }: { depositId: string; productId: string; quantity: number }) =>
+      (await api.post(`/locations/${depositId}/stock-load`, { productId, quantity })).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["locations"] }),
+  });
+}
+
 export function useTransferStock() {
   const queryClient = useQueryClient();
   return useMutation({

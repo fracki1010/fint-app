@@ -432,7 +432,7 @@ export interface ReceivablesSummary {
 
 // ── Equipo ────────────────────────────────────────────────────────────
 
-export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura";
+export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura" | "sucursal";
 
 export interface TeamMember {
   _id: string;

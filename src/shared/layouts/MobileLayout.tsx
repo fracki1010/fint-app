@@ -49,6 +49,7 @@ export default function MobileLayout() {
   const { user, logout } = useAuth();
   const { can, roleLabel } = usePermissions();
   const { hasFeature } = usePlanFeatures();
+  const isSucursal = user?.role === "sucursal";
   const { theme, toggleTheme } = useThemeStore();
   const { state: drawer, handlers: drawerHandlers, open: openDrawer, close: closeDrawer } = useDrawerGesture();
   const handleDrawerNav = (path: string) => {
@@ -56,12 +57,15 @@ export default function MobileLayout() {
     closeDrawer();
   };
 
-  const operationNav = [
+  const operationNav = isSucursal ? [
+    { path: "/new-operation", label: "Vender", icon: ShoppingCart },
+    { path: "/locations", label: "Stock de mi lugar", icon: MapPin },
+  ] : [
     { path: "/", label: "Inicio", icon: LayoutGrid },
   ];
 
   // ── Accordion groups for mobile drawer ──
-  const comprasNav = [
+  const comprasNav = isSucursal ? [] : [
     { path: "/purchases", label: "Órdenes de Compra", icon: ShoppingCart },
     { path: "/suppliers", label: "Proveedores", icon: Truck },
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-account", label: "Cta. Proveedores", icon: Building2 }] : []),
@@ -69,26 +73,26 @@ export default function MobileLayout() {
     ...(hasFeature("supplier_account") ? [{ path: "/supplier-payments", label: "Órdenes de Pago", icon: DollarSign }] : []),
   ];
 
-  const ventasNav = [
+  const ventasNav = isSucursal ? [] : [
     { path: "/sales", label: "General", icon: ReceiptText },
     { path: "/clients", label: "Clientes", icon: Users },
     ...(hasFeature("client_account") ? [{ path: "/client-account", label: "Cta. Clientes", icon: CreditCard }] : []),
   ];
 
-  const stockNav = [
+  const stockNav = isSucursal ? [] : [
     { path: "/products", label: "Artículos", icon: ClipboardList },
     { path: "/movements", label: "Movimientos", icon: ArrowRightLeft },
     ...(hasFeature("bill_of_materials") ? [{ path: "/recipes", label: "Lista de Materiales", icon: ChefHat }] : []),
   ];
 
-  const tesoreriaNav = [
+  const tesoreriaNav = isSucursal ? [] : [
     ...(hasFeature("financial_center") ? [{ path: "/financial/treasury", label: "Tesorería", icon: DollarSign }] : []),
     ...(hasFeature("banking") ? [{ path: "/banking", label: "Cuentas", icon: Landmark }] : []),
     ...(hasFeature("cash_management") ? [{ path: "/financial/cash-movements", label: "Mov. de Caja", icon: Wallet }] : []),
     ...(hasFeature("cash_management") ? [{ path: "/cash-closing", label: "Cierre de Caja", icon: Lock }] : []),
   ];
 
-  const fullFinancialNav = [
+  const fullFinancialNav = isSucursal ? [] : [
     { path: "/financial/dashboard", label: "Panel Financiero", icon: LayoutGrid },
     { path: "/financial/accounting", label: "Contabilidad", icon: ReceiptText },
     { path: "/financial/product-analysis", label: "Análisis Productos", icon: ChartNoAxesCombined },
@@ -96,7 +100,7 @@ export default function MobileLayout() {
     { path: "/financial/purchases", label: "Costos y Compras", icon: ShoppingCart },
   ];
 
-  const adminNav = [
+  const adminNav = isSucursal ? [] : [
     ...(can.manageTeam && hasFeature("team_management") ? [{ path: "/admin/team", label: "Equipo", icon: UserCog }] : []),
     { path: "/admin/company", label: "Empresa", icon: Building2 },
     { path: "/settings", label: "Ajustes", icon: Settings },

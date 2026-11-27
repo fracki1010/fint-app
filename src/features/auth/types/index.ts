@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura";
+export type UserRole = "admin" | "ventas" | "deposito" | "contabilidad" | "lectura" | "sucursal";
 
 export interface TenantInfo {
   _id: string;
