@@ -546,7 +546,7 @@ export default function TreasuryDashboard() {
         </div>
 
         {cashMovements && cashMovements.total > 0 && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-content2/40 px-4 py-3 text-center">
               <p className="text-[11px] text-default-400 font-semibold uppercase tracking-wider">Total ingresos</p>
               <p className="text-lg font-bold text-success">{formatCurrency(cashMovements.incomeTotal, "ARS")}</p>

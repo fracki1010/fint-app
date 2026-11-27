@@ -17,6 +17,7 @@ const MovementDetailPage = lazy(() => import("@features/products/pages/MovementD
 const SettingsPage = lazy(() => import("@features/settings/pages/Settings"));
 const NewOperationPage = lazy(() => import("@features/sales/pages/NewOperation"));
 const LoginPage = lazy(() => import("@features/auth/pages/Login"));
+const ActivatePage = lazy(() => import("@features/auth/pages/Activate"));
 const PurchasesPage = lazy(() => import("@features/purchases/pages/Purchases"));
 const SupplierAccountPage = lazy(() => import("@features/purchases/pages/SupplierAccount"));
 const BillOfMaterialsPage = lazy(() => import("@features/bill-of-materials/pages/BillOfMaterials"));
@@ -126,6 +127,8 @@ function App() {
           }
           path="/login"
         />
+        {/* Public: the invited person sets their password from the WhatsApp link. */}
+        <Route element={<ActivatePage />} path="/activar" />
 
         {/* SuperAdmin Routes — separate from the regular app */}
         <Route
